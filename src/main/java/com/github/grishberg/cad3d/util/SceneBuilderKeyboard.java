@@ -11,7 +11,7 @@ import com.github.grishberg.cad3d.keyboard.KeyPlaceHoles;
 import com.github.grishberg.cad3d.keyboard.KeySwitchHoles;
 import com.github.grishberg.cad3d.keyboard.ThumbConnections;
 import com.github.grishberg.cad3d.keyboard.ThumbKeyPlace;
-import com.github.grishberg.cad3d.keyboard.Walls;
+import com.github.grishberg.cad3d.keyboard.walls.Walls;
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig;
 import com.github.grishberg.cad3d.keyboard.wristrest.WristRest;
 import eu.printingin3d.javascad.coords.V3d;

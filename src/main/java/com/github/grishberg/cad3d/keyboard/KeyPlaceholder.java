@@ -40,12 +40,12 @@ public class KeyPlaceholder {
             ));
     }
 
-    static Abstract3dModel placeHolderTop() {
+    public static Abstract3dModel placeHolderTop() {
         return cube(17.2, WALL_THICKNESS, TOP_THICKNESS).
             move(0.0, CORNER_OFFSET + WALL_THICKNESS, CORNER_PLACEHOLDER_TOP_OFFSET);
     }
 
-    static Abstract3dModel placeHolderLeft() {
+    public static Abstract3dModel placeHolderLeft() {
         return cube(WALL_THICKNESS, 17.2, TOP_THICKNESS).move(
             -CORNER_OFFSET - WALL_THICKNESS,
             0,
@@ -53,12 +53,12 @@ public class KeyPlaceholder {
         );
     }
 
-    static Abstract3dModel placeHolderRight() {
+    public static Abstract3dModel placeHolderRight() {
         return cube(WALL_THICKNESS, 17.2, TOP_THICKNESS)
             .move(CORNER_OFFSET + WALL_THICKNESS, 0, CORNER_PLACEHOLDER_TOP_OFFSET);
     }
 
-    static Abstract3dModel placeHolderBottom() {
+    public static Abstract3dModel placeHolderBottom() {
         return cube(17.2, WALL_THICKNESS, TOP_THICKNESS).move(
             0,
             -CORNER_OFFSET - WALL_THICKNESS,
@@ -66,7 +66,7 @@ public class KeyPlaceholder {
         );
     }
 
-    static Abstract3dModel placeHolderTopLeft() {
+    public static Abstract3dModel placeHolderTopLeft() {
         return cube(WALL_THICKNESS, WALL_THICKNESS, TOP_THICKNESS)
             .move(-CORNER_OFFSET - WALL_THICKNESS, CORNER_OFFSET + WALL_THICKNESS, CORNER_PLACEHOLDER_TOP_OFFSET);
     }
@@ -76,16 +76,16 @@ public class KeyPlaceholder {
             .move(-CORNER_OFFSET - WALL_THICKNESS, CORNER_OFFSET + WALL_THICKNESS, CORNER_PLACEHOLDER_TOP_OFFSET);
     }
 
-    static Abstract3dModel placeHolderTopRight() {
+    public static Abstract3dModel placeHolderTopRight() {
         return cube(WALL_THICKNESS, WALL_THICKNESS, TOP_THICKNESS)
             .move(CORNER_OFFSET + WALL_THICKNESS, CORNER_OFFSET + WALL_THICKNESS, CORNER_PLACEHOLDER_TOP_OFFSET);
     }
-    static Abstract3dModel placeHolderTopRight(int height) {
+    public static Abstract3dModel placeHolderTopRight(int height) {
         return cube(WALL_THICKNESS, WALL_THICKNESS, height)
             .move(CORNER_OFFSET + WALL_THICKNESS, CORNER_OFFSET + WALL_THICKNESS, CORNER_PLACEHOLDER_TOP_OFFSET);
     }
 
-    static Abstract3dModel placeHolderBottomLeft() {
+    public static Abstract3dModel placeHolderBottomLeft() {
         return cube(WALL_THICKNESS, WALL_THICKNESS, TOP_THICKNESS)
             .move(-CORNER_OFFSET - WALL_THICKNESS, -CORNER_OFFSET - WALL_THICKNESS, CORNER_PLACEHOLDER_TOP_OFFSET);
     }
@@ -94,14 +94,14 @@ public class KeyPlaceholder {
             .move(-CORNER_OFFSET - WALL_THICKNESS, -CORNER_OFFSET - WALL_THICKNESS, CORNER_PLACEHOLDER_TOP_OFFSET);
     }
 
-    static Abstract3dModel placeHolderBottomRight() {
+    public static Abstract3dModel placeHolderBottomRight() {
         return cube(WALL_THICKNESS, WALL_THICKNESS, TOP_THICKNESS).move(
             CORNER_OFFSET + WALL_THICKNESS,
             -CORNER_OFFSET - WALL_THICKNESS,
             CORNER_PLACEHOLDER_TOP_OFFSET
         );
     }
-    static Abstract3dModel placeHolderBottomRight(int height) {
+    public static Abstract3dModel placeHolderBottomRight(int height) {
         return cube(WALL_THICKNESS, WALL_THICKNESS, height).move(
             CORNER_OFFSET + WALL_THICKNESS,
             -CORNER_OFFSET - WALL_THICKNESS,
