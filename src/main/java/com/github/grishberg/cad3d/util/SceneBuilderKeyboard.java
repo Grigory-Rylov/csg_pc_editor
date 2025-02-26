@@ -96,7 +96,7 @@ public class SceneBuilderKeyboard implements SceneBuilder {
 
             createPlaceholders();
 
-            createWristRest();
+            //createWristRest();
 
             SwingUtilities.invokeLater(() -> {
                 if (listener != null) {
@@ -254,13 +254,13 @@ public class SceneBuilderKeyboard implements SceneBuilder {
     }
 
     private void showControlPoints(V3d[][] points) {
-        Color[] colors = {Color.RED, Color.BLUE, Color.GREEN, Color.CYAN, Color.MAGENTA};
+        Color[] colors = {Color.RED, Color.BLUE, Color.GREEN, Color.CYAN, Color.MAGENTA, Color.ORANGE};
 
         for (int rowIndex = 0; rowIndex < points.length; rowIndex++) {
             for (int colIndex = 0; colIndex < points[rowIndex].length; colIndex++) {
                 createAndAdd(
-                    sphere(3).move(points[rowIndex][colIndex]),
-                    colors[rowIndex % colors.length]
+                    sphere(2).move(points[rowIndex][colIndex]),
+                    colors[colIndex % colors.length]
                 );
             }
         }

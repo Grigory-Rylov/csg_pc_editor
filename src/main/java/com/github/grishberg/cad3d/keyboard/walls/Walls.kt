@@ -63,10 +63,12 @@ class Walls(private val cfg: KeyboardConfig, private val keyPlace: KeyPlace) {
         for (column in 0 until cfg.columnsCount - 1) {
             bordersOffset = cfg.bordersOffset
             // back diagonals
-            models.add(wallsBuilder.backMidWall(
-                leftPlace = { obj -> keyPlace.place(column, 0, obj) },
-                rightPlace = { obj -> keyPlace.place(column + 1, 0, obj) },
-            ))
+            models.add(
+                wallsBuilder.backMidWall(
+                    leftPlace = { obj -> keyPlace.place(column, 0, obj) },
+                    rightPlace = { obj -> keyPlace.place(column + 1, 0, obj) },
+                )
+            )
 //            addHull(
 //                keyPlace.place(column, 0, KeyPlaceholder.placeHolderTopRight()),
 //                keyPlace.place(column + 1, 0, KeyPlaceholder.placeHolderTopLeft()),
@@ -81,10 +83,12 @@ class Walls(private val cfg: KeyboardConfig, private val keyPlace: KeyPlace) {
                 bordersOffset = firstColunsBordersOffset
             }
             // front diagonals
-            models.add(wallsBuilder.frontMidWall(
-                leftPlace = { obj -> keyPlace.place(column, cfg.lastRow, obj) },
-                rightPlace = { obj -> keyPlace.place(column + 1, cfg.lastRow, obj) },
-            ))
+            models.add(
+                wallsBuilder.frontMidWall(
+                    leftPlace = { obj -> keyPlace.place(column, cfg.lastRow, obj) },
+                    rightPlace = { obj -> keyPlace.place(column + 1, cfg.lastRow, obj) },
+                )
+            )
 //            addHull(
 //                keyPlace.place(column, cfg.lastRow, KeyPlaceholder.placeHolderBottomRight()),
 //                keyPlace.place(column + 1, cfg.lastRow, KeyPlaceholder.placeHolderBottomLeft()),
@@ -158,6 +162,7 @@ class Walls(private val cfg: KeyboardConfig, private val keyPlace: KeyPlace) {
     }
 
     private fun thumbBorders(wallsBuilder: WallsBuilder, cornerWallBuilder: CornerWallBuilder) {
+        //corners
         //left back
         models.add(cornerWallBuilder.backLeft { obj -> ThumbKeyPlace.place3(obj) })
         //left front
@@ -167,128 +172,48 @@ class Walls(private val cfg: KeyboardConfig, private val keyPlace: KeyPlace) {
         // right front
         models.add(cornerWallBuilder.frontRight { obj -> ThumbKeyPlace.place1(obj) })
 
-        bordersOffset = 4.0
-        /*
-        //corners
-        //left front
-        cornerWallBuilder.frontLeft()
-        addHull(
-            ThumbKeyPlace.place3(KeyPlaceholder.placeHolderBottomLeft().move(0.0, -bordersOffset, borderZOffset)),
-            ThumbKeyPlace.place3(KeyPlaceholder.placeHolderBottomLeft().move(-horizontalOffset, 0.0, borderZOffset)),
-            ThumbKeyPlace.place3(KeyPlaceholder.placeHolderBottomLeft())
+        models.add(wallsBuilder.backWall { o -> ThumbKeyPlace.place1(o) })
+        models.add(wallsBuilder.backWall { o -> ThumbKeyPlace.place2(o) })
+        models.add(wallsBuilder.backWall { o -> ThumbKeyPlace.place3(o) })
+
+        models.add(wallsBuilder.frontWall { o -> ThumbKeyPlace.place1(o) })
+        models.add(wallsBuilder.frontWall { o -> ThumbKeyPlace.place2(o) })
+        models.add(wallsBuilder.frontWall { o -> ThumbKeyPlace.place3(o) })
+
+        models.add(wallsBuilder.leftWall { o -> ThumbKeyPlace.place3(o) })
+        models.add(wallsBuilder.rightWall { o -> ThumbKeyPlace.place1(o) })
+
+        models.add(
+            wallsBuilder.frontMidWall(
+                leftPlace = { o -> ThumbKeyPlace.place2(o) },
+                rightPlace = { o -> ThumbKeyPlace.place1(o) },
+            )
+        )
+        models.add(
+            wallsBuilder.frontMidWall(
+                leftPlace = { o -> ThumbKeyPlace.place3(o) },
+                rightPlace = { o -> ThumbKeyPlace.place2(o) },
+            )
         )
 
-        //left back
-        cornerWallBuilder.backLeft()
-        addHull(
-            ThumbKeyPlace.place3(KeyPlaceholder.placeHolderTopLeft().move(0.0, bordersOffset, borderZOffset)),
-            ThumbKeyPlace.place3(KeyPlaceholder.placeHolderTopLeft().move(-horizontalOffset, 0.0, borderZOffset)),
-            ThumbKeyPlace.place3(KeyPlaceholder.placeHolderTopLeft())
+        models.add(
+            wallsBuilder.backMidWall(
+                leftPlace = { o -> ThumbKeyPlace.place2(o) },
+                rightPlace = { o -> ThumbKeyPlace.place1(o) },
+            )
+        )
+        models.add(
+            wallsBuilder.backMidWall(
+                leftPlace = { o -> ThumbKeyPlace.place3(o) },
+                rightPlace = { o -> ThumbKeyPlace.place2(o) },
+            )
         )
 
-        //right front
-        cornerWallBuilder.frontRight()
-        addHull(
-            ThumbKeyPlace.place1(KeyPlaceholder.placeHolderBottomRight().move(0.0, -bordersOffset, borderZOffset)),
-            ThumbKeyPlace.place1(KeyPlaceholder.placeHolderBottomRight().move(bordersOffset, 0.0, borderZOffset)),
-            ThumbKeyPlace.place1(KeyPlaceholder.placeHolderBottomRight())
-        )
-
-        //right back
-        cornerWallBuilder.backRight()
-        addHull(
-            ThumbKeyPlace.place1(KeyPlaceholder.placeHolderTopRight().move(0.0, bordersOffset, borderZOffset)),
-            ThumbKeyPlace.place1(KeyPlaceholder.placeHolderTopRight().move(bordersOffset, 0.0, borderZOffset)),
-            ThumbKeyPlace.place1(KeyPlaceholder.placeHolderTopRight())
-        )
-
-        // thumb borders;
-        wallsBuilder.backWall()
-        addHull(
-            ThumbKeyPlace.place1(KeyPlaceholder.placeHolderTop()),
-            ThumbKeyPlace.place1(KeyPlaceholder.placeHolderTop().move(0.0, bordersOffset, borderZOffset))
-        )
-
-        wallsBuilder.backWall()
-        addHull(
-            ThumbKeyPlace.place2(KeyPlaceholder.placeHolderTop()),
-            ThumbKeyPlace.place2(KeyPlaceholder.placeHolderTop().move(0.0, bordersOffset, borderZOffset))
-        )
-
-        wallsBuilder.backWall()
-        addHull(
-            ThumbKeyPlace.place3(KeyPlaceholder.placeHolderTop()),
-            ThumbKeyPlace.place3(KeyPlaceholder.placeHolderTop().move(0.0, bordersOffset, borderZOffset))
-        )
-
-        wallsBuilder.frontWall()
-        addHull(
-            ThumbKeyPlace.place1(KeyPlaceholder.placeHolderBottom()),
-            ThumbKeyPlace.place1(KeyPlaceholder.placeHolderBottom().move(0.0, -bordersOffset, borderZOffset))
-        )
-        wallsBuilder.frontWall()
-        addHull(
-            ThumbKeyPlace.place2(KeyPlaceholder.placeHolderBottom()),
-            ThumbKeyPlace.place2(KeyPlaceholder.placeHolderBottom().move(0.0, -bordersOffset, borderZOffset))
-        )
-        wallsBuilder.frontWall()
-        addHull(
-            ThumbKeyPlace.place3(KeyPlaceholder.placeHolderBottom()),
-            ThumbKeyPlace.place3(KeyPlaceholder.placeHolderBottom().move(0.0, -bordersOffset, borderZOffset))
-        )
-
-        // right
-        wallsBuilder.rightWall()
-        addHull(
-            ThumbKeyPlace.place1(KeyPlaceholder.placeHolderRight()),
-            ThumbKeyPlace.place1(KeyPlaceholder.placeHolderRight().move(bordersOffset, 0.0, borderZOffset))
-        )
-
-        // left
-        wallsBuilder.leftWall()
-        addHull(
-            ThumbKeyPlace.place3(KeyPlaceholder.placeHolderLeft()),
-            ThumbKeyPlace.place3(KeyPlaceholder.placeHolderLeft().move(-horizontalOffset, 0.0, borderZOffset))
-        )
-
-        //middle front
-        wallsBuilder.frontMidWall()
-        addHull(
-            ThumbKeyPlace.place1(KeyPlaceholder.placeHolderBottomLeft()),
-            ThumbKeyPlace.place1(KeyPlaceholder.placeHolderBottomLeft().move(0.0, -bordersOffset, borderZOffset)),
-            ThumbKeyPlace.place2(KeyPlaceholder.placeHolderBottomRight()),
-            ThumbKeyPlace.place2(KeyPlaceholder.placeHolderBottomRight().move(0.0, -bordersOffset, borderZOffset))
-        )
-        wallsBuilder.frontMidWall()
-        addHull(
-            ThumbKeyPlace.place2(KeyPlaceholder.placeHolderBottomLeft()),
-            ThumbKeyPlace.place2(KeyPlaceholder.placeHolderBottomLeft().move(0.0, -bordersOffset, borderZOffset)),
-            ThumbKeyPlace.place3(KeyPlaceholder.placeHolderBottomRight()),
-            ThumbKeyPlace.place3(KeyPlaceholder.placeHolderBottomRight().move(0.0, -bordersOffset, borderZOffset))
-        )
-
-        // middle back
-        wallsBuilder.backMidWall()
-        addHull(
-            ThumbKeyPlace.place1(KeyPlaceholder.placeHolderTopLeft()),
-            ThumbKeyPlace.place1(KeyPlaceholder.placeHolderTopLeft().move(0.0, bordersOffset, borderZOffset)),
-            ThumbKeyPlace.place2(KeyPlaceholder.placeHolderTopRight()),
-            ThumbKeyPlace.place2(KeyPlaceholder.placeHolderTopRight().move(0.0, bordersOffset, borderZOffset))
-        )
-        wallsBuilder.backMidWall()
-        addHull(
-            ThumbKeyPlace.place2(KeyPlaceholder.placeHolderTopLeft()),
-            ThumbKeyPlace.place2(KeyPlaceholder.placeHolderTopLeft().move(0.0, bordersOffset, borderZOffset)),
-            ThumbKeyPlace.place3(KeyPlaceholder.placeHolderTopRight()),
-            ThumbKeyPlace.place3(KeyPlaceholder.placeHolderTopRight().move(0.0, bordersOffset, borderZOffset))
-        )
-
- */
     }
 
     private class InnerBordersBuilder(
-        private val verticalOffset: Double = 8.0,
-        private val horizontalOffset: Double = 6.0,
+        private val verticalOffset: Double = 4.0,
+        private val horizontalOffset: Double = 8.0,
         private val borderZOffset: Double = -2.0,
     ) : WallsBuilder {
 
@@ -378,8 +303,8 @@ class Walls(private val cfg: KeyboardConfig, private val keyPlace: KeyPlace) {
     }
 
     private class InnerCorners(
-        private val verticalOffset: Double = 8.0,
-        private val horizontalOffset: Double = 6.0,
+        private val verticalOffset: Double = 4.0,
+        private val horizontalOffset: Double = 8.0,
         private val borderZOffset: Double = -2.0,
     ) : CornerWallBuilder {
 

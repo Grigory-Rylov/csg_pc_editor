@@ -2,14 +2,11 @@ package com.github.grishberg.cad3d.keyboard.wristrest;
 
 import static com.github.grishberg.cad3d.keyboard.Utils.v3d;
 
-import com.github.grishberg.cad3d.keyboard.Utils;
 import eu.printingin3d.javascad.coords.V3d;
 import eu.printingin3d.javascad.models.Abstract3dModel;
-import eu.printingin3d.javascad.models.Cube;
 import eu.printingin3d.javascad.models.Cylinder;
-import eu.printingin3d.javascad.models.surfaces.S6x3Linear;
-import java.util.ArrayList;
-import java.util.List;
+import eu.printingin3d.javascad.models.surfaces.BicubicInterpolator;
+import eu.printingin3d.javascad.models.surfaces.SmoothSurfaceBuilder;
 
 public class WristRest {
    private static final int resolution = 15;
@@ -22,15 +19,15 @@ public class WristRest {
            v3d(-10, -90, 20),
            v3d( 16, -60, 15),
            v3d(60, -80, 15),
-           v3d(60, -80, 10),
+           v3d(70, -80, 10),
        },
        {
-           v3d(-65, -100, 5),
-           v3d(-40, -100, 30),
+           v3d(-42, -100, 5),
+           v3d(-30, -100, 30),
            v3d(-16, -100, 20),
            v3d(16, -100,  10),
            v3d(60, -100, 20),
-           v3d(60, -100, 10),
+           v3d(70, -100, 10),
        },
        {
            v3d(-60,-150,  15),
@@ -38,18 +35,20 @@ public class WristRest {
            v3d(-16,-130,  40),
            v3d(16,-130,  40),
            v3d(60, -150, 20),
-           v3d(60,-150,  30),
+           v3d(90,-150,  30),
        }
    };
    public static Abstract3dModel build(){
-       V3d[][] points = S6x3Linear.create(controlPoints, 5).buildSurface();
+       //V3d[][] points = S6x3Linear.create(controlPoints, 5).buildSurface();
+       V3d[][] points = new BicubicInterpolator(controlPoints).generateSurface(40);
 
-       List<Abstract3dModel> models = new ArrayList<>();
-       for(V3d[] w: points) {
-           for (V3d p: w) {
-               models.add(new Cube(1).move(p));
-           }
-       }
+       SmoothSurfaceBuilder surfaceBuilder = new SmoothSurfaceBuilder(points, thickness);
+//       List<Abstract3dModel> models = new ArrayList<>();
+//       for(V3d[] w: points) {
+//           for (V3d p: w) {
+//               models.add(new Cube(1).move(p));
+//           }
+//       }
 
 //      Abstract3dModel topSurface = new SmoothSurface3(
 //          S6x3.s6x3(controlPoints).buildSurfaceStrategy(resolution),
@@ -59,7 +58,7 @@ public class WristRest {
 //      Abstract3dModel wristRest = topSurface.addModel(wristRestMount())
 //          .subtractModel(new Cube(300, 300, 50).move(0, 0, -25));
 
-      return Utils.union(models);
+      return surfaceBuilder;//Utils.union(models);
    }
 
    private static Abstract3dModel wristRestMount() {
