@@ -135,6 +135,14 @@ class Walls(private val cfg: KeyboardConfig, private val keyPlace: KeyPlace) {
                 rightPlace = { o -> ThumbKeyPlace.placeM(o) },
             )
         )
+
+        models.add(
+            wallsBuilder.midEdge(
+                midPlace = { o -> ThumbKeyPlace.placeM(o) },
+                leftPlace = { o -> ThumbKeyPlace.placeL(o) },
+                rightPlace = { o -> ThumbKeyPlace.placeR(o) },
+            )
+        )
     }
 
     private fun betweenThumbAndMatrixBorders() {
@@ -182,14 +190,71 @@ class Walls(private val cfg: KeyboardConfig, private val keyPlace: KeyPlace) {
                 ThumbKeyPlace.placeR(KeyPlaceholder.placeHolderTopLeft()),
                 ThumbKeyPlace.placeR(KeyPlaceholder.placeHolderTopRight().move(0.0, verticalOffset, borderZOffset)),
                 keyPlace.place(0, cfg.lastRow, KeyPlaceholder.placeHolderBottomRight()),
-                //keyPlace.place(1, cfg.lastRow, KeyPlaceholder.placeHolderBottom()),
             )
+        )
+        models.add(
+            Utils.hull(
+                ThumbKeyPlace.placeR(KeyPlaceholder.placeHolderTopRight().move(0.0, verticalOffset, borderZOffset)),
+                keyPlace.place(0, cfg.lastRow, KeyPlaceholder.placeHolderBottomRight()),
+                keyPlace.place(1, cfg.lastRow, KeyPlaceholder.placeHolderBottomLeft()),
+                keyPlace.place(1, cfg.lastRow, KeyPlaceholder.placeHolderBottomRight()),
+            )
+        )
+        models.add(
+            Utils.hull(
+                ThumbKeyPlace.placeR(KeyPlaceholder.placeHolderTopRight().move(0.0, verticalOffset, borderZOffset)),
+                keyPlace.place(1, cfg.lastRow, KeyPlaceholder.placeHolderBottomRight()),
+
+                keyPlace.place(
+                    3, cfg.lastRow, KeyPlaceholder.placeHolderBottomLeft().move(0.0, -verticalOffset, borderZOffset)
+                ),
+            )
+        )
+
+        //row 3 bottom
+        models.add(
+            Utils.hull(
+                keyPlace.place(1, cfg.lastRow, KeyPlaceholder.placeHolderBottomRight()),
+                keyPlace.place(
+                    3, cfg.lastRow, KeyPlaceholder.placeHolderBottomLeft().move(0.0, -verticalOffset, borderZOffset)
+                ),
+
+                keyPlace.place(
+                    2, cfg.lastRow, KeyPlaceholder.placeHolderBottomLeft().move(0.0, -verticalOffset, borderZOffset)
+                ),
+                keyPlace.place(
+                    2, cfg.lastRow, KeyPlaceholder.placeHolderBottomRight().move(0.0, -verticalOffset, borderZOffset)
+                ),
+
+                )
         )
 
         models.add(
             Utils.hull(
                 ThumbKeyPlace.placeR(KeyPlaceholder.placeHolderTop()),
                 ThumbKeyPlace.placeR(KeyPlaceholder.placeHolderTopRight().move(0.0, verticalOffset, borderZOffset)),
+            )
+        )
+
+        models.add(
+            Utils.hull(
+                ThumbKeyPlace.placeR(KeyPlaceholder.placeHolderTopRight().move(horizontalOffset, 0.0, borderZOffset)),
+                ThumbKeyPlace.placeR(KeyPlaceholder.placeHolderTopRight().move(0.0, verticalOffset, borderZOffset)),
+                keyPlace.place(
+                    3, cfg.lastRow, KeyPlaceholder.placeHolderBottomLeft().move(0.0, -verticalOffset, borderZOffset)
+                ),
+            )
+        )
+
+        models.add(
+            Utils.hull(
+                ThumbKeyPlace.placeR(KeyPlaceholder.placeHolderTopRight().move(horizontalOffset, 0.0, borderZOffset)),
+                ThumbKeyPlace.placeR(
+                    KeyPlaceholder.placeHolderBottomRight().move(horizontalOffset, 0.0, borderZOffset)
+                ),
+                keyPlace.place(
+                    3, cfg.lastRow, KeyPlaceholder.placeHolderBottomLeft().move(0.0, -verticalOffset, borderZOffset)
+                ),
             )
         )
     }
@@ -283,6 +348,16 @@ class Walls(private val cfg: KeyboardConfig, private val keyPlace: KeyPlace) {
                 frontPlace(KeyPlaceholder.placeHolderTopRight().move(horizontalOffset, 0.0, borderZOffset))
             )
         }
+
+        override fun midEdge(
+            midPlace: (Abstract3dModel) -> Abstract3dModel,
+            leftPlace: (Abstract3dModel) -> Abstract3dModel,
+            rightPlace: (Abstract3dModel) -> Abstract3dModel
+        ) = Utils.hull(
+            ThumbKeyPlace.placeM(KeyPlaceholder.placeHolderBottom().move(0.0, -verticalOffset, borderZOffset)),
+            ThumbKeyPlace.placeL(KeyPlaceholder.placeHolderBottomRight().move(0.0, -verticalOffset, borderZOffset)),
+            ThumbKeyPlace.placeR(KeyPlaceholder.placeHolderBottomLeft().move(0.0, -verticalOffset, borderZOffset)),
+        )
     }
 
     private class InnerCorners(

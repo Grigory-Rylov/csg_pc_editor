@@ -25,4 +25,10 @@ interface WallsBuilder {
         backPlace: (Abstract3dModel) -> Abstract3dModel,
         frontPlace: (Abstract3dModel) -> Abstract3dModel,
     ): Abstract3dModel
+
+    fun midEdge(
+        midPlace: (Abstract3dModel) -> Abstract3dModel,
+        leftPlace: (Abstract3dModel) -> Abstract3dModel,
+        rightPlace: (Abstract3dModel) -> Abstract3dModel,
+    ): Abstract3dModel
 }
