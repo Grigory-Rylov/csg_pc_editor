@@ -26,13 +26,13 @@ public class ThumbConnections {
         models.clear();
 
         addHull(
-            ThumbKeyPlace.place1(placeHolderLeft()),
-            ThumbKeyPlace.place2(placeHolderRight())
+            ThumbKeyPlace.placeR(placeHolderLeft()),
+            ThumbKeyPlace.placeM(placeHolderRight())
         );
 
         addHull(
-            ThumbKeyPlace.place2(placeHolderLeft()),
-            ThumbKeyPlace.place3(placeHolderRight())
+            ThumbKeyPlace.placeM(placeHolderLeft()),
+            ThumbKeyPlace.placeL(placeHolderRight())
         );
 
         return union(models);
