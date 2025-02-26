@@ -108,4 +108,8 @@ public class KeyPlaceholder {
             CORNER_PLACEHOLDER_TOP_OFFSET
         );
     }
+
+    public static Abstract3dModel placeCube(){
+        return cube(WALL_THICKNESS, WALL_THICKNESS, TOP_THICKNESS);
+    }
 }
