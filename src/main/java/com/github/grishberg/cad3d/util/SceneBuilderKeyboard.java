@@ -198,14 +198,14 @@ public class SceneBuilderKeyboard implements SceneBuilder {
     }
 
     private Abstract3dModel createBorders() {
-        Abstract3dModel borders = new Walls(cfg, keyPlace).createBorders(1.5);
+        Abstract3dModel borders = new Walls(cfg, keyPlace).createBorders(1.5, 4);
         createAndAdd(borders, Color.lightGray, 30);
         return borders;
     }
 
     private Abstract3dModel createCase() {
-        Abstract3dModel borders = new Walls(cfg, keyPlace).createBorders(3);
-        Abstract3dModel walls = new Walls(cfg, keyPlace).createWalls(1.5).subtractModel(borders);
+        Abstract3dModel borders = new Walls(cfg, keyPlace).createBorders(3, 6);
+        Abstract3dModel walls = new Walls(cfg, keyPlace).createWalls(1.5, 4).subtractModel(borders);
 
         createAndAdd(walls, Color.pink, 30);
         return borders;

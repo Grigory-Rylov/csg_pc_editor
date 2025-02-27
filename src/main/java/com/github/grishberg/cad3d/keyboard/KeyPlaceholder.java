@@ -114,8 +114,8 @@ public class KeyPlaceholder {
         );
     }
 
-    public static Abstract3dModel placeCube(double thickness){
+    public static Abstract3dModel placeCube(double thickness, double height){
         //return cube(WALL_THICKNESS, thickness, TOP_THICKNESS);
-        return cylinder(thickness, TOP_THICKNESS);
+        return cylinder(thickness, height);
     }
 }

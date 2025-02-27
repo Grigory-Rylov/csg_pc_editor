@@ -15,28 +15,28 @@ class Walls(private val cfg: KeyboardConfig, private val keyPlace: KeyPlace) {
     val horizontalOffset = 8.0
     val borderZOffset = -2.0
 
-    fun createBorders(borderThickness: Double = 1.5): Abstract3dModel {
+    fun createBorders(borderThickness: Double = 1.5, borderHeight: Double = 4.0): Abstract3dModel {
         models.clear()
 
         //columns
-        thumbBorders(InnerBordersBuilder(borderThickness = borderThickness), InnerCorners(borderThickness = borderThickness))
+        thumbBorders(InnerBordersBuilder(borderThickness = borderThickness, borderHeight = borderHeight), InnerCorners(borderThickness = borderThickness, borderHeight = borderHeight))
 
-        matrixBorders(InnerBordersBuilder(borderThickness = borderThickness), InnerCorners(borderThickness = borderThickness))
+        matrixBorders(InnerBordersBuilder(borderThickness = borderThickness, borderHeight = borderHeight), InnerCorners(borderThickness = borderThickness, borderHeight = borderHeight))
         //matrixBorders(InnerBordersBuilder(borderThickness = borderThickness), OuterCornersWallBuilder(borderThickness = borderThickness))
 
-        betweenThumbAndMatrixBorders(borderThickness)
+        betweenThumbAndMatrixBorders(borderThickness, borderHeight)
 
         return Utils.union(models)
     }
 
-    fun createWalls(borderThickness: Double = 1.5): Abstract3dModel {
+    fun createWalls(borderThickness: Double = 1.5, borderHeight:Double = 4.0): Abstract3dModel {
         models.clear()
 
         //columns
         //thumbBorders(InnerBordersBuilder(borderThickness = borderThickness), InnerCorners(borderThickness = borderThickness))
 
         //matrixBorders(InnerBordersBuilder(borderThickness = borderThickness), InnerCorners(borderThickness = borderThickness))
-        matrixBorders(InnerBordersBuilder(borderThickness = borderThickness), OuterCornersWallBuilder(borderThickness = borderThickness))
+        matrixBorders(OuterWallsBuilder(borderThickness = borderThickness), OuterCornersWallBuilder(borderThickness = borderThickness))
 
         //betweenThumbAndMatrixBorders(borderThickness)
 
@@ -163,7 +163,7 @@ class Walls(private val cfg: KeyboardConfig, private val keyPlace: KeyPlace) {
         )
     }
 
-    private fun betweenThumbAndMatrixBorders(borderThickness: Double) {
+    private fun betweenThumbAndMatrixBorders(borderThickness: Double, borderHeight: Double) {
         val verticalOffset = 4.0
         val horizontalOffset = 8.0
         val borderZOffset = -2.0
@@ -177,7 +177,7 @@ class Walls(private val cfg: KeyboardConfig, private val keyPlace: KeyPlace) {
                     ThumbKeyPlace.placeM(
                         KeyPlaceholder.placeHolderTopLeft().move(0.0, verticalOffset, borderZOffset)
                     ),
-                    borderThickness,
+                    borderThickness,borderHeight
                 ),
 
                 keyPlace.place(0, cfg.lastRow, KeyPlaceholder.placeHolderBottomLeft()),
@@ -188,7 +188,7 @@ class Walls(private val cfg: KeyboardConfig, private val keyPlace: KeyPlace) {
                         cfg.lastRow,
                         KeyPlaceholder.placeHolderBottomLeft().move(-horizontalOffset, 0.0, borderZOffset)
                     ),
-                    borderThickness,
+                    borderThickness,borderHeight
                 )
             )
         )
@@ -221,7 +221,7 @@ class Walls(private val cfg: KeyboardConfig, private val keyPlace: KeyPlace) {
                     ThumbKeyPlace.placeR(
                         KeyPlaceholder.placeHolderTopRight().move(0.0, verticalOffset, borderZOffset)
                     ),
-                    borderThickness,
+                    borderThickness,borderHeight
                 ),
                 keyPlace.place(0, cfg.lastRow, KeyPlaceholder.placeHolderBottomRight()),
             )
@@ -232,7 +232,7 @@ class Walls(private val cfg: KeyboardConfig, private val keyPlace: KeyPlace) {
                     ThumbKeyPlace.placeR(
                         KeyPlaceholder.placeHolderTopRight().move(0.0, verticalOffset, borderZOffset)
                     ),
-                    borderThickness,
+                    borderThickness,borderHeight
                 ),
                 keyPlace.place(0, cfg.lastRow, KeyPlaceholder.placeHolderBottomRight()),
                 keyPlace.place(1, cfg.lastRow, KeyPlaceholder.placeHolderBottomLeft()),
@@ -245,7 +245,7 @@ class Walls(private val cfg: KeyboardConfig, private val keyPlace: KeyPlace) {
                     ThumbKeyPlace.placeR(
                         KeyPlaceholder.placeHolderTopRight().move(0.0, verticalOffset, borderZOffset)
                     ),
-                    borderThickness,
+                    borderThickness,borderHeight
                 ),
                 keyPlace.place(1, cfg.lastRow, KeyPlaceholder.placeHolderBottomRight()),
 
@@ -253,7 +253,7 @@ class Walls(private val cfg: KeyboardConfig, private val keyPlace: KeyPlace) {
                     keyPlace.place(
                         3, cfg.lastRow, KeyPlaceholder.placeHolderBottomLeft().move(0.0, -verticalOffset, borderZOffset)
                     ),
-                    borderThickness,
+                    borderThickness,borderHeight
                 ),
             )
         )
@@ -266,14 +266,14 @@ class Walls(private val cfg: KeyboardConfig, private val keyPlace: KeyPlace) {
                     keyPlace.place(
                         3, cfg.lastRow, KeyPlaceholder.placeHolderBottomLeft().move(0.0, -verticalOffset, borderZOffset)
                     ),
-                    borderThickness,
+                    borderThickness,borderHeight
                 ),
 
                 verticalCube(
                     keyPlace.place(
                         2, cfg.lastRow, KeyPlaceholder.placeHolderBottomLeft().move(0.0, -verticalOffset, borderZOffset)
                     ),
-                    borderThickness,
+                    borderThickness,borderHeight
                 ),
                 verticalCube(
                     keyPlace.place(
@@ -281,7 +281,7 @@ class Walls(private val cfg: KeyboardConfig, private val keyPlace: KeyPlace) {
                         cfg.lastRow,
                         KeyPlaceholder.placeHolderBottomRight().move(0.0, -verticalOffset, borderZOffset)
                     ),
-                    borderThickness,
+                    borderThickness,borderHeight
                 ),
 
                 )
@@ -294,7 +294,7 @@ class Walls(private val cfg: KeyboardConfig, private val keyPlace: KeyPlace) {
                     ThumbKeyPlace.placeR(
                         KeyPlaceholder.placeHolderTopRight().move(0.0, verticalOffset, borderZOffset)
                     ),
-                    borderThickness,
+                    borderThickness,borderHeight
                 ),
             )
         )
@@ -305,19 +305,19 @@ class Walls(private val cfg: KeyboardConfig, private val keyPlace: KeyPlace) {
                     ThumbKeyPlace.placeR(
                         KeyPlaceholder.placeHolderTopRight().move(horizontalOffset, 0.0, borderZOffset)
                     ),
-                    borderThickness,
+                    borderThickness,borderHeight
                 ),
                 verticalCube(
                     ThumbKeyPlace.placeR(
                         KeyPlaceholder.placeHolderTopRight().move(0.0, verticalOffset, borderZOffset)
                     ),
-                    borderThickness,
+                    borderThickness,borderHeight
                 ),
                 verticalCube(
                     keyPlace.place(
                         3, cfg.lastRow, KeyPlaceholder.placeHolderBottomLeft().move(0.0, -verticalOffset, borderZOffset)
                     ),
-                    borderThickness,
+                    borderThickness,borderHeight
                 ),
             )
         )
@@ -328,24 +328,24 @@ class Walls(private val cfg: KeyboardConfig, private val keyPlace: KeyPlace) {
                     ThumbKeyPlace.placeR(
                         KeyPlaceholder.placeHolderTopRight().move(horizontalOffset, 0.0, borderZOffset)
                     ),
-                    borderThickness,
+                    borderThickness,borderHeight
                 ),
                 verticalCube(
                     ThumbKeyPlace.placeR(
                         KeyPlaceholder.placeHolderBottomRight().move(horizontalOffset, 0.0, borderZOffset)
                     ),
-                    borderThickness,
+                    borderThickness,borderHeight
                 ),
                 verticalCube(
                     keyPlace.place(
                         3, cfg.lastRow, KeyPlaceholder.placeHolderBottomLeft().move(0.0, -verticalOffset, borderZOffset)
                     ),
-                    borderThickness,
+                    borderThickness,borderHeight
                 ),
             )
         )
     }
-    private fun verticalCube(obj: Abstract3dModel, borderThickness:Double): Abstract3dModel {
-        return KeyPlaceholder.placeCube(borderThickness).move(obj.move)
+    private fun verticalCube(obj: Abstract3dModel, borderThickness:Double, borderHeight: Double): Abstract3dModel {
+        return KeyPlaceholder.placeCube(borderThickness, borderHeight).move(obj.move)
     }
 }

@@ -6,6 +6,7 @@ import eu.printingin3d.javascad.models.Abstract3dModel
 
 class OuterCornersWallBuilder(
     private val borderThickness: Double = 1.5,
+    private val borderHeight: Double = 4.0,
     private val verticalOffset: Double = 4.0,
     private val horizontalOffset: Double = 8.0,
     private val borderZOffset: Double = -2.0,
@@ -19,8 +20,8 @@ class OuterCornersWallBuilder(
 
     override fun backLeft(keyPlace: (Abstract3dModel) -> Abstract3dModel): Abstract3dModel {
         return Utils.hull(
-            verticalCube(keyPlace(KeyPlaceholder.placeHolderTopLeft().move(0.0, verticalOffset, borderZOffset))).move(-offset, offset, 0.0),
-            verticalCube(keyPlace(KeyPlaceholder.placeHolderTopLeft().move(-horizontalOffset, 0.0, borderZOffset))).move(-offset, offset, 0.0),
+            verticalCube(keyPlace(KeyPlaceholder.placeHolderTopLeft().move(0.0, verticalOffset, borderZOffset))),
+            verticalCube(keyPlace(KeyPlaceholder.placeHolderTopLeft().move(-horizontalOffset, 0.0, borderZOffset))),
             keyPlace(KeyPlaceholder.placeHolderTopLeft().move(0.0, outerVerticalOffset, outerBorderZOffset)),
             keyPlace(KeyPlaceholder.placeHolderTopLeft().move(-outerHorizontalOffset, 0.0, outerBorderZOffset)),
         )
@@ -84,6 +85,6 @@ class OuterCornersWallBuilder(
     }
 
     private fun verticalCube(obj: Abstract3dModel): Abstract3dModel {
-        return KeyPlaceholder.placeCube(borderThickness).move(obj.move)
+        return KeyPlaceholder.placeCube(borderThickness, borderHeight).move(obj.move)
     }
 }

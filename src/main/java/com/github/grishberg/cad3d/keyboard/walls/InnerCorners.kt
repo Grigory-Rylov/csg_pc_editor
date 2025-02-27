@@ -6,6 +6,7 @@ import eu.printingin3d.javascad.models.Abstract3dModel
 
 class InnerCorners(
     private val borderThickness: Double = 1.5,
+    private val borderHeight: Double = 4.0,
     private val verticalOffset: Double = 4.0,
     private val horizontalOffset: Double = 8.0,
     private val borderZOffset: Double = -2.0,
@@ -56,6 +57,6 @@ class InnerCorners(
     }
 
     private fun verticalCube(obj: Abstract3dModel): Abstract3dModel {
-        return KeyPlaceholder.placeCube(borderThickness).move(obj.move)
+        return KeyPlaceholder.placeCube(borderThickness, borderHeight).move(obj.move)
     }
 }
