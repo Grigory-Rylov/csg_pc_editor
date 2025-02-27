@@ -1,6 +1,7 @@
 package com.github.grishberg.cad3d.keyboard;
 
 import static com.github.grishberg.cad3d.keyboard.Utils.cube;
+import static com.github.grishberg.cad3d.keyboard.Utils.cylinder;
 
 import eu.printingin3d.javascad.models.Abstract3dModel;
 
@@ -40,9 +41,13 @@ public class KeyPlaceholder {
             ));
     }
 
+    public static Abstract3dModel placeHolderTop(double thickness) {
+        return cube(17.2, thickness, TOP_THICKNESS).
+            move(0.0, CORNER_OFFSET + thickness, CORNER_PLACEHOLDER_TOP_OFFSET);
+    }
+
     public static Abstract3dModel placeHolderTop() {
-        return cube(17.2, WALL_THICKNESS, TOP_THICKNESS).
-            move(0.0, CORNER_OFFSET + WALL_THICKNESS, CORNER_PLACEHOLDER_TOP_OFFSET);
+        return placeHolderTop(WALL_THICKNESS);
     }
 
     public static Abstract3dModel placeHolderLeft() {
@@ -109,7 +114,8 @@ public class KeyPlaceholder {
         );
     }
 
-    public static Abstract3dModel placeCube(){
-        return cube(WALL_THICKNESS, WALL_THICKNESS, TOP_THICKNESS);
+    public static Abstract3dModel placeCube(double thickness){
+        //return cube(WALL_THICKNESS, thickness, TOP_THICKNESS);
+        return cylinder(thickness, TOP_THICKNESS);
     }
 }
