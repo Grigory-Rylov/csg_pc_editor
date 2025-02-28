@@ -8,7 +8,7 @@ import eu.printingin3d.javascad.models.Cylinder;
 import eu.printingin3d.javascad.models.EdgeType;
 import eu.printingin3d.javascad.models.surfaces.BicubicInterpolator;
 import eu.printingin3d.javascad.models.surfaces.SmoothSurface;
-import eu.printingin3d.javascad.models.surfaces.bicubic.BicubicSurfaceSpline3;
+import eu.printingin3d.javascad.models.surfaces.bicubic.BicubicSurfaceSpline;
 
 public class WristRest {
 
@@ -47,7 +47,7 @@ public class WristRest {
         V3d[][] points = new BicubicInterpolator(controlPoints).generateSurface(10);
 
         Abstract3dModel surfaceBuilder = new SmoothSurface(
-            BicubicSurfaceSpline3.bSplineSurface(controlPoints, resolution),
+            BicubicSurfaceSpline.bSplineSurface(controlPoints, resolution),
             thickness,
             EdgeType.Vertical,
             EdgeType.Normal,

@@ -8,7 +8,7 @@ import java.util.List;
 /**
  * Работает, но с заломами
  */
-public class BicubicSurfaceSpline3 implements SurfaceStrategy {
+public class BicubicSurfaceSpline implements SurfaceStrategy {
 
     private static final int kernelRadius = 170 / 5;
     private final V3d[] inPoints;
@@ -19,7 +19,7 @@ public class BicubicSurfaceSpline3 implements SurfaceStrategy {
     private static final double[] gaussianKernel =
         CommonMath.calcGaussianKernel(kernelRadius, false);
 
-    public BicubicSurfaceSpline3(V3d[] controlPoints, int width, int height, int resolution) {
+    public BicubicSurfaceSpline(V3d[] controlPoints, int width, int height, int resolution) {
         this.inPoints = controlPoints;
         inWidth = width;
         inHeight = height;
@@ -344,7 +344,7 @@ public class BicubicSurfaceSpline3 implements SurfaceStrategy {
     }
 
 
-    public static BicubicSurfaceSpline3 bSplineSurface(V3d[][] points, int resolution) {
+    public static BicubicSurfaceSpline bSplineSurface(V3d[][] points, int resolution) {
         int h = points.length;
         int w = points[0].length;
         V3d[] result = new V3d[h * w];
@@ -354,6 +354,6 @@ public class BicubicSurfaceSpline3 implements SurfaceStrategy {
                 result[index++] = points[y][x];
             }
         }
-        return new BicubicSurfaceSpline3(result, w, h, resolution);
+        return new BicubicSurfaceSpline(result, w, h, resolution);
     }
 }
