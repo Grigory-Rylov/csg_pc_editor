@@ -16,6 +16,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * Работает некорректно
+ */
 public class SmoothSurfaceBuilder extends Atomic3dModel {
 
     private final V3d[][] points;
@@ -71,7 +74,7 @@ public class SmoothSurfaceBuilder extends Atomic3dModel {
                 addQuadAsTriangles(polygons, v1, v2, v3, v4, context.getColor());
             }
         }
-/*
+
         // Bottom faces
         for (int y = 0; y < height - 1; y++) {
             for (int x = 0; x < width - 1; x++) {
@@ -132,7 +135,7 @@ public class SmoothSurfaceBuilder extends Atomic3dModel {
             V3d v3 = bottomSurface[y][x];
             addQuadAsTriangles(polygons, v1, v2, v3, v4, context.getColor());
         }
-*/
+
         return new CSG(polygons);
     }
 

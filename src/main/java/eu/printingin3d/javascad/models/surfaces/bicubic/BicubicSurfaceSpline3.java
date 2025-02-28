@@ -5,6 +5,9 @@ import eu.printingin3d.javascad.models.SurfaceStrategy;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Работает, но с заломами
+ */
 public class BicubicSurfaceSpline3 implements SurfaceStrategy {
 
     private static final int kernelRadius = 170 / 5;
@@ -13,7 +16,8 @@ public class BicubicSurfaceSpline3 implements SurfaceStrategy {
     private final int inHeight;
     private final int resolution;
 
-    private static final double[] gaussianKernel = CommonMath.calcGaussianKernel(kernelRadius, false);
+    private static final double[] gaussianKernel =
+        CommonMath.calcGaussianKernel(kernelRadius, false);
 
     public BicubicSurfaceSpline3(V3d[] controlPoints, int width, int height, int resolution) {
         this.inPoints = controlPoints;
