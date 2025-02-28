@@ -5,7 +5,7 @@ import eu.printingin3d.javascad.models.Abstract3dModel;
 
 public class ThumbKeyPlace {
 
-    private static final int OFFSET_Z = 22;
+    private static final int OFFSET_Z = 40;
     private static final int OFFSET_Y = -40;
 
     public static Abstract3dModel thumbPlace(Abstract3dModel obj) {

@@ -120,7 +120,6 @@ public class SceneBuilderKeyboard implements SceneBuilder {
             }).start();
         });
 
-
         //   createAndAdd(keyPlaceHoles(), new Color(127, 5, 60), 15);
 
         //createAndAdd(cornerModel(), Color.ORANGE, 20);
@@ -193,7 +192,10 @@ public class SceneBuilderKeyboard implements SceneBuilder {
     private Abstract3dModel createConnections() {
         Abstract3dModel connections = new Connections(cfg, keyPlace).buildConnections();
         createAndAdd(connections, DEFAULT_COLOR);
-        createAndAdd(new ThumbConnections(cfg, keyPlace).buildThumbPlaceConnections(), DEFAULT_COLOR);
+        createAndAdd(
+            new ThumbConnections(cfg, keyPlace).buildThumbPlaceConnections(),
+            DEFAULT_COLOR
+        );
         return connections;
     }
 
@@ -204,15 +206,15 @@ public class SceneBuilderKeyboard implements SceneBuilder {
     }
 
     private Abstract3dModel createCase() {
-        Abstract3dModel borders = new Walls(cfg, keyPlace).createBorders(3, 6);
-        Abstract3dModel walls = new Walls(cfg, keyPlace).createWalls(1.5, 4).subtractModel(borders);
-
+        Abstract3dModel borders = new Walls(cfg, keyPlace).createBorders(1.9, 6);
+        Abstract3dModel walls = new Walls(cfg, keyPlace).createWalls(1.5, 4)
+            .subtractModel(borders)
+            .subtractModel(new Cube(300, 300, 50).move(0, 0, -25));
         createAndAdd(walls, Color.pink, 30);
-        return borders;
+        return walls;
     }
 
     private void createKeyMatrix() {
-
 
         //        if (matrix == null) {
         //            matrix = keyPlaceBottomWalls()
@@ -221,7 +223,6 @@ public class SceneBuilderKeyboard implements SceneBuilder {
         //        }
         //        createAndAdd(matrix, new Color(0, 127, 0));
         //
-
 
         //System.out.println(stl);
         //Log.d("<DBG>", "stl size = " + stl.length());
@@ -264,7 +265,8 @@ public class SceneBuilderKeyboard implements SceneBuilder {
     }
 
     private void showControlPoints(V3d[][] points) {
-        Color[] colors = {Color.RED, Color.BLUE, Color.GREEN, Color.CYAN, Color.MAGENTA, Color.ORANGE};
+        Color[] colors =
+            {Color.RED, Color.BLUE, Color.GREEN, Color.CYAN, Color.MAGENTA, Color.ORANGE};
 
         for (int rowIndex = 0; rowIndex < points.length; rowIndex++) {
             for (int colIndex = 0; colIndex < points[rowIndex].length; colIndex++) {

@@ -16,7 +16,11 @@ interface WallsBuilder {
         leftPlace: (Abstract3dModel) -> Abstract3dModel,
         rightPlace: (Abstract3dModel) -> Abstract3dModel,
     ): Abstract3dModel
-    fun frontWall(keyPlace:(Abstract3dModel) -> Abstract3dModel): Abstract3dModel
+    fun frontWall(
+        leftOffset: Double = 0.0,
+        rightOffset: Double = 0.0,
+        keyPlace:(Abstract3dModel) -> Abstract3dModel,
+        ): Abstract3dModel
     fun frontMidWall(
         leftPlace: (Abstract3dModel) -> Abstract3dModel,
         rightPlace: (Abstract3dModel) -> Abstract3dModel,

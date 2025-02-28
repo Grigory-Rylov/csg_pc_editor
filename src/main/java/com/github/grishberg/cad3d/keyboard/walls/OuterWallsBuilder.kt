@@ -1,7 +1,6 @@
 package com.github.grishberg.cad3d.keyboard.walls
 
 import com.github.grishberg.cad3d.keyboard.KeyPlaceholder
-import com.github.grishberg.cad3d.keyboard.ThumbKeyPlace
 import com.github.grishberg.cad3d.keyboard.Utils.hull
 import eu.printingin3d.javascad.coords.V3d
 import eu.printingin3d.javascad.models.Abstract3dModel
@@ -125,20 +124,26 @@ class OuterWallsBuilder(
         return Union(border, wall)
     }
 
-    override fun frontWall(keyPlace: (Abstract3dModel) -> Abstract3dModel): Abstract3dModel {
-        val left = keyPlace(KeyPlaceholder.placeHolderBottomLeft().move(0.0, -outerVerticalOffset, outerBorderZOffset))
-        val right = keyPlace(KeyPlaceholder.placeHolderBottomRight().move(0.0, -outerVerticalOffset, outerBorderZOffset))
+    override fun frontWall(
+        leftOffset: Double, rightOffset: Double,
+        keyPlace: (Abstract3dModel) -> Abstract3dModel,
+    ): Abstract3dModel {
+        val left =
+            keyPlace(KeyPlaceholder.placeHolderBottomLeft().move(leftOffset, -outerVerticalOffset, outerBorderZOffset))
+        val right = keyPlace(
+            KeyPlaceholder.placeHolderBottomRight().move(rightOffset, -outerVerticalOffset, outerBorderZOffset)
+        )
 
         val border = hull(
             left, right,
             verticalCube(
                 keyPlace(
-                    KeyPlaceholder.placeHolderBottomLeft().move(0.0, -verticalOffset, borderZOffset)
+                    KeyPlaceholder.placeHolderBottomLeft().move(leftOffset, -verticalOffset, borderZOffset)
                 )
             ),
             verticalCube(
                 keyPlace(
-                    KeyPlaceholder.placeHolderBottomRight().move(0.0, -verticalOffset, borderZOffset)
+                    KeyPlaceholder.placeHolderBottomRight().move(rightOffset, -verticalOffset, borderZOffset)
                 )
             ),
         )
@@ -152,8 +157,10 @@ class OuterWallsBuilder(
     override fun frontMidWall(
         leftPlace: (Abstract3dModel) -> Abstract3dModel, rightPlace: (Abstract3dModel) -> Abstract3dModel
     ): Abstract3dModel {
-        val left = leftPlace(KeyPlaceholder.placeHolderBottomRight().move(0.0, -outerVerticalOffset, outerBorderZOffset))
-        val right = rightPlace(KeyPlaceholder.placeHolderBottomLeft().move(0.0, -outerVerticalOffset, outerBorderZOffset))
+        val left =
+            leftPlace(KeyPlaceholder.placeHolderBottomRight().move(0.0, -outerVerticalOffset, outerBorderZOffset))
+        val right =
+            rightPlace(KeyPlaceholder.placeHolderBottomLeft().move(0.0, -outerVerticalOffset, outerBorderZOffset))
         val border = hull(
             left,
             right,
@@ -233,28 +240,25 @@ class OuterWallsBuilder(
         midPlace: (Abstract3dModel) -> Abstract3dModel,
         leftPlace: (Abstract3dModel) -> Abstract3dModel,
         rightPlace: (Abstract3dModel) -> Abstract3dModel
-    ) = hull(
-        verticalCube(
-            ThumbKeyPlace.placeM(
-                KeyPlaceholder.placeHolderBottomLeft().move(0.0, -verticalOffset, borderZOffset)
-            )
-        ),
-        verticalCube(
-            ThumbKeyPlace.placeM(
-                KeyPlaceholder.placeHolderBottomRight().move(0.0, -verticalOffset, borderZOffset)
-            )
-        ),
-        verticalCube(
-            ThumbKeyPlace.placeL(
-                KeyPlaceholder.placeHolderBottomRight().move(0.0, -verticalOffset, borderZOffset)
-            )
-        ),
-        verticalCube(
-            ThumbKeyPlace.placeR(
-                KeyPlaceholder.placeHolderBottomLeft().move(0.0, -verticalOffset, borderZOffset)
-            )
-        ),
-    )
+    ): Abstract3dModel {
+        val left =
+            leftPlace(KeyPlaceholder.placeHolderBottomRight().move(0.0, -outerVerticalOffset, outerBorderZOffset))
+        val right =
+            rightPlace(KeyPlaceholder.placeHolderBottomLeft().move(0.0, -outerVerticalOffset, outerBorderZOffset))
+
+        val border = hull(
+            left, right,
+            verticalCube(leftPlace(KeyPlaceholder.placeHolderBottomRight().move(0.0, -verticalOffset, borderZOffset))),
+            verticalCube(rightPlace(KeyPlaceholder.placeHolderBottomLeft().move(0.0, -verticalOffset, borderZOffset))),
+        )
+
+        val wall = hull(
+            left, right,
+            projection(left),
+            projection(right),
+        )
+        return Union(border, wall)
+    }
 
     private fun verticalCube(obj: Abstract3dModel): Abstract3dModel {
         return KeyPlaceholder.placeCube(borderThickness, borderHeight).move(obj.move)

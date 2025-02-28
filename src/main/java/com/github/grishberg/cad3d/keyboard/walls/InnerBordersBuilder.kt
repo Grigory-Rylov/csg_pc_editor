@@ -9,10 +9,11 @@ class InnerBordersBuilder(
     private val borderThickness: Double = 1.5,
     private val borderHeight: Double = 4.0,
     private val verticalOffset: Double = 4.0,
-    private val horizontalOffset: Double = 8.0,
+    private val leftOffset: Double = -8.0,
+    private val rightOffset: Double = 8.0,
     private val borderZOffset: Double = -2.0,
 
-) : WallsBuilder {
+    ) : WallsBuilder {
 
     override fun backWall(keyPlace: (Abstract3dModel) -> Abstract3dModel): Abstract3dModel {
         return Utils.hull(
@@ -57,12 +58,12 @@ class InnerBordersBuilder(
             keyPlace(KeyPlaceholder.placeHolderLeft()),
             verticalCube(
                 keyPlace(
-                    KeyPlaceholder.placeHolderTopLeft().move(-horizontalOffset, 0.0, borderZOffset)
+                    KeyPlaceholder.placeHolderTopLeft().move(leftOffset, 0.0, borderZOffset)
                 )
             ),
             verticalCube(
                 keyPlace(
-                    KeyPlaceholder.placeHolderBottomLeft().move(-horizontalOffset, 0.0, borderZOffset)
+                    KeyPlaceholder.placeHolderBottomLeft().move(leftOffset, 0.0, borderZOffset)
                 )
             ),
         )
@@ -76,18 +77,20 @@ class InnerBordersBuilder(
             rightPlace(KeyPlaceholder.placeHolderTopLeft()),
             verticalCube(
                 leftPlace(
-                    KeyPlaceholder.placeHolderBottomLeft().move(-horizontalOffset, 0.0, borderZOffset)
+                    KeyPlaceholder.placeHolderBottomLeft().move(leftOffset, 0.0, borderZOffset)
                 )
             ),
             verticalCube(
                 rightPlace(
-                    KeyPlaceholder.placeHolderTopLeft().move(-horizontalOffset, 0.0, borderZOffset)
+                    KeyPlaceholder.placeHolderTopLeft().move(leftOffset, 0.0, borderZOffset)
                 )
             ),
         )
     }
 
-    override fun frontWall(keyPlace: (Abstract3dModel) -> Abstract3dModel): Abstract3dModel {
+    override fun frontWall(
+        leftOffset: Double, rightOffset: Double, keyPlace: (Abstract3dModel) -> Abstract3dModel
+    ): Abstract3dModel {
         return Utils.hull(
             keyPlace(KeyPlaceholder.placeHolderBottom()),
             verticalCube(
@@ -127,10 +130,10 @@ class InnerBordersBuilder(
             keyPlace(KeyPlaceholder.placeHolderRight()),
             verticalCube(
                 keyPlace(
-                    KeyPlaceholder.placeHolderBottomRight().move(horizontalOffset, 0.0, borderZOffset)
+                    KeyPlaceholder.placeHolderBottomRight().move(rightOffset, 0.0, borderZOffset)
                 )
             ),
-            verticalCube(keyPlace(KeyPlaceholder.placeHolderTopRight().move(horizontalOffset, 0.0, borderZOffset))),
+            verticalCube(keyPlace(KeyPlaceholder.placeHolderTopRight().move(rightOffset, 0.0, borderZOffset))),
         )
     }
 
@@ -142,12 +145,12 @@ class InnerBordersBuilder(
             frontPlace(KeyPlaceholder.placeHolderTopRight()),
             verticalCube(
                 backPlace(
-                    KeyPlaceholder.placeHolderBottomRight().move(horizontalOffset, 0.0, borderZOffset)
+                    KeyPlaceholder.placeHolderBottomRight().move(rightOffset, 0.0, borderZOffset)
                 )
             ),
             verticalCube(
                 frontPlace(
-                    KeyPlaceholder.placeHolderTopRight().move(horizontalOffset, 0.0, borderZOffset)
+                    KeyPlaceholder.placeHolderTopRight().move(rightOffset, 0.0, borderZOffset)
                 )
             )
         )

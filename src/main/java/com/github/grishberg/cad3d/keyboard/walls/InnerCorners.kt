@@ -8,14 +8,15 @@ class InnerCorners(
     private val borderThickness: Double = 1.5,
     private val borderHeight: Double = 4.0,
     private val verticalOffset: Double = 4.0,
-    private val horizontalOffset: Double = 8.0,
+    private val leftOffset: Double = -8.0,
+    private val rightOffset: Double = 8.0,
     private val borderZOffset: Double = -2.0,
 ) : CornerWallBuilder {
 
     override fun backLeft(keyPlace: (Abstract3dModel) -> Abstract3dModel): Abstract3dModel {
         return Utils.hull(
             verticalCube(keyPlace(KeyPlaceholder.placeHolderTopLeft().move(0.0, verticalOffset, borderZOffset))),
-            verticalCube(keyPlace(KeyPlaceholder.placeHolderTopLeft().move(-horizontalOffset, 0.0, borderZOffset))),
+            verticalCube(keyPlace(KeyPlaceholder.placeHolderTopLeft().move(leftOffset, 0.0, borderZOffset))),
             keyPlace(KeyPlaceholder.placeHolderTopLeft())
         )
     }
@@ -23,7 +24,7 @@ class InnerCorners(
     override fun backRight(keyPlace: (Abstract3dModel) -> Abstract3dModel): Abstract3dModel {
         return Utils.hull(
             verticalCube(keyPlace(KeyPlaceholder.placeHolderTopRight().move(0.0, verticalOffset, borderZOffset))),
-            verticalCube(keyPlace(KeyPlaceholder.placeHolderTopRight().move(horizontalOffset, 0.0, borderZOffset))),
+            verticalCube(keyPlace(KeyPlaceholder.placeHolderTopRight().move(rightOffset, 0.0, borderZOffset))),
             keyPlace(KeyPlaceholder.placeHolderTopRight())
         )
     }
@@ -36,7 +37,7 @@ class InnerCorners(
                 )
             ), verticalCube(
                 keyPlace(
-                    KeyPlaceholder.placeHolderBottomLeft().move(-horizontalOffset, 0.0, borderZOffset)
+                    KeyPlaceholder.placeHolderBottomLeft().move(leftOffset, 0.0, borderZOffset)
                 )
             ), keyPlace(KeyPlaceholder.placeHolderBottomLeft())
         )
@@ -50,7 +51,7 @@ class InnerCorners(
                 )
             ), verticalCube(
                 keyPlace(
-                    KeyPlaceholder.placeHolderBottomRight().move(horizontalOffset, 0.0, borderZOffset)
+                    KeyPlaceholder.placeHolderBottomRight().move(rightOffset, 0.0, borderZOffset)
                 )
             ), keyPlace(KeyPlaceholder.placeHolderBottomRight())
         )
