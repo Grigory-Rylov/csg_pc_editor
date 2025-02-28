@@ -5,6 +5,7 @@ import static com.github.grishberg.cad3d.keyboard.Utils.v3d;
 import eu.printingin3d.javascad.coords.V3d;
 import eu.printingin3d.javascad.models.Abstract3dModel;
 import eu.printingin3d.javascad.models.Cylinder;
+import eu.printingin3d.javascad.models.EdgeType;
 import eu.printingin3d.javascad.models.surfaces.BicubicInterpolator;
 import eu.printingin3d.javascad.models.surfaces.SmoothSurface;
 import eu.printingin3d.javascad.models.surfaces.bicubic.BicubicSurfaceSpline3;
@@ -43,11 +44,15 @@ public class WristRest {
 
     public static Abstract3dModel build() {
         //V3d[][] points = S6x3Linear.create(controlPoints, 5).buildSurface();
-        V3d[][] points = new BicubicInterpolator(controlPoints).generateSurface(40);
+        V3d[][] points = new BicubicInterpolator(controlPoints).generateSurface(10);
 
         Abstract3dModel surfaceBuilder = new SmoothSurface(
             BicubicSurfaceSpline3.bSplineSurface(controlPoints, resolution),
-            thickness
+            thickness,
+            EdgeType.Vertical,
+            EdgeType.Normal,
+            EdgeType.Normal,
+            EdgeType.Vertical
         );
         //       List<Abstract3dModel> models = new ArrayList<>();
         //       for(V3d[] w: points) {
