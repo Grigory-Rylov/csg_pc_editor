@@ -210,7 +210,7 @@ public class SceneBuilderKeyboard implements SceneBuilder {
         Abstract3dModel walls = new Walls(cfg, keyPlace).createWalls(1.5, 4)
             .subtractModel(borders)
             .subtractModel(new Cube(300, 300, 50).move(0, 0, -25));
-        createAndAdd(walls, Color.pink, 30);
+        createAndAdd(walls, Color.gray, 30);
         return walls;
     }
 
