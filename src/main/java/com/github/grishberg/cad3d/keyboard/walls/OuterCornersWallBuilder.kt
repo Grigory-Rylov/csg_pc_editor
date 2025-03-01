@@ -133,11 +133,11 @@ class OuterCornersWallBuilder(
         )
 
         val innerLeft = matrixInnerPlace(
-            KeyPlaceholder.placeHolderBottomLeft().move(0.0, -verticalOffset, outerBorderZOffset)
+            KeyPlaceholder.placeHolderBottomLeft().move(0.0, -verticalOffset, borderZOffset)
         )
 
         val innerRight = matrixInnerPlace(
-            KeyPlaceholder.placeHolderBottomRight().move(0.0, -outerVerticalOffset, outerBorderZOffset)
+            KeyPlaceholder.placeHolderBottomRight().move(0.0, -verticalOffset, borderZOffset)
         )
 
         val outerLeft = matrixOuterPlace(
@@ -147,11 +147,11 @@ class OuterCornersWallBuilder(
         val wall1 = hull(
             verticalCube(thumbVertex),
             verticalCube(innerLeft),
-            verticalCube(innerRight),
+            verticalCube(outerLeft),
         )
 
-        val wall2 = hull(
-            verticalCube(thumbVertex),
+        val bottomBorder = hull(
+            verticalCube(innerLeft),
             verticalCube(innerRight),
             verticalCube(outerLeft),
         )
@@ -167,8 +167,8 @@ class OuterCornersWallBuilder(
 
         return Union(
             wall1,
-            wall2,
-            //wall3,
+            bottomBorder,
+
             topBorder,
         )
     }
