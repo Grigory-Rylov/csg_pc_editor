@@ -15,7 +15,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class KeyPlaceHoles {
-	private static final int OFFSET_Z = 15;
+
+    private static final int OFFSET_Z = 15;
     private static final int HOLE_SIZE = 14;
     private static final double HOLE_RADIUS = 3;
     private final KeyboardConfig cfg;
@@ -41,7 +42,7 @@ public class KeyPlaceHoles {
                 models.add(hull(
                     keyPlace.place(column, row, singleHole(), offset),
                     keyPlace.place(column, row + 1, singleHole(), offset)
-                )); 
+                ));
 
             }
         }
@@ -64,7 +65,7 @@ public class KeyPlaceHoles {
                     ),
                     keyPlace.place(
                         column,
-                        row ,
+                        row,
                         cornerModel().move(OFFSET, -OFFSET, 0),
                         edgesOffset
                     ),
@@ -78,38 +79,37 @@ public class KeyPlaceHoles {
                 ));
             }
         }
-		
-		
-		// inner
-		for (int column = 0; column < cfg.getColumnsCount() - 1; column++) {
+
+        // inner
+        for (int column = 0; column < cfg.getColumnsCount() - 1; column++) {
             for (int row = 0; row < cfg.getRowsCount() - 1; row++) {
                 models.add(hull(
-							   keyPlace.place(
-								   column,
-								   row,
-								   cornerModel().move(OFFSET, -OFFSET, 0),
-								   edgesOffset
-							   ),
-							   keyPlace.place(
-								   column + 1,
-								   row,
-								   cornerModel().move(-OFFSET, -OFFSET, 0),
-								   edgesOffset
-							   ),
-							   keyPlace.place(
-								   column,
-								   row + 1,
-								   cornerModel().move(OFFSET, OFFSET, 0),
-								   edgesOffset
-							   ),
-							   keyPlace.place(
-								   column + 1,
-								   row + 1,
-								   cornerModel().move(-OFFSET, OFFSET, 0),
-								   edgesOffset
-							   )
+                    keyPlace.place(
+                        column,
+                        row,
+                        cornerModel().move(OFFSET, -OFFSET, 0),
+                        edgesOffset
+                    ),
+                    keyPlace.place(
+                        column + 1,
+                        row,
+                        cornerModel().move(-OFFSET, -OFFSET, 0),
+                        edgesOffset
+                    ),
+                    keyPlace.place(
+                        column,
+                        row + 1,
+                        cornerModel().move(OFFSET, OFFSET, 0),
+                        edgesOffset
+                    ),
+                    keyPlace.place(
+                        column + 1,
+                        row + 1,
+                        cornerModel().move(-OFFSET, OFFSET, 0),
+                        edgesOffset
+                    )
 
-						   ));
+                ));
             }
 
         }
@@ -126,8 +126,8 @@ public class KeyPlaceHoles {
 
     private static Abstract3dModel cornerModel() {
         return hull(
-		cylinder(HOLE_RADIUS, 1).move(0,0,15),
-		sphere(HOLE_RADIUS).move(0,0,-4)
-		);
+            cylinder(HOLE_RADIUS, 1).move(0, 0, 15),
+            sphere(HOLE_RADIUS).move(0, 0, -4)
+        );
     }
 }

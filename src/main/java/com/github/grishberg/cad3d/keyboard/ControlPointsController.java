@@ -14,7 +14,7 @@ public class ControlPointsController {
 
     private List<OnChangeListener> listeners = new ArrayList<>();
 
-    public ControlPointsController(KeyboardConfig cfg, KeyPlace keyPlace) {
+    public ControlPointsController(KeyboardConfig cfg) {
 
         double topOffset = 10;
         double offset = 12;

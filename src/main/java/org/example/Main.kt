@@ -37,9 +37,11 @@ import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.Properties
+import javax.swing.JButton
 import javax.swing.JCheckBox
 import javax.swing.JFrame
 import javax.swing.JPanel
+import org.example.dialog.ConfigEditor
 
 class Main(title: String?) : JFrame(title), GLEventListener {
 
@@ -57,7 +59,7 @@ class Main(title: String?) : JFrame(title), GLEventListener {
     var lightPosition = floatArrayOf(0.0f, 1f, 0.5f, 1.0f)
     private val rowsCount = 3
     private val colsCount = 6
-    private val cfg = KeyboardConfig(
+    private var cfg = KeyboardConfig(
         60,  // fn
         14.0,  // plateZOffset
         20.1,  // rowCurvature
@@ -92,8 +94,7 @@ class Main(title: String?) : JFrame(title), GLEventListener {
     private var translateX = 0.0f // Смещение по X
     private var translateY = 0.0f // Смещение по Y
     private var translateZ = -300.0f // Смещение по Y
-    private val keyPlace = KeyPlace(cfg)
-    private val pointsController = ControlPointsController(cfg, keyPlace)
+    private val pointsController = ControlPointsController(cfg)
     private var glCanvas: GLCanvas? = null
     private var controlPanel: JPanel? = null
     private val sceneBuilder: SceneBuilder
@@ -102,7 +103,7 @@ class Main(title: String?) : JFrame(title), GLEventListener {
 
     init {
         loadSettings()
-        sceneBuilder = SceneBuilderKeyboard(cfg, keyPlace, pointsController)
+        sceneBuilder = SceneBuilderKeyboard(cfg, pointsController)
         sceneBuilder.setListener { buffers: List<VertexHolder>? ->
             val timeDelta = System.currentTimeMillis() - requestRenderingTime
             println("Rendering time = $timeDelta ms")
@@ -146,6 +147,13 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         controlPanel!!.add(matrixButton)
         controlPanel!!.add(plateButton)
         controlPanel!!.add(wristRestButton)
+
+        val configButton = JButton("Конфигурации")
+        configButton.addActionListener {
+            showConfigDialog()
+        }
+        controlPanel?.add(configButton)
+
         val glProfile = GLProfile.get(GLProfile.GL2)
         val glCapabilities = GLCapabilities(glProfile)
         glCapabilities.depthBits = 24
@@ -177,8 +185,18 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         isVisible = true
     }
 
+    private fun showConfigDialog() {
+        // Создание и отображение редактора
+        val configDialog = ConfigEditor(cfg) {
+            cfg = it
+            rebuildConfigAndRequestRendering()
+        }
+        configDialog.isVisible = true
+    }
+
     private fun rebuildConfigAndRequestRendering() {
         cfg.assemblySettings = makeAssemblySettings()
+        sceneBuilder.setConfig(cfg)
         requestRenderingTime = System.currentTimeMillis()
         sceneBuilder.requestBuffers()
     }

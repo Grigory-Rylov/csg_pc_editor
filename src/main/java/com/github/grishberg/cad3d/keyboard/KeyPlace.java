@@ -24,7 +24,7 @@ public class KeyPlace {
         this.cfg = cfg;
         capTopHeight = cfg.getPlateThickness() + cfg.getSaProfileKeyHeight();
         mountWidth = cfg.getKeyswitchWidth() + 3.0;
-        mountHeight = cfg.getKeyswitchHeight() + 3.0;
+        mountHeight = cfg.getKeyswitchWidth() + 3.0;
 
         columnRadius =
             ((mountWidth + cfg.getExtraHeight()) / 2.0) /
@@ -52,7 +52,7 @@ public class KeyPlace {
             .move(keyOffset.x, keyOffset.y, keyOffset.z)
             .rotate(Angles3d.zOnly(cfg.getZAngleProvider().getZAngle(column)))
             .rotate(Angles3d.yOnly(cfg.getTentingAngle()))
-            .rotate(Angles3d.yOnly(cfg.getTentingAngle()))
+            .rotate(Angles3d.yOnly(cfg.getTentingAngle())) // ?????
             .move(0, 0, cfg.getPlateZOffset());
     }
 
@@ -82,7 +82,7 @@ public class KeyPlace {
             .move(keyOffset.x, keyOffset.y, keyOffset.z)
             .rotate(Angles3d.zOnly(cfg.getZAngleProvider().getZAngle(column)))
             .rotate(Angles3d.yOnly(cfg.getTentingAngle()))
-            .rotate(Angles3d.yOnly(cfg.getTentingAngle()))
+            .rotate(Angles3d.yOnly(cfg.getTentingAngle())) // ???
             .move(0, 0, cfg.getPlateZOffset())
             .getMove();
     }

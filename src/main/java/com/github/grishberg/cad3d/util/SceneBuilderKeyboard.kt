@@ -33,10 +33,10 @@ import java.util.concurrent.Executors
 import javax.swing.SwingUtilities
 
 class SceneBuilderKeyboard(
-    private val cfg: KeyboardConfig,
-    private val keyPlace: KeyPlace,
-    private val pointsController: ControlPointsController
+    private val initialConfig: KeyboardConfig, private val pointsController: ControlPointsController
 ) : SceneBuilder {
+
+    @Volatile private var cfg: KeyboardConfig = initialConfig
 
     /**
      * How many bytes per float.
@@ -50,6 +50,10 @@ class SceneBuilderKeyboard(
     init {
         buffers = ArrayList()
         pointsController.addListener { row: Int, col: Int -> rebuildCaseAndInvalidate() }
+    }
+
+    override fun setConfig(cfg: KeyboardConfig) {
+        this.cfg = cfg
     }
 
     override fun setListener(listener: ReadyListener) {
@@ -69,19 +73,21 @@ class SceneBuilderKeyboard(
 
     private fun create3dModels() {
         executor.execute {
+            val keyPlace = KeyPlace(cfg)
+
             buffers.clear()
             val settings = cfg.assemblySettings
 
             if (settings.settingsShowMatrix) {
-                val connections = createConnections()
-                val borders = createBorders()
-                val matrix = connections.addModel(borders).addModel(createPlaceholders())
+                val connections = createConnections(keyPlace)
+                val borders = createBorders(keyPlace)
+                val matrix = connections.addModel(borders).addModel(createPlaceholders(keyPlace))
 
                 saveModel("matrix.stl", matrix)
             }
             if (settings.settingsShowCaps) {
                 createThumbKeyPlace()
-                createKeycaps()
+                createKeycaps(keyPlace)
             }
 
             if (settings.settingsShowPlate) {
@@ -89,7 +95,7 @@ class SceneBuilderKeyboard(
             }
 
             if (settings.settingsShowCase) {
-                val caseWalls = createCase()
+                val caseWalls = createCase(keyPlace)
                 saveModel("case.stl", caseWalls)
             }
 
@@ -102,10 +108,6 @@ class SceneBuilderKeyboard(
                 }
             }
         }
-
-        //   createAndAdd(keyPlaceHoles(), new Color(127, 5, 60), 15);
-
-        //createAndAdd(cornerModel(), Color.ORANGE, 20);
     }
 
     private fun saveModel(name: String, model: Abstract3dModel, fn: Int = 20) {
@@ -127,11 +129,11 @@ class SceneBuilderKeyboard(
         createAndAdd(ThumbKeyPlace.thumbPlace(keycap), Color.BLUE)
     }
 
-    private fun keyHoles(): Abstract3dModel {
+    private fun keyHoles(keyPlace: KeyPlace): Abstract3dModel {
         return KeySwitchHoles(cfg, keyPlace).build()
     }
 
-    private fun keyPlaceHoles(offset: Double): Abstract3dModel {
+    private fun keyPlaceHoles(keyPlace: KeyPlace, offset: Double): Abstract3dModel {
         return KeyPlaceHoles(cfg, keyPlace).build(offset)
     }
 
@@ -146,11 +148,11 @@ class SceneBuilderKeyboard(
         )
     }
 
-    private fun keyPlaceBottomWalls(): Abstract3dModel {
+    private fun keyPlaceBottomWalls(keyPlace: KeyPlace): Abstract3dModel {
         return KeyHolderBottomWalls(cfg, keyPlace).build()
     }
 
-    private fun createPlaceholders(): Abstract3dModel {
+    private fun createPlaceholders(keyPlace: KeyPlace): Abstract3dModel {
         val models = mutableListOf<Abstract3dModel>()
         for (column in 0 until cfg.columnsCount) {
             for (row in 0 until cfg.rowsCount) {
@@ -165,7 +167,7 @@ class SceneBuilderKeyboard(
         return allPlaceholders
     }
 
-    private fun createKeycaps() {
+    private fun createKeycaps(keyPlace: KeyPlace) {
         for (column in 0 until cfg.columnsCount) {
             for (row in 0 until cfg.rowsCount) {
                 val obj = Cube(
@@ -176,7 +178,7 @@ class SceneBuilderKeyboard(
         }
     }
 
-    private fun createConnections(): Abstract3dModel {
+    private fun createConnections(keyPlace: KeyPlace): Abstract3dModel {
         val connections = Connections(cfg, keyPlace).buildConnections()
         createAndAdd(connections, DEFAULT_COLOR)
         val thumbPlaceConnections = ThumbConnections(cfg, keyPlace).buildThumbPlaceConnections()
@@ -186,13 +188,13 @@ class SceneBuilderKeyboard(
         return connections.addModel(thumbPlaceConnections)
     }
 
-    private fun createBorders(): Abstract3dModel {
+    private fun createBorders(keyPlace: KeyPlace): Abstract3dModel {
         val borders = Walls(cfg, keyPlace).createBorders(1.5, 4.0)
         createAndAdd(borders, Color.lightGray, 30)
         return borders
     }
 
-    private fun createCase(): Abstract3dModel {
+    private fun createCase(keyPlace: KeyPlace): Abstract3dModel {
         val borders = Walls(cfg, keyPlace).createBorders(1.9, 6.0)
         val walls = Walls(cfg, keyPlace).createWalls(1.5, 4.0).subtractModel(borders)
             .subtractModel(Cube(300.0, 300.0, 50.0).move(0.0, 0.0, -25.0))
