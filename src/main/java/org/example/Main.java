@@ -120,7 +120,7 @@ public class Main implements GLEventListener, MouseListener, MouseMotionListener
             //TODO invalidate
         });
         builder.requestBuffers();
-        setup("test");
+        setup("Ergonomic keyboard generator by Grishberg");
     }
 
     public void setup(String title) {
@@ -187,7 +187,9 @@ public class Main implements GLEventListener, MouseListener, MouseMotionListener
 
     // Метод загрузки настроек
     private void loadSettings() {
-        if (!Files.exists(Paths.get(SETTINGS_FILE))) return;
+        if (!Files.exists(Paths.get(SETTINGS_FILE))) {
+            return;
+        }
 
         Properties props = new Properties();
         try (InputStream input = Files.newInputStream(Paths.get(SETTINGS_FILE))) {
