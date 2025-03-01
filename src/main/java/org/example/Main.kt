@@ -7,6 +7,7 @@ import com.github.grishberg.cad3d.keyboard.cfg.KeyOffsetProvider
 import com.github.grishberg.cad3d.keyboard.cfg.KeyZAngleProvider
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
 import com.github.grishberg.cad3d.keyboard.cfg.PowerSwitcherType
+import com.github.grishberg.cad3d.keyboard.cfg.ThumbClusterSettings
 import com.github.grishberg.cad3d.util.SceneBuilder
 import com.github.grishberg.cad3d.util.SceneBuilderKeyboard
 import com.jogamp.opengl.GL2
@@ -83,6 +84,7 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         false,  // magneticWristRestHolder
         6.0, //borders offset,
         makeAssemblySettings(),
+        ThumbClusterSettings(),
     )
     private val vertexHolderList: MutableList<VertexHolder> = ArrayList()
     private val glu = GLU()

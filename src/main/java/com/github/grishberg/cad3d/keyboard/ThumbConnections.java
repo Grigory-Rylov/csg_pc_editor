@@ -5,34 +5,31 @@ import static com.github.grishberg.cad3d.keyboard.KeyPlaceholder.placeHolderRigh
 import static com.github.grishberg.cad3d.keyboard.Utils.hull;
 import static com.github.grishberg.cad3d.keyboard.Utils.union;
 
-import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig;
 import eu.printingin3d.javascad.models.Abstract3dModel;
 import java.util.ArrayList;
 
 public class ThumbConnections {
 
-    private KeyboardConfig cfg;
-    private final KeyPlace keyPlace;
+    private final ThumbKeyPlace thumbKeyPlace;
 
     private final ArrayList<Abstract3dModel> models = new ArrayList<>();
 
 
-    public ThumbConnections(KeyboardConfig cfg, KeyPlace keyPlace) {
-        this.cfg = cfg;
-        this.keyPlace = keyPlace;
+    public ThumbConnections(ThumbKeyPlace thumbKeyPlace) {
+        this.thumbKeyPlace = thumbKeyPlace;
     }
 
     public Abstract3dModel buildThumbPlaceConnections() {
         models.clear();
 
         addHull(
-            ThumbKeyPlace.placeR(placeHolderLeft()),
-            ThumbKeyPlace.placeM(placeHolderRight())
+            thumbKeyPlace.placeR(placeHolderLeft()),
+            thumbKeyPlace.placeM(placeHolderRight())
         );
 
         addHull(
-            ThumbKeyPlace.placeM(placeHolderLeft()),
-            ThumbKeyPlace.placeL(placeHolderRight())
+            thumbKeyPlace.placeM(placeHolderLeft()),
+            thumbKeyPlace.placeL(placeHolderRight())
         );
 
         return union(models);

@@ -33,7 +33,8 @@ import java.util.concurrent.Executors
 import javax.swing.SwingUtilities
 
 class SceneBuilderKeyboard(
-    private val initialConfig: KeyboardConfig, private val pointsController: ControlPointsController
+    private val initialConfig: KeyboardConfig,
+    private val pointsController: ControlPointsController,
 ) : SceneBuilder {
 
     @Volatile private var cfg: KeyboardConfig = initialConfig
@@ -74,19 +75,20 @@ class SceneBuilderKeyboard(
     private fun create3dModels() {
         executor.execute {
             val keyPlace = KeyPlace(cfg)
+            val thumbKeyPlace = ThumbKeyPlace(cfg.thumbClusterSettings)
 
             buffers.clear()
             val settings = cfg.assemblySettings
 
             if (settings.settingsShowMatrix) {
-                val connections = createConnections(keyPlace)
-                val borders = createBorders(keyPlace)
-                val matrix = connections.addModel(borders).addModel(createPlaceholders(keyPlace))
+                val connections = createConnections(keyPlace, thumbKeyPlace)
+                val borders = createBorders(keyPlace, thumbKeyPlace)
+                val matrix = connections.addModel(borders).addModel(createPlaceholders(keyPlace, thumbKeyPlace))
 
                 saveModel("matrix.stl", matrix)
             }
             if (settings.settingsShowCaps) {
-                createThumbKeyPlace()
+                createThumbKeyPlace(thumbKeyPlace)
                 createKeycaps(keyPlace)
             }
 
@@ -95,7 +97,7 @@ class SceneBuilderKeyboard(
             }
 
             if (settings.settingsShowCase) {
-                val caseWalls = createCase(keyPlace)
+                val caseWalls = createCase(keyPlace, thumbKeyPlace)
                 saveModel("case.stl", caseWalls)
             }
 
@@ -122,11 +124,11 @@ class SceneBuilderKeyboard(
         }.start()
     }
 
-    private fun createThumbKeyPlace() {
+    private fun createThumbKeyPlace(thumbKeyPlace: ThumbKeyPlace) {
         val keycap = Cube(
             cfg.keyswitchWidth, cfg.keyswitchHeight, cfg.saProfileKeyHeight
         ).move(0.0, 0.0, 10.0)
-        createAndAdd(ThumbKeyPlace.thumbPlace(keycap), Color.BLUE)
+        createAndAdd(thumbKeyPlace.thumbPlace(keycap), Color.BLUE)
     }
 
     private fun keyHoles(keyPlace: KeyPlace): Abstract3dModel {
@@ -152,7 +154,7 @@ class SceneBuilderKeyboard(
         return KeyHolderBottomWalls(cfg, keyPlace).build()
     }
 
-    private fun createPlaceholders(keyPlace: KeyPlace): Abstract3dModel {
+    private fun createPlaceholders(keyPlace: KeyPlace, thumbKeyPlace: ThumbKeyPlace): Abstract3dModel {
         val models = mutableListOf<Abstract3dModel>()
         for (column in 0 until cfg.columnsCount) {
             for (row in 0 until cfg.rowsCount) {
@@ -160,7 +162,7 @@ class SceneBuilderKeyboard(
             }
         }
 
-        models.add(ThumbKeyPlace.thumbPlace(KeyPlaceholder.placeHolder()))
+        models.add(thumbKeyPlace.thumbPlace(KeyPlaceholder.placeHolder()))
 
         val allPlaceholders = Union(models)
         createAndAdd(allPlaceholders, Color(30, 127, 40))
@@ -178,25 +180,25 @@ class SceneBuilderKeyboard(
         }
     }
 
-    private fun createConnections(keyPlace: KeyPlace): Abstract3dModel {
+    private fun createConnections(keyPlace: KeyPlace, thumbKeyPlace: ThumbKeyPlace): Abstract3dModel {
         val connections = Connections(cfg, keyPlace).buildConnections()
         createAndAdd(connections, DEFAULT_COLOR)
-        val thumbPlaceConnections = ThumbConnections(cfg, keyPlace).buildThumbPlaceConnections()
+        val thumbPlaceConnections = ThumbConnections(thumbKeyPlace).buildThumbPlaceConnections()
         createAndAdd(
             thumbPlaceConnections, DEFAULT_COLOR
         )
         return connections.addModel(thumbPlaceConnections)
     }
 
-    private fun createBorders(keyPlace: KeyPlace): Abstract3dModel {
-        val borders = Walls(cfg, keyPlace).createBorders(1.5, 4.0)
+    private fun createBorders(keyPlace: KeyPlace, thumbKeyPlace: ThumbKeyPlace): Abstract3dModel {
+        val borders = Walls(cfg, keyPlace, thumbKeyPlace).createBorders(1.5, 4.0)
         createAndAdd(borders, Color.lightGray, 30)
         return borders
     }
 
-    private fun createCase(keyPlace: KeyPlace): Abstract3dModel {
-        val borders = Walls(cfg, keyPlace).createBorders(1.9, 6.0)
-        val walls = Walls(cfg, keyPlace).createWalls(1.5, 4.0).subtractModel(borders)
+    private fun createCase(keyPlace: KeyPlace, thumbKeyPlace: ThumbKeyPlace): Abstract3dModel {
+        val borders = Walls(cfg, keyPlace, thumbKeyPlace).createBorders(1.9, 6.0)
+        val walls = Walls(cfg, keyPlace, thumbKeyPlace).createWalls(1.5, 4.0).subtractModel(borders)
             .subtractModel(Cube(300.0, 300.0, 50.0).move(0.0, 0.0, -25.0))
         createAndAdd(walls, Color.gray, 30)
         return walls

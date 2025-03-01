@@ -12,7 +12,11 @@ import eu.printingin3d.javascad.models.EdgeType
 import eu.printingin3d.javascad.models.surfaces.SmoothSurface
 import eu.printingin3d.javascad.models.surfaces.bicubic.BicubicSurfaceSpline
 
-class Walls(private val cfg: KeyboardConfig, private val keyPlace: KeyPlace) {
+class Walls(
+    private val cfg: KeyboardConfig,
+    private val keyPlace: KeyPlace,
+    private val thumbKeyPlace: ThumbKeyPlace,
+) {
 
     private val models = ArrayList<Abstract3dModel>()
     var bordersOffset = cfg.bordersOffset
@@ -27,12 +31,12 @@ class Walls(private val cfg: KeyboardConfig, private val keyPlace: KeyPlace) {
 
         //columns
         thumbBorders(
-            InnerBordersBuilder(rightOffset = 4.0, borderThickness = borderThickness, borderHeight = borderHeight),
+            InnerBordersBuilder(thumbKeyPlace = thumbKeyPlace, rightOffset = 4.0, borderThickness = borderThickness, borderHeight = borderHeight),
             InnerCorners(rightOffset = 4.0, borderThickness = borderThickness, borderHeight = borderHeight)
         )
 
         matrixBorders(
-            InnerBordersBuilder(borderThickness = borderThickness, borderHeight = borderHeight),
+            InnerBordersBuilder(thumbKeyPlace = thumbKeyPlace, borderThickness = borderThickness, borderHeight = borderHeight),
             InnerCorners(borderThickness = borderThickness, borderHeight = borderHeight)
         )
 
@@ -263,52 +267,52 @@ class Walls(private val cfg: KeyboardConfig, private val keyPlace: KeyPlace) {
     ) {
         //corners
         //left back
-        models.add(cornerWallBuilder.backLeft { obj -> ThumbKeyPlace.placeL(obj) })
+        models.add(cornerWallBuilder.backLeft { obj -> thumbKeyPlace.placeL(obj) })
         //left front
-        models.add(cornerWallBuilder.frontLeft { obj -> ThumbKeyPlace.placeL(obj) })
+        models.add(cornerWallBuilder.frontLeft { obj -> thumbKeyPlace.placeL(obj) })
         // right back
-        models.add(cornerWallBuilder.backRight { obj -> ThumbKeyPlace.placeR(obj) })
+        models.add(cornerWallBuilder.backRight { obj -> thumbKeyPlace.placeR(obj) })
         // right front
-        models.add(cornerWallBuilder.frontRight { obj -> ThumbKeyPlace.placeR(obj) })
+        models.add(cornerWallBuilder.frontRight { obj -> thumbKeyPlace.placeR(obj) })
 
         //models.add(wallsBuilder.backWall { o -> ThumbKeyPlace.placeR(o) })
         //models.add(wallsBuilder.backWall { o -> ThumbKeyPlace.placeM(o) })
-        models.add(wallsBuilder.backWall { o -> ThumbKeyPlace.placeL(o) })
+        models.add(wallsBuilder.backWall { o -> thumbKeyPlace.placeL(o) })
 
-        models.add(wallsBuilder.frontWall { o -> ThumbKeyPlace.placeR(o) })
-        models.add(wallsBuilder.frontWall { o -> ThumbKeyPlace.placeM(o) })
-        models.add(wallsBuilder.frontWall { o -> ThumbKeyPlace.placeL(o) })
+        models.add(wallsBuilder.frontWall { o -> thumbKeyPlace.placeR(o) })
+        models.add(wallsBuilder.frontWall { o -> thumbKeyPlace.placeM(o) })
+        models.add(wallsBuilder.frontWall { o -> thumbKeyPlace.placeL(o) })
 
-        models.add(wallsBuilder.leftWall { o -> ThumbKeyPlace.placeL(o) })
-        models.add(wallsBuilder.rightWall { o -> ThumbKeyPlace.placeR(o) })
+        models.add(wallsBuilder.leftWall { o -> thumbKeyPlace.placeL(o) })
+        models.add(wallsBuilder.rightWall { o -> thumbKeyPlace.placeR(o) })
 
         if (!isWallMode) {
             models.add(
                 wallsBuilder.frontMidWall(
-                    leftPlace = { o -> ThumbKeyPlace.placeM(o) },
-                    rightPlace = { o -> ThumbKeyPlace.placeR(o) },
+                    leftPlace = { o -> thumbKeyPlace.placeM(o) },
+                    rightPlace = { o -> thumbKeyPlace.placeR(o) },
                 )
             )
             models.add(
                 wallsBuilder.frontMidWall(
-                    leftPlace = { o -> ThumbKeyPlace.placeL(o) },
-                    rightPlace = { o -> ThumbKeyPlace.placeM(o) },
+                    leftPlace = { o -> thumbKeyPlace.placeL(o) },
+                    rightPlace = { o -> thumbKeyPlace.placeM(o) },
                 )
             )
 
             models.add(
                 wallsBuilder.backMidWall(
-                    leftPlace = { o -> ThumbKeyPlace.placeL(o) },
-                    rightPlace = { o -> ThumbKeyPlace.placeM(o) },
+                    leftPlace = { o -> thumbKeyPlace.placeL(o) },
+                    rightPlace = { o -> thumbKeyPlace.placeM(o) },
                 )
             )
         }
 
         models.add(
             wallsBuilder.midEdge(
-                midPlace = { o -> ThumbKeyPlace.placeM(o) },
-                leftPlace = { o -> ThumbKeyPlace.placeL(o) },
-                rightPlace = { o -> ThumbKeyPlace.placeR(o) },
+                midPlace = { o -> thumbKeyPlace.placeM(o) },
+                leftPlace = { o -> thumbKeyPlace.placeL(o) },
+                rightPlace = { o -> thumbKeyPlace.placeR(o) },
             )
         )
     }
@@ -332,32 +336,32 @@ class Walls(private val cfg: KeyboardConfig, private val keyPlace: KeyPlace) {
 
         //corners
         //left back
-        models.add(cornerWallBuilder.backLeft { obj -> ThumbKeyPlace.placeL(obj) })
+        models.add(cornerWallBuilder.backLeft { obj -> thumbKeyPlace.placeL(obj) })
         //left front
-        models.add(cornerWallBuilder.frontLeft { obj -> ThumbKeyPlace.placeL(obj) })
+        models.add(cornerWallBuilder.frontLeft { obj -> thumbKeyPlace.placeL(obj) })
         // right front
         models.add(
             cornerWallBuilder.frontRightToMatrix(
-                keyPlace = { obj -> ThumbKeyPlace.placeR(obj) },
+                keyPlace = { obj -> thumbKeyPlace.placeR(obj) },
                 matrixOuterPlace = { o -> keyPlace.place(4, cfg.lastRow, o) },
                 matrixInnerPlace = { o -> keyPlace.place(3, cfg.lastRow, o) },
             )
         )
 
-        //models.add(wallsBuilder.backWall { o -> ThumbKeyPlace.placeL(o) })
+        //models.add(wallsBuilder.backWall { o -> thumbKeyPlace.placeL(o) })
 
-        models.add(wallsBuilder.frontWall { o -> ThumbKeyPlace.placeR(o) })
+        models.add(wallsBuilder.frontWall { o -> thumbKeyPlace.placeR(o) })
         //models.add(wallsBuilder.frontWall { o -> ThumbKeyPlace.placeM(o) })
-        models.add(wallsBuilder.frontWall { o -> ThumbKeyPlace.placeL(o) })
+        models.add(wallsBuilder.frontWall { o -> thumbKeyPlace.placeL(o) })
 
-        models.add(wallsBuilder.leftWall { o -> ThumbKeyPlace.placeL(o) })
+        models.add(wallsBuilder.leftWall { o -> thumbKeyPlace.placeL(o) })
 
 
         models.add(
             wallsBuilder.midEdge(
-                midPlace = { o -> ThumbKeyPlace.placeM(o) },
-                leftPlace = { o -> ThumbKeyPlace.placeL(o) },
-                rightPlace = { o -> ThumbKeyPlace.placeR(o) },
+                midPlace = { o -> thumbKeyPlace.placeM(o) },
+                leftPlace = { o -> thumbKeyPlace.placeL(o) },
+                rightPlace = { o -> thumbKeyPlace.placeR(o) },
             )
         )
 
@@ -372,16 +376,16 @@ class Walls(private val cfg: KeyboardConfig, private val keyPlace: KeyPlace) {
         models.add(
             hull(
                 verticalCube(
-                    ThumbKeyPlace.placeL(KeyPlaceholder.placeHolderTopRight().move(0.0, verticalOffset, borderZOffset)),
+                    thumbKeyPlace.placeL(KeyPlaceholder.placeHolderTopRight().move(0.0, verticalOffset, borderZOffset)),
                     borderThickness,
                     borderHeight
                 ),
                 verticalCube(
-                    ThumbKeyPlace.placeL(KeyPlaceholder.placeHolderTopLeft().move(0.0, verticalOffset, borderZOffset)),
+                    thumbKeyPlace.placeL(KeyPlaceholder.placeHolderTopLeft().move(0.0, verticalOffset, borderZOffset)),
                     borderThickness,
                     borderHeight
                 ),
-                ThumbKeyPlace.placeL(
+                thumbKeyPlace.placeL(
                     KeyPlaceholder.placeHolderTopLeft().move(0.0, outerVerticalOffset, outerBorderZOffset)
                 ),
 
@@ -397,7 +401,7 @@ class Walls(private val cfg: KeyboardConfig, private val keyPlace: KeyPlace) {
                 topOuterPoint,
                 bottomEdgePatcher.projection(topOuterPoint),
                 bottomEdgePatcher.projection(
-                    ThumbKeyPlace.placeL(
+                    thumbKeyPlace.placeL(
                         KeyPlaceholder.placeHolderTopLeft().move(0.0, outerVerticalOffset, outerBorderZOffset)
                     ),
 
@@ -416,10 +420,10 @@ class Walls(private val cfg: KeyboardConfig, private val keyPlace: KeyPlace) {
         // edge
         models.add(
             hull(
-                ThumbKeyPlace.placeM(KeyPlaceholder.placeHolderTopLeft()),
+                thumbKeyPlace.placeM(KeyPlaceholder.placeHolderTopLeft()),
 
                 verticalCube(
-                    ThumbKeyPlace.placeM(
+                    thumbKeyPlace.placeM(
                         KeyPlaceholder.placeHolderTopLeft().move(0.0, verticalOffset, borderZOffset)
                     ), borderThickness, borderHeight
                 ),
@@ -437,7 +441,7 @@ class Walls(private val cfg: KeyboardConfig, private val keyPlace: KeyPlace) {
         // thumb mid
         models.add(
             hull(
-                ThumbKeyPlace.placeM(KeyPlaceholder.placeHolderTop()),
+                thumbKeyPlace.placeM(KeyPlaceholder.placeHolderTop()),
                 keyPlace.place(0, cfg.lastRow, KeyPlaceholder.placeHolderBottom()),
             )
         )
@@ -446,8 +450,8 @@ class Walls(private val cfg: KeyboardConfig, private val keyPlace: KeyPlace) {
 
         models.add(
             hull(
-                ThumbKeyPlace.placeM(KeyPlaceholder.placeHolderTopRight()),
-                ThumbKeyPlace.placeR(KeyPlaceholder.placeHolderTopLeft()),
+                thumbKeyPlace.placeM(KeyPlaceholder.placeHolderTopRight()),
+                thumbKeyPlace.placeR(KeyPlaceholder.placeHolderTopLeft()),
 
                 keyPlace.place(0, cfg.lastRow, KeyPlaceholder.placeHolderBottomRight()),
             )
@@ -457,9 +461,9 @@ class Walls(private val cfg: KeyboardConfig, private val keyPlace: KeyPlace) {
 
         models.add(
             hull(
-                ThumbKeyPlace.placeR(KeyPlaceholder.placeHolderTopLeft()),
+                thumbKeyPlace.placeR(KeyPlaceholder.placeHolderTopLeft()),
                 verticalCube(
-                    ThumbKeyPlace.placeR(
+                    thumbKeyPlace.placeR(
                         KeyPlaceholder.placeHolderTopRight().move(0.0, verticalOffset, borderZOffset)
                     ), borderThickness, borderHeight
                 ),
@@ -469,7 +473,7 @@ class Walls(private val cfg: KeyboardConfig, private val keyPlace: KeyPlace) {
         models.add(
             hull(
                 verticalCube(
-                    ThumbKeyPlace.placeR(
+                    thumbKeyPlace.placeR(
                         KeyPlaceholder.placeHolderTopRight().move(0.0, verticalOffset, borderZOffset)
                     ), borderThickness, borderHeight
                 ),
@@ -481,7 +485,7 @@ class Walls(private val cfg: KeyboardConfig, private val keyPlace: KeyPlace) {
         models.add(
             hull(
                 verticalCube(
-                    ThumbKeyPlace.placeR(
+                    thumbKeyPlace.placeR(
                         KeyPlaceholder.placeHolderTopRight().move(0.0, verticalOffset, borderZOffset)
                     ), borderThickness, borderHeight
                 ),
@@ -523,9 +527,9 @@ class Walls(private val cfg: KeyboardConfig, private val keyPlace: KeyPlace) {
 
         models.add(
             hull(
-                ThumbKeyPlace.placeR(KeyPlaceholder.placeHolderTop()),
+                thumbKeyPlace.placeR(KeyPlaceholder.placeHolderTop()),
                 verticalCube(
-                    ThumbKeyPlace.placeR(
+                    thumbKeyPlace.placeR(
                         KeyPlaceholder.placeHolderTopRight().move(0.0, verticalOffset, borderZOffset)
                     ), borderThickness, borderHeight
                 ),
@@ -535,12 +539,12 @@ class Walls(private val cfg: KeyboardConfig, private val keyPlace: KeyPlace) {
         models.add(
             hull(
                 verticalCube(
-                    ThumbKeyPlace.placeR(
+                    thumbKeyPlace.placeR(
                         KeyPlaceholder.placeHolderTopRight().move(rightOffset, 0.0, borderZOffset)
                     ), borderThickness, borderHeight
                 ),
                 verticalCube(
-                    ThumbKeyPlace.placeR(
+                    thumbKeyPlace.placeR(
                         KeyPlaceholder.placeHolderTopRight().move(0.0, verticalOffset, borderZOffset)
                     ), borderThickness, borderHeight
                 ),
@@ -555,12 +559,12 @@ class Walls(private val cfg: KeyboardConfig, private val keyPlace: KeyPlace) {
         models.add(
             hull(
                 verticalCube(
-                    ThumbKeyPlace.placeR(
+                    thumbKeyPlace.placeR(
                         KeyPlaceholder.placeHolderTopRight().move(rightOffset, 0.0, borderZOffset)
                     ), borderThickness, borderHeight
                 ),
                 verticalCube(
-                    ThumbKeyPlace.placeR(
+                    thumbKeyPlace.placeR(
                         KeyPlaceholder.placeHolderBottomRight().move(rightOffset, 0.0, borderZOffset)
                     ), borderThickness, borderHeight
                 ),

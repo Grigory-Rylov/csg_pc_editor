@@ -1,5 +1,13 @@
 package com.github.grishberg.cad3d.keyboard.cfg
 
+data class ThumbClusterSettings(
+    val xOffset: Double = 10.0,
+    val yOffset: Double = -40.0,
+    val zOffset: Double = 40.0,
+    val rotateY: Double = 0.0,
+    val rotateZ: Double = 0.0,
+)
+
 data class KeyboardConfig(
     val fn: Int,
     val plateZOffset: Double,
@@ -26,7 +34,8 @@ data class KeyboardConfig(
     val isHasHotswap: Boolean,
     val isMagneticWristRestHolder: Boolean,
     val bordersOffset: Double,
-    @field:Volatile var assemblySettings: AssemblySettings
+    @field:Volatile var assemblySettings: AssemblySettings,
+    val thumbClusterSettings: ThumbClusterSettings
 ) {
 
     val lastCol: Int

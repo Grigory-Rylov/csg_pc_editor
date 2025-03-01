@@ -6,6 +6,7 @@ import com.github.grishberg.cad3d.keyboard.Utils
 import eu.printingin3d.javascad.models.Abstract3dModel
 
 class InnerBordersBuilder(
+    private val thumbKeyPlace: ThumbKeyPlace,
     private val borderThickness: Double = 1.5,
     private val borderHeight: Double = 4.0,
     private val verticalOffset: Double = 4.0,
@@ -164,22 +165,22 @@ class InnerBordersBuilder(
         rightPlace: (Abstract3dModel) -> Abstract3dModel
     ) = Utils.hull(
         verticalCube(
-            ThumbKeyPlace.placeM(
+            thumbKeyPlace.placeM(
                 KeyPlaceholder.placeHolderBottomLeft().move(0.0, -verticalOffset, borderZOffset)
             )
         ),
         verticalCube(
-            ThumbKeyPlace.placeM(
+            thumbKeyPlace.placeM(
                 KeyPlaceholder.placeHolderBottomRight().move(0.0, -verticalOffset, borderZOffset)
             )
         ),
         verticalCube(
-            ThumbKeyPlace.placeL(
+            thumbKeyPlace.placeL(
                 KeyPlaceholder.placeHolderBottomRight().move(0.0, -verticalOffset, borderZOffset)
             )
         ),
         verticalCube(
-            ThumbKeyPlace.placeR(
+            thumbKeyPlace.placeR(
                 KeyPlaceholder.placeHolderBottomLeft().move(0.0, -verticalOffset, borderZOffset)
             )
         ),
