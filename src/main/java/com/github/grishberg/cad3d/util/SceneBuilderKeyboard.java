@@ -98,7 +98,7 @@ public class SceneBuilderKeyboard implements SceneBuilder {
 
             createPlaceholders();
 
-            createWristRest();
+            //createWristRest();
 
             SwingUtilities.invokeLater(() -> {
                 if (listener != null) {

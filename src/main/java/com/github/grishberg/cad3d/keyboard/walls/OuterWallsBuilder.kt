@@ -2,7 +2,6 @@ package com.github.grishberg.cad3d.keyboard.walls
 
 import com.github.grishberg.cad3d.keyboard.KeyPlaceholder
 import com.github.grishberg.cad3d.keyboard.Utils.hull
-import eu.printingin3d.javascad.coords.V3d
 import eu.printingin3d.javascad.models.Abstract3dModel
 import eu.printingin3d.javascad.tranzitions.Union
 
@@ -16,6 +15,7 @@ class OuterWallsBuilder(
     private val outerVerticalOffset: Double = 10.0,
     private val outerHorizontalOffset: Double = 15.0,
     private val outerBorderZOffset: Double = -6.0,
+    private val bottomEdgePatcher: WallBottomEdgePatcher = DefaultBottomEdgePatcher(borderThickness, borderHeight),
 ) : WallsBuilder {
 
     override fun backWall(keyPlace: (Abstract3dModel) -> Abstract3dModel): Abstract3dModel {
@@ -38,7 +38,7 @@ class OuterWallsBuilder(
             )
         )
         val wall = hull(
-            left, right, projection(left), projection(right)
+            left, right, bottomEdgePatcher.backPoint(left), bottomEdgePatcher.backPoint(right)
         )
         return Union(border, wall)
     }
@@ -63,8 +63,8 @@ class OuterWallsBuilder(
         )
         val wall = hull(
             left, right,
-            projection(left),
-            projection(right),
+            bottomEdgePatcher.backPoint(left),
+            bottomEdgePatcher.backPoint(right),
         )
         return Union(border, wall)
     }
@@ -89,8 +89,8 @@ class OuterWallsBuilder(
 
         val wall = hull(
             top, bottom,
-            projection(top),
-            projection(bottom),
+            bottomEdgePatcher.leftPoint(top),
+            bottomEdgePatcher.leftPoint(bottom),
         )
         return Union(border, wall)
     }
@@ -118,7 +118,9 @@ class OuterWallsBuilder(
         )
 
         val wall = hull(
-            top, bottom, projection(top), projection(bottom)
+            top, bottom,
+            bottomEdgePatcher.leftPoint(top),
+            bottomEdgePatcher.leftPoint(bottom)
         )
 
         return Union(border, wall)
@@ -126,6 +128,7 @@ class OuterWallsBuilder(
 
     override fun frontWall(
         leftOffset: Double, rightOffset: Double,
+        onlyBorder: Boolean,
         keyPlace: (Abstract3dModel) -> Abstract3dModel,
     ): Abstract3dModel {
         val left =
@@ -147,8 +150,13 @@ class OuterWallsBuilder(
                 )
             ),
         )
+        if (onlyBorder) {
+            return border
+        }
         val wall = hull(
-            left, right, projection(left), projection(right)
+            left, right,
+            bottomEdgePatcher.frontPoint(left),
+            bottomEdgePatcher.frontPoint(right)
         )
 
         return Union(border, wall)
@@ -178,8 +186,8 @@ class OuterWallsBuilder(
 
         val wall = hull(
             left, right,
-            projection(left),
-            projection(right),
+            bottomEdgePatcher.frontPoint(left),
+            bottomEdgePatcher.frontPoint(right),
         )
 
         return Union(border, wall)
@@ -202,8 +210,8 @@ class OuterWallsBuilder(
 
         val wall = hull(
             top, bottom,
-            projection(top),
-            projection(bottom),
+            bottomEdgePatcher.rightPoint(top),
+            bottomEdgePatcher.rightPoint(bottom),
         )
 
         return Union(border, wall)
@@ -230,8 +238,8 @@ class OuterWallsBuilder(
 
         val wall = hull(
             top, bottom,
-            projection(top),
-            projection(bottom),
+            bottomEdgePatcher.rightPoint(top),
+            bottomEdgePatcher.rightPoint(bottom),
         )
         return Union(border, wall)
     }
@@ -254,8 +262,8 @@ class OuterWallsBuilder(
 
         val wall = hull(
             left, right,
-            projection(left),
-            projection(right),
+            bottomEdgePatcher.projection(left),
+            bottomEdgePatcher.projection(right),
         )
         return Union(border, wall)
     }
@@ -263,10 +271,4 @@ class OuterWallsBuilder(
     private fun verticalCube(obj: Abstract3dModel): Abstract3dModel {
         return KeyPlaceholder.placeCube(borderThickness, borderHeight).move(obj.move)
     }
-
-    private fun projection(obj: Abstract3dModel): Abstract3dModel {
-        val point = obj.move
-        return KeyPlaceholder.placeCube(borderThickness, borderHeight).move(V3d(point.x, point.y, 0.0))
-    }
-
 }

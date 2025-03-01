@@ -62,10 +62,10 @@ public class Main implements GLEventListener, MouseListener, MouseMotionListener
     private final int colsCount = 6;
     private final KeyboardConfig cfg = new KeyboardConfig(
         60, // fn
-        10.0, // plateZOffset
+        14.0, // plateZOffset
         20.1, // rowCurvature
-        7, // tentingAngle
-        15.1, // columnCurvature
+        14, // tentingAngle
+        12.1, // columnCurvature
         14.2, // keyswitchHeight
         14.2, // keyswitchWidth
         2.5, // controls overall height; original=9 with centercol=3; use 16 for centercol=2

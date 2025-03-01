@@ -89,7 +89,9 @@ class InnerBordersBuilder(
     }
 
     override fun frontWall(
-        leftOffset: Double, rightOffset: Double, keyPlace: (Abstract3dModel) -> Abstract3dModel
+        leftOffset: Double, rightOffset: Double,
+        onlyBorder: Boolean,
+        keyPlace: (Abstract3dModel) -> Abstract3dModel
     ): Abstract3dModel {
         return Utils.hull(
             keyPlace(KeyPlaceholder.placeHolderBottom()),

@@ -19,6 +19,7 @@ interface WallsBuilder {
     fun frontWall(
         leftOffset: Double = 0.0,
         rightOffset: Double = 0.0,
+        onlyBorder: Boolean = false,
         keyPlace:(Abstract3dModel) -> Abstract3dModel,
         ): Abstract3dModel
     fun frontMidWall(
