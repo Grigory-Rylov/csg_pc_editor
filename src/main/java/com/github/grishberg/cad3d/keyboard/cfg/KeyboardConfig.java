@@ -30,6 +30,8 @@ public class KeyboardConfig {
 
     private final double bordersOffset;
 
+    volatile private AssemblySettings assemblySettings;
+
     public KeyboardConfig(
         int fn,
         double plateZOffset,
@@ -55,7 +57,8 @@ public class KeyboardConfig {
         PowerSwitcherType powerSwitcherType,
         boolean hasHotswap,
         boolean magneticWristRestHolder,
-        double bordersOffset
+        double bordersOffset,
+        AssemblySettings assemblySettings
     ) {
         this.fn = fn;
         this.plateZOffset = plateZOffset;
@@ -82,6 +85,7 @@ public class KeyboardConfig {
         this.hasHotswap = hasHotswap;
         this.magneticWristRestHolder = magneticWristRestHolder;
         this.bordersOffset = bordersOffset;
+        this.assemblySettings = assemblySettings;
     }
 
     public int getFn() {
@@ -179,16 +183,24 @@ public class KeyboardConfig {
     public boolean isMagneticWristRestHolder() {
         return magneticWristRestHolder;
     }
-	
-	public int getLastCol(){
-		return columnsCount - 1;
-	}
-	
-	public int getLastRow(){
-		return rowsCount - 1;
-	}
+
+    public int getLastCol() {
+        return columnsCount - 1;
+    }
+
+    public int getLastRow() {
+        return rowsCount - 1;
+    }
 
     public double getBordersOffset() {
         return bordersOffset;
+    }
+
+    public AssemblySettings getAssemblySettings() {
+        return assemblySettings;
+    }
+
+    public void setAssemblySettings(AssemblySettings settings) {
+        assemblySettings = settings;
     }
 }

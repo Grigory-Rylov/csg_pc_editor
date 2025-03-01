@@ -1,297 +1,258 @@
-package com.github.grishberg.cad3d.util;
+package com.github.grishberg.cad3d.util
 
-import static com.github.grishberg.cad3d.keyboard.KeyPlaceholder.placeHolder;
-import static com.github.grishberg.cad3d.keyboard.Utils.sphere;
+import com.github.grishberg.cad3d.keyboard.Connections
+import com.github.grishberg.cad3d.keyboard.ControlPointsController
+import com.github.grishberg.cad3d.keyboard.KeyHolderBottomWalls
+import com.github.grishberg.cad3d.keyboard.KeyPlace
+import com.github.grishberg.cad3d.keyboard.KeyPlaceHoles
+import com.github.grishberg.cad3d.keyboard.KeyPlaceholder
+import com.github.grishberg.cad3d.keyboard.KeySwitchHoles
+import com.github.grishberg.cad3d.keyboard.ThumbConnections
+import com.github.grishberg.cad3d.keyboard.ThumbKeyPlace
+import com.github.grishberg.cad3d.keyboard.Utils
+import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
+import com.github.grishberg.cad3d.keyboard.walls.Walls
+import com.github.grishberg.cad3d.keyboard.wristrest.WristRest
+import com.github.grishberg.cad3d.util.SceneBuilder.ReadyListener
+import eu.printingin3d.javascad.coords.V3d
+import eu.printingin3d.javascad.models.Abstract3dModel
+import eu.printingin3d.javascad.models.Cube
+import eu.printingin3d.javascad.models.Cylinder
+import eu.printingin3d.javascad.models.IModel
+import eu.printingin3d.javascad.models.surfaces.SmoothSurface
+import eu.printingin3d.javascad.models.surfaces.bicubic.BicubicSurfaceSpline
+import eu.printingin3d.javascad.tranzitions.Union
+import eu.printingin3d.javascad.utils.Color
+import eu.printingin3d.javascad.utils.StlExporter
+import eu.printingin3d.javascad.vrl.ColorFacetGenerationContext
+import eu.printingin3d.javascad.vrl.FacetGenerationContext
+import eu.printingin3d.javascad.vrl.VertexHolder
+import java.io.IOException
+import java.util.concurrent.Executor
+import java.util.concurrent.Executors
+import javax.swing.SwingUtilities
 
-import com.github.grishberg.cad3d.keyboard.Connections;
-import com.github.grishberg.cad3d.keyboard.ControlPointsController;
-import com.github.grishberg.cad3d.keyboard.KeyHolderBottomWalls;
-import com.github.grishberg.cad3d.keyboard.KeyPlace;
-import com.github.grishberg.cad3d.keyboard.KeyPlaceHoles;
-import com.github.grishberg.cad3d.keyboard.KeySwitchHoles;
-import com.github.grishberg.cad3d.keyboard.ThumbConnections;
-import com.github.grishberg.cad3d.keyboard.ThumbKeyPlace;
-import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig;
-import com.github.grishberg.cad3d.keyboard.walls.Walls;
-import com.github.grishberg.cad3d.keyboard.wristrest.WristRest;
-import eu.printingin3d.javascad.coords.V3d;
-import eu.printingin3d.javascad.models.Abstract3dModel;
-import eu.printingin3d.javascad.models.Cube;
-import eu.printingin3d.javascad.models.Cylinder;
-import eu.printingin3d.javascad.models.IModel;
-import eu.printingin3d.javascad.utils.Color;
-import eu.printingin3d.javascad.utils.StlExporter;
-import eu.printingin3d.javascad.vrl.CSG;
-import eu.printingin3d.javascad.vrl.ColorFacetGenerationContext;
-import eu.printingin3d.javascad.vrl.FacetGenerationContext;
-import eu.printingin3d.javascad.vrl.VertexHolder;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-import javax.swing.*;
-
-public class SceneBuilderKeyboard implements SceneBuilder {
+class SceneBuilderKeyboard(
+    private val cfg: KeyboardConfig,
+    private val keyPlace: KeyPlace,
+    private val pointsController: ControlPointsController
+) : SceneBuilder {
 
     /**
      * How many bytes per float.
      */
-    private final int mBytesPerFloat = 4;
-    private int resolution = 15;     // Количество промежуточных точек между заданными точками
+    private val mBytesPerFloat = 4
+    private var resolution = 15 // Количество промежуточных точек между заданными точками
+    val buffers: MutableList<VertexHolder>
+    private var listener: ReadyListener? = null
+    private val executor: Executor = Executors.newSingleThreadExecutor()
 
-
-    private static final Color DEFAULT_COLOR = Color.GRAY;
-
-    public final List<VertexHolder> buffers;
-
-    private final KeyboardConfig cfg;
-    private final KeyPlace keyPlace;
-    private final ControlPointsController pointsController;
-    private SceneBuilder.ReadyListener listener;
-    private Executor executor = Executors.newSingleThreadExecutor();
-    private volatile Abstract3dModel matrix;
-
-    public SceneBuilderKeyboard(
-        KeyboardConfig cfg,
-        KeyPlace keyPlace,
-        ControlPointsController pointsController
-    ) {
-        this.cfg = cfg;
-        this.keyPlace = keyPlace;
-        this.pointsController = pointsController;
-        buffers = new ArrayList<>();
-        pointsController.addListener((row, col) -> rebuildCaseAndInvalidate());
+    init {
+        buffers = ArrayList()
+        pointsController.addListener { row: Int, col: Int -> rebuildCaseAndInvalidate() }
     }
 
-    @Override
-    public void setListener(ReadyListener listener) {
-        this.listener = listener;
+    override fun setListener(listener: ReadyListener) {
+        this.listener = listener
     }
 
-    @Override
-    public void requestBuffers() {
+    override fun requestBuffers() {
         if (resolution == 0) {
-            resolution = 20;
+            resolution = 20
         }
-        create3dModels();
+        create3dModels()
     }
 
-    private void rebuildCaseAndInvalidate() {
-        create3dModels();
+    private fun rebuildCaseAndInvalidate() {
+        create3dModels()
     }
 
-    private void create3dModels() {
-        executor.execute(() -> {
-            buffers.clear();
-            createKeyMatrix();
+    private fun create3dModels() {
+        executor.execute {
+            buffers.clear()
+            val settings = cfg.assemblySettings
 
-            createThumbKeyPlace();
+            if (settings.settingsShowMatrix) {
+                val connections = createConnections()
+                val borders = createBorders()
+                val matrix = connections.addModel(borders).addModel(createPlaceholders())
 
-            Abstract3dModel connections = createConnections();
+                saveModel("matrix.stl", matrix)
+            }
+            if (settings.settingsShowCaps) {
+                createThumbKeyPlace()
+                createKeycaps()
+            }
 
-            createBorders();
+            if (settings.settingsShowPlate) {
+                //TODO generate plate
+            }
 
-            createCase();
+            if (settings.settingsShowCase) {
+                val caseWalls = createCase()
+                saveModel("case.stl", caseWalls)
+            }
 
-            createKeycaps();
-
-            createPlaceholders();
-
-            //createWristRest();
-
-            SwingUtilities.invokeLater(() -> {
+            if (settings.settingsShowWristRest) {
+                createWristRest()
+            }
+            SwingUtilities.invokeLater {
                 if (listener != null) {
-                    listener.onReady(buffers);
+                    listener!!.onReady(buffers)
                 }
-            });
-
-            new Thread(() -> {
-                try {
-                    FacetGenerationContext context = new ColorFacetGenerationContext(DEFAULT_COLOR);
-                    context.setFn(20);
-                    StlExporter.saveStringToFile(
-                        connections.toCSG(context).getVerticesAndColorsAsFloatArray(),
-                        "connections.stl"
-                    );
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            }).start();
-        });
+            }
+        }
 
         //   createAndAdd(keyPlaceHoles(), new Color(127, 5, 60), 15);
 
         //createAndAdd(cornerModel(), Color.ORANGE, 20);
-
     }
 
-    private void createThumbKeyPlace() {
-        Abstract3dModel keycap =
-            new Cube(
-                cfg.getKeyswitchWidth(),
-                cfg.getKeyswitchHeight(),
-                cfg.getSaProfileKeyHeight()
-            ).move(0, 0, 10);
-
-        createAndAdd(ThumbKeyPlace.thumbPlace(keycap), Color.BLUE);
-        createAndAdd(ThumbKeyPlace.thumbPlace(placeHolder()), Color.ORANGE);
+    private fun saveModel(name: String, model: Abstract3dModel, fn: Int = 20) {
+        Thread {
+            try {
+                val context: FacetGenerationContext = ColorFacetGenerationContext(DEFAULT_COLOR)
+                context.setFn(fn)
+                StlExporter.saveStringToFile(model.toCSG(context).verticesAndColorsAsFloatArray, name)
+            } catch (e: IOException) {
+                throw RuntimeException(e)
+            }
+        }.start()
     }
 
-    private Abstract3dModel keyHoles() {
-        return new KeySwitchHoles(cfg, keyPlace).build();
+    private fun createThumbKeyPlace() {
+        val keycap = Cube(
+            cfg.keyswitchWidth, cfg.keyswitchHeight, cfg.saProfileKeyHeight
+        ).move(0.0, 0.0, 10.0)
+        createAndAdd(ThumbKeyPlace.thumbPlace(keycap), Color.BLUE)
     }
 
-    private Abstract3dModel keyPlaceHoles(double offset) {
-        return new KeyPlaceHoles(cfg, keyPlace).build(offset);
+    private fun keyHoles(): Abstract3dModel {
+        return KeySwitchHoles(cfg, keyPlace).build()
     }
 
-    private Abstract3dModel wristRestMount() {
+    private fun keyPlaceHoles(offset: Double): Abstract3dModel {
+        return KeyPlaceHoles(cfg, keyPlace).build(offset)
+    }
+
+    private fun wristRestMount(): Abstract3dModel {
         // left back
-        return new Cylinder(42, 6).move(-56, -88, -2)
-            .addModel(
-                // left front
-                new Cylinder(56, 6).move(-53, -142, -4)
-            )
-            .addModel(
-                // right back
-                new Cylinder(48, 6).move(60, -85, -6)
-            ).addModel(
-                // right front
-                new Cylinder(62, 6).move(53, -140, -6)
-            );
+        return Cylinder(42.0, 6.0).move(-56.0, -88.0, -2.0).addModel( // left front
+            Cylinder(56.0, 6.0).move(-53.0, -142.0, -4.0)
+        ).addModel( // right back
+            Cylinder(48.0, 6.0).move(60.0, -85.0, -6.0)
+        ).addModel( // right front
+            Cylinder(62.0, 6.0).move(53.0, -140.0, -6.0)
+        )
     }
 
-    private Abstract3dModel keyPlaceBottomWalls() {
-        return new KeyHolderBottomWalls(cfg, keyPlace).build();
+    private fun keyPlaceBottomWalls(): Abstract3dModel {
+        return KeyHolderBottomWalls(cfg, keyPlace).build()
     }
 
-    private void createPlaceholders() {
-        for (int column = 0; column < cfg.getColumnsCount(); column++) {
-            for (int row = 0; row < cfg.getRowsCount(); row++) {
-                createAndAdd(keyPlace.place(column, row, placeHolder()), new Color(30, 127, 40));
+    private fun createPlaceholders(): Abstract3dModel {
+        val models = mutableListOf<Abstract3dModel>()
+        for (column in 0 until cfg.columnsCount) {
+            for (row in 0 until cfg.rowsCount) {
+                models.add(keyPlace.place(column, row, KeyPlaceholder.placeHolder()))
+            }
+        }
+
+        models.add(ThumbKeyPlace.thumbPlace(KeyPlaceholder.placeHolder()))
+
+        val allPlaceholders = Union(models)
+        createAndAdd(allPlaceholders, Color(30, 127, 40))
+        return allPlaceholders
+    }
+
+    private fun createKeycaps() {
+        for (column in 0 until cfg.columnsCount) {
+            for (row in 0 until cfg.rowsCount) {
+                val obj = Cube(
+                    cfg.keyswitchWidth, cfg.keyswitchHeight, cfg.saProfileKeyHeight
+                ).move(0.0, 0.0, 10.0)
+                createAndAdd(keyPlace.place(column, row, obj), Color.PINK)
             }
         }
     }
 
-    private void createKeycaps() {
-        for (int column = 0; column < cfg.getColumnsCount(); column++) {
-            for (int row = 0; row < cfg.getRowsCount(); row++) {
-                Abstract3dModel obj =
-                    new Cube(
-                        cfg.getKeyswitchWidth(),
-                        cfg.getKeyswitchHeight(),
-                        cfg.getSaProfileKeyHeight()
-                    ).move(0, 0, 10);
-
-                createAndAdd(keyPlace.place(column, row, obj), Color.PINK);
-            }
-        }
-    }
-
-    private Abstract3dModel createConnections() {
-        Abstract3dModel connections = new Connections(cfg, keyPlace).buildConnections();
-        createAndAdd(connections, DEFAULT_COLOR);
+    private fun createConnections(): Abstract3dModel {
+        val connections = Connections(cfg, keyPlace).buildConnections()
+        createAndAdd(connections, DEFAULT_COLOR)
+        val thumbPlaceConnections = ThumbConnections(cfg, keyPlace).buildThumbPlaceConnections()
         createAndAdd(
-            new ThumbConnections(cfg, keyPlace).buildThumbPlaceConnections(),
-            DEFAULT_COLOR
-        );
-        return connections;
+            thumbPlaceConnections, DEFAULT_COLOR
+        )
+        return connections.addModel(thumbPlaceConnections)
     }
 
-    private Abstract3dModel createBorders() {
-        Abstract3dModel borders = new Walls(cfg, keyPlace).createBorders(1.5, 4);
-        createAndAdd(borders, Color.lightGray, 30);
-        return borders;
+    private fun createBorders(): Abstract3dModel {
+        val borders = Walls(cfg, keyPlace).createBorders(1.5, 4.0)
+        createAndAdd(borders, Color.lightGray, 30)
+        return borders
     }
 
-    private Abstract3dModel createCase() {
-        Abstract3dModel borders = new Walls(cfg, keyPlace).createBorders(1.9, 6);
-        Abstract3dModel walls = new Walls(cfg, keyPlace).createWalls(1.5, 4)
-            .subtractModel(borders)
-            .subtractModel(new Cube(300, 300, 50).move(0, 0, -25));
-        createAndAdd(walls, Color.gray, 30);
-        return walls;
+    private fun createCase(): Abstract3dModel {
+        val borders = Walls(cfg, keyPlace).createBorders(1.9, 6.0)
+        val walls = Walls(cfg, keyPlace).createWalls(1.5, 4.0).subtractModel(borders)
+            .subtractModel(Cube(300.0, 300.0, 50.0).move(0.0, 0.0, -25.0))
+        createAndAdd(walls, Color.gray, 30)
+        return walls
     }
 
-    private void createKeyMatrix() {
-
-        //        if (matrix == null) {
-        //            matrix = keyPlaceBottomWalls()
-        //                .subtractModel(keyPlaceHoles(0))
-        //                .subtractModel(keyHoles());
-        //        }
-        //        createAndAdd(matrix, new Color(0, 127, 0));
-        //
-
-        //System.out.println(stl);
-        //Log.d("<DBG>", "stl size = " + stl.length());
-    }
-
-    private void createWristRest() {
-        showControlPoints(pointsController.controlPoints);
+    private fun createWristRest() {
+        showControlPoints(pointsController.controlPoints)
 
         // Задаем параметры поверхности
-        double thickness = 4;  // Толщина поверхности
-/*
-        Abstract3dModel topSurface = new SmoothSurface3(
-            BicubicSurfaceSpline3.bSplineSurface(pointsController.controlPoints, resolution),
-            thickness
+        val thickness = 4.0 // Толщина поверхности/*
+        val topSurface = SmoothSurface(
+            BicubicSurfaceSpline.bSplineSurface(pointsController.controlPoints, resolution), thickness
         );
-*/
 
-        Abstract3dModel wristRest = WristRest.build()
-            .subtractModel(new Cube(300, 300, 50).move(0, 0, -25));
-
+        val wristRest = WristRest.build().subtractModel(Cube(300.0, 300.0, 50.0).move(0.0, 0.0, -25.0))
         createAndAdd(
-            wristRest
-            // .subtractModel(keyPlaceHoles(-4))
-            , Color.ORANGE
-            , 30
-        );
-
-        new Thread(() -> {
+            wristRest // .subtractModel(keyPlaceHoles(-4))
+            , Color.ORANGE, 30
+        )
+        Thread {
             try {
-                FacetGenerationContext context = new ColorFacetGenerationContext(DEFAULT_COLOR);
-                context.setFn(20);
+                val context: FacetGenerationContext = ColorFacetGenerationContext(DEFAULT_COLOR)
+                context.setFn(20)
                 StlExporter.saveStringToFile(
-                    wristRest.toCSG(context).getVerticesAndColorsAsFloatArray(),
-                    "out.stl"
-                );
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+                    wristRest.toCSG(context).verticesAndColorsAsFloatArray, "out.stl"
+                )
+            } catch (e: IOException) {
+                throw RuntimeException(e)
             }
-        }).start();
+        }.start()
     }
 
-    private void showControlPoints(V3d[][] points) {
-        Color[] colors =
-            {Color.RED, Color.BLUE, Color.GREEN, Color.CYAN, Color.MAGENTA, Color.ORANGE};
-
-        for (int rowIndex = 0; rowIndex < points.length; rowIndex++) {
-            for (int colIndex = 0; colIndex < points[rowIndex].length; colIndex++) {
+    private fun showControlPoints(points: Array<Array<V3d>>) {
+        val colors = arrayOf(Color.RED, Color.BLUE, Color.GREEN, Color.CYAN, Color.MAGENTA, Color.ORANGE)
+        for (rowIndex in points.indices) {
+            for (colIndex in points[rowIndex].indices) {
                 createAndAdd(
-                    sphere(2).move(points[rowIndex][colIndex]),
-                    colors[colIndex % colors.length]
-                );
+                    Utils.sphere(2.0).move(points[rowIndex][colIndex]), colors[colIndex % colors.size]
+                )
             }
         }
     }
 
-    private void createAndAdd(IModel model) {
-        createAndAdd(model, DEFAULT_COLOR);
+    private fun createAndAdd(model: IModel) {
+        createAndAdd(model, DEFAULT_COLOR)
     }
 
-    private VertexHolder createAndAdd(IModel model, Color color) {
-        return createAndAdd(model, color, 6);
+    private fun createAndAdd(model: IModel, color: Color, fn: Int = 6): VertexHolder {
+        val context: FacetGenerationContext = ColorFacetGenerationContext(color)
+        context.setFn(fn)
+        val csg = model.toCSG(context)
+        val vertex = csg.verticesAndColorsAsFloatArray
+        buffers.add(vertex)
+        return vertex
     }
 
-    private VertexHolder createAndAdd(IModel model, Color color, int fn) {
-        FacetGenerationContext context = new ColorFacetGenerationContext(color);
-        context.setFn(fn);
-        CSG csg = model.toCSG(context);
-        VertexHolder vertex = csg.getVerticesAndColorsAsFloatArray();
-        buffers.add(vertex);
-        return vertex;
+    companion object {
+
+        private val DEFAULT_COLOR = Color.GRAY
     }
 }
