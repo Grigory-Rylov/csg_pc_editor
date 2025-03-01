@@ -39,10 +39,6 @@ class SceneBuilderKeyboard(
 
     @Volatile private var cfg: KeyboardConfig = initialConfig
 
-    /**
-     * How many bytes per float.
-     */
-    private val mBytesPerFloat = 4
     private var resolution = 15 // Количество промежуточных точек между заданными точками
     val buffers: MutableList<VertexHolder>
     private var listener: ReadyListener? = null

@@ -27,6 +27,7 @@ class ConfigEditor(
         createAnglesPanel()
         createDimensionsPanel()
         createAdditionalConfigPanel()
+        createThumbClusterConfigPanel()
 
         pack()
         setLocationRelativeTo(null)
@@ -133,6 +134,52 @@ class ConfigEditor(
         add(panel)
     }
 
+    private fun createThumbClusterConfigPanel() {
+        val panel = JPanel().apply {
+            border = BorderFactory.createTitledBorder("Кластер большого пальца")
+            layout = GridLayout(0, 2)
+        }
+
+        addDoubleSpinner(panel, "Смещение по оси X:", currentConfig.thumbClusterSettings.xOffset, 0.0..100.0) {
+            val thumbClusterSettings = currentConfig.thumbClusterSettings
+            currentConfig = currentConfig.copy(thumbClusterSettings = thumbClusterSettings.copy(xOffset = it))
+            fireChanges()
+        }
+
+        addDoubleSpinner(panel, "Смещение по оси Y:", currentConfig.thumbClusterSettings.yOffset, -100.0..100.0) {
+            val thumbClusterSettings = currentConfig.thumbClusterSettings
+            currentConfig = currentConfig.copy(thumbClusterSettings = thumbClusterSettings.copy(yOffset = it))
+            fireChanges()
+        }
+
+        addDoubleSpinner(panel, "Смещение по оси Z:", currentConfig.thumbClusterSettings.zOffset, 0.0..100.0) {
+            val thumbClusterSettings = currentConfig.thumbClusterSettings
+            currentConfig = currentConfig.copy(thumbClusterSettings = thumbClusterSettings.copy(zOffset = it))
+            fireChanges()
+        }
+
+
+        addDoubleSpinner(panel, "Поворот вокруг оси Y:", currentConfig.thumbClusterSettings.rotateY, 0.0..100.0) {
+            val thumbClusterSettings = currentConfig.thumbClusterSettings
+            currentConfig = currentConfig.copy(thumbClusterSettings = thumbClusterSettings.copy(rotateY = it))
+            fireChanges()
+        }
+
+        addDoubleSpinner(panel, "Поворот вокруг оси Z:", currentConfig.thumbClusterSettings.rotateZ, 0.0..100.0) {
+            val thumbClusterSettings = currentConfig.thumbClusterSettings
+            currentConfig = currentConfig.copy(thumbClusterSettings = thumbClusterSettings.copy(rotateZ = it))
+            fireChanges()
+        }
+
+        /*
+        addDoubleSpinner(panel, "Поворот вокруг оси X:", currentConfig.thumbClusterSettings.r, 0..100) {
+            currentConfig = currentConfig.copy(fn = it)
+            fireChanges()
+        }
+        */
+        add(panel)
+    }
+
     private fun addIntSpinner(
         panel: JPanel, label: String, value: Int, range: IntRange, callback: (Int) -> Unit
     ) {
@@ -148,7 +195,7 @@ class ConfigEditor(
         label: String,
         initialValue: Double,
         range: ClosedFloatingPointRange<Double>,
-        step: Double,
+        step: Double = 0.1,
         callback: (Double) -> Unit
     ) {
         panel.add(JLabel(label))
