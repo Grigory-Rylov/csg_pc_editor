@@ -27,6 +27,7 @@ import eu.printingin3d.javascad.utils.StlExporter
 import eu.printingin3d.javascad.vrl.ColorFacetGenerationContext
 import eu.printingin3d.javascad.vrl.FacetGenerationContext
 import eu.printingin3d.javascad.vrl.VertexHolder
+import java.io.File
 import java.io.IOException
 import java.util.concurrent.Executor
 import java.util.concurrent.Executors
@@ -109,11 +110,19 @@ class SceneBuilderKeyboard(
     }
 
     private fun saveModel(name: String, model: Abstract3dModel, fn: Int = 20) {
+        val outDir = File("stl")
+        if (!outDir.exists()) {
+            outDir.mkdirs()
+        }
+
         Thread {
             try {
                 val context: FacetGenerationContext = ColorFacetGenerationContext(DEFAULT_COLOR)
                 context.setFn(fn)
-                StlExporter.saveStringToFile(model.toCSG(context).verticesAndColorsAsFloatArray, name)
+                StlExporter.saveStringToFile(
+                    model.toCSG(context).verticesAndColorsAsFloatArray,
+                    File(outDir, name).absolutePath
+                )
             } catch (e: IOException) {
                 throw RuntimeException(e)
             }
@@ -193,8 +202,10 @@ class SceneBuilderKeyboard(
     }
 
     private fun createCase(keyPlace: KeyPlace, thumbKeyPlace: ThumbKeyPlace): Abstract3dModel {
-        val borders = Walls(cfg, keyPlace, thumbKeyPlace).createBorders(1.9, 6.0)
-        val walls = Walls(cfg, keyPlace, thumbKeyPlace).createWalls(1.5, 4.0).subtractModel(borders)
+        val borders = Walls(cfg, keyPlace, thumbKeyPlace).createBorders(1.7, 6.0)
+        val walls = Walls(cfg, keyPlace, thumbKeyPlace)
+            .createWalls(1.5, 4.0)
+            .subtractModel(borders)
             .subtractModel(Cube(300.0, 300.0, 50.0).move(0.0, 0.0, -25.0))
         createAndAdd(walls, Color.gray, 30)
         return walls

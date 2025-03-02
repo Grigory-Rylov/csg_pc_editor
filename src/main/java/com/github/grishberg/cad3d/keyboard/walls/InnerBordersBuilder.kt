@@ -16,7 +16,9 @@ class InnerBordersBuilder(
 
     ) : WallsBuilder {
 
-    override fun backWall(keyPlace: (Abstract3dModel) -> Abstract3dModel): Abstract3dModel {
+    override fun backWall(
+        onlyBorder: Boolean,
+        keyPlace: (Abstract3dModel) -> Abstract3dModel): Abstract3dModel {
         return Utils.hull(
             keyPlace(KeyPlaceholder.placeHolderTop()),
 

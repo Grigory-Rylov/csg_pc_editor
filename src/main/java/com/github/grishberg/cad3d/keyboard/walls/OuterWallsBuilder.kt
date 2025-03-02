@@ -8,7 +8,7 @@ import eu.printingin3d.javascad.tranzitions.Union
 class OuterWallsBuilder(
     private val borderThickness: Double = 1.5,
     private val borderHeight: Double = 4.0,
-    private val verticalOffset: Double = 4.0,
+    private val verticalOffset: Double = 5.0,
     private val horizontalOffset: Double = 8.0,
     private val borderZOffset: Double = -2.0,
 
@@ -18,7 +18,9 @@ class OuterWallsBuilder(
     private val bottomEdgePatcher: WallBottomEdgePatcher = DefaultBottomEdgePatcher(borderThickness, borderHeight),
 ) : WallsBuilder {
 
-    override fun backWall(keyPlace: (Abstract3dModel) -> Abstract3dModel): Abstract3dModel {
+    override fun backWall(
+        onlyBorder: Boolean, keyPlace: (Abstract3dModel) -> Abstract3dModel
+    ): Abstract3dModel {
         val left = keyPlace(KeyPlaceholder.placeHolderTopLeft().move(0.0, outerVerticalOffset, outerBorderZOffset))
         val right = keyPlace(KeyPlaceholder.placeHolderTopRight().move(0.0, outerVerticalOffset, outerBorderZOffset))
 
@@ -37,8 +39,13 @@ class OuterWallsBuilder(
                 )
             )
         )
+        if (onlyBorder) {
+            return border
+        }
         val wall = hull(
-            left, right, bottomEdgePatcher.backPoint(left), bottomEdgePatcher.backPoint(right)
+            left, right,
+            bottomEdgePatcher.backPoint(left),
+            bottomEdgePatcher.backPoint(right)
         )
         return Union(border, wall)
     }
@@ -118,9 +125,7 @@ class OuterWallsBuilder(
         )
 
         val wall = hull(
-            top, bottom,
-            bottomEdgePatcher.leftPoint(top),
-            bottomEdgePatcher.leftPoint(bottom)
+            top, bottom, bottomEdgePatcher.leftPoint(top), bottomEdgePatcher.leftPoint(bottom)
         )
 
         return Union(border, wall)
@@ -154,9 +159,7 @@ class OuterWallsBuilder(
             return border
         }
         val wall = hull(
-            left, right,
-            bottomEdgePatcher.frontPoint(left),
-            bottomEdgePatcher.frontPoint(right)
+            left, right, bottomEdgePatcher.frontPoint(left), bottomEdgePatcher.frontPoint(right)
         )
 
         return Union(border, wall)

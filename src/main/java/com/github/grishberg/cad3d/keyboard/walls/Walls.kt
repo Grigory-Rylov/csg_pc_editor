@@ -18,6 +18,8 @@ class Walls(
     private val thumbKeyPlace: ThumbKeyPlace,
 ) {
 
+    private val wallVerticalOffset = 5.0
+    private val wallHorizontalOffset = 10.0
     private val models = ArrayList<Abstract3dModel>()
     var bordersOffset = cfg.bordersOffset
     val thumbRightOffset = 4.0
@@ -31,13 +33,18 @@ class Walls(
 
         //columns
         thumbBorders(
-            InnerBordersBuilder(thumbKeyPlace = thumbKeyPlace, rightOffset = 4.0, borderThickness = borderThickness, borderHeight = borderHeight),
-            InnerCorners(rightOffset = 4.0, borderThickness = borderThickness, borderHeight = borderHeight)
+            InnerBordersBuilder(
+                thumbKeyPlace = thumbKeyPlace,
+                rightOffset = 4.0,
+                borderThickness = borderThickness,
+                borderHeight = borderHeight
+            ), InnerCorners(rightOffset = 4.0, borderThickness = borderThickness, borderHeight = borderHeight)
         )
 
         matrixBorders(
-            InnerBordersBuilder(thumbKeyPlace = thumbKeyPlace, borderThickness = borderThickness, borderHeight = borderHeight),
-            InnerCorners(borderThickness = borderThickness, borderHeight = borderHeight)
+            InnerBordersBuilder(
+                thumbKeyPlace = thumbKeyPlace, borderThickness = borderThickness, borderHeight = borderHeight
+            ), InnerCorners(borderThickness = borderThickness, borderHeight = borderHeight)
         )
 
         betweenThumbAndMatrixBorders(borderThickness, borderHeight)
@@ -57,19 +64,37 @@ class Walls(
         )
 
         matrixBorders(
-            OuterWallsBuilder(borderThickness = borderThickness, bottomEdgePatcher = bottomEdgePatcher),
-            OuterCornersWallBuilder(borderThickness = borderThickness, bottomEdgePatcher = bottomEdgePatcher),
-            isWallMode = true
+            OuterWallsBuilder(
+                verticalOffset = wallVerticalOffset,
+                horizontalOffset = wallHorizontalOffset,
+                borderThickness = borderThickness,
+                bottomEdgePatcher = bottomEdgePatcher
+            ), OuterCornersWallBuilder(
+                verticalOffset = wallVerticalOffset,
+                leftOffset = wallHorizontalOffset,
+                rightOffset = wallHorizontalOffset,
+                borderThickness = borderThickness,
+                bottomEdgePatcher = bottomEdgePatcher
+            ), isWallMode = true
         )
 
         thumbWalls(
-            OuterWallsBuilder(borderThickness = borderThickness, borderHeight = borderHeight),
+            OuterWallsBuilder(
+                verticalOffset = wallVerticalOffset,
+                horizontalOffset = wallHorizontalOffset,
+                borderThickness = borderThickness,
+                borderHeight = borderHeight
+            ),
             OuterCornersWallBuilder(
+                verticalOffset = wallVerticalOffset,
+                leftOffset = wallHorizontalOffset,
+                rightOffset = thumbRightOffset,
                 borderThickness = borderThickness,
                 borderHeight = borderHeight,
-                rightOffset = thumbRightOffset,
                 outerRightOffset = thumbOuterRightOffset
             ),
+            verticalOffset = wallVerticalOffset,
+            leftOffset = wallHorizontalOffset,
             rightOffset = thumbRightOffset,
             outerRightOffset = thumbOuterRightOffset,
             bottomEdgePatcher = bottomEdgePatcher,
@@ -348,7 +373,7 @@ class Walls(
             )
         )
 
-        //models.add(wallsBuilder.backWall { o -> thumbKeyPlace.placeL(o) })
+        models.add(wallsBuilder.backWall(onlyBorder = true) { o -> thumbKeyPlace.placeL(o) })
 
         models.add(wallsBuilder.frontWall { o -> thumbKeyPlace.placeR(o) })
         //models.add(wallsBuilder.frontWall { o -> ThumbKeyPlace.placeM(o) })
@@ -376,14 +401,14 @@ class Walls(
         models.add(
             hull(
                 verticalCube(
-                    thumbKeyPlace.placeL(KeyPlaceholder.placeHolderTopRight().move(0.0, verticalOffset, borderZOffset)),
-                    borderThickness,
-                    borderHeight
+                    thumbKeyPlace.placeL(
+                        KeyPlaceholder.placeHolderTopRight().move(0.0, outerVerticalOffset, outerBorderZOffset)
+                    ), borderThickness, borderHeight
                 ),
                 verticalCube(
-                    thumbKeyPlace.placeL(KeyPlaceholder.placeHolderTopLeft().move(0.0, verticalOffset, borderZOffset)),
-                    borderThickness,
-                    borderHeight
+                    thumbKeyPlace.placeL(
+                        KeyPlaceholder.placeHolderTopLeft().move(0.0, outerVerticalOffset, outerBorderZOffset)
+                    ), borderThickness, borderHeight
                 ),
                 thumbKeyPlace.placeL(
                     KeyPlaceholder.placeHolderTopLeft().move(0.0, outerVerticalOffset, outerBorderZOffset)
@@ -396,6 +421,23 @@ class Walls(
                 topOuterPoint,
             )
         )
+
+        models.add(
+            hull(
+                topInnerPoint,
+
+                thumbKeyPlace.placeL(
+                    KeyPlaceholder.placeHolderTopRight().move(0.0, outerVerticalOffset, outerBorderZOffset)
+                ),
+
+                verticalCube(
+                    thumbKeyPlace.placeL(
+                        KeyPlaceholder.placeHolderTopRight().move(0.0, verticalOffset + 2, borderZOffset)
+                    ), borderThickness, borderHeight
+                ),
+            )
+        )
+
         models.add(
             hull(
                 topOuterPoint,
@@ -404,10 +446,8 @@ class Walls(
                     thumbKeyPlace.placeL(
                         KeyPlaceholder.placeHolderTopLeft().move(0.0, outerVerticalOffset, outerBorderZOffset)
                     ),
-
-                    ),
-
-                )
+                ),
+            )
         )
     }
 
@@ -482,6 +522,9 @@ class Walls(
                 keyPlace.place(1, cfg.lastRow, KeyPlaceholder.placeHolderBottomRight()),
             )
         )
+        val firstPointMatrix = keyPlace.place(
+            3, cfg.lastRow, KeyPlaceholder.placeHolderBottomLeft().move(0.0, -verticalOffset, borderZOffset)
+        )
         models.add(
             hull(
                 verticalCube(
@@ -492,9 +535,7 @@ class Walls(
                 keyPlace.place(1, cfg.lastRow, KeyPlaceholder.placeHolderBottomRight()),
 
                 verticalCube(
-                    keyPlace.place(
-                        3, cfg.lastRow, KeyPlaceholder.placeHolderBottomLeft().move(0.0, -verticalOffset, borderZOffset)
-                    ), borderThickness, borderHeight
+                    firstPointMatrix, borderThickness, borderHeight
                 ),
             )
         )
@@ -504,9 +545,7 @@ class Walls(
             hull(
                 keyPlace.place(1, cfg.lastRow, KeyPlaceholder.placeHolderBottomRight()),
                 verticalCube(
-                    keyPlace.place(
-                        3, cfg.lastRow, KeyPlaceholder.placeHolderBottomLeft().move(0.0, -verticalOffset, borderZOffset)
-                    ), borderThickness, borderHeight
+                    firstPointMatrix, borderThickness, borderHeight
                 ),
 
                 verticalCube(
@@ -549,9 +588,7 @@ class Walls(
                     ), borderThickness, borderHeight
                 ),
                 verticalCube(
-                    keyPlace.place(
-                        3, cfg.lastRow, KeyPlaceholder.placeHolderBottomLeft().move(0.0, -verticalOffset, borderZOffset)
-                    ), borderThickness, borderHeight
+                    firstPointMatrix, borderThickness, borderHeight
                 ),
             )
         )
@@ -569,9 +606,7 @@ class Walls(
                     ), borderThickness, borderHeight
                 ),
                 verticalCube(
-                    keyPlace.place(
-                        3, cfg.lastRow, KeyPlaceholder.placeHolderBottomLeft().move(0.0, -verticalOffset, borderZOffset)
-                    ), borderThickness, borderHeight
+                    firstPointMatrix, borderThickness, borderHeight
                 ),
             )
         )

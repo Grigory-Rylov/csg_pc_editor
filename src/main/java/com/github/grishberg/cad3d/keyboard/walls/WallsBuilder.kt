@@ -5,7 +5,9 @@ import eu.printingin3d.javascad.models.Abstract3dModel
 
 interface WallsBuilder {
 
-    fun backWall(keyPlace:(Abstract3dModel) -> Abstract3dModel): Abstract3dModel
+    fun backWall(
+        onlyBorder: Boolean = false,
+        keyPlace:(Abstract3dModel) -> Abstract3dModel): Abstract3dModel
     fun backMidWall(
         leftPlace: (Abstract3dModel) -> Abstract3dModel,
         rightPlace: (Abstract3dModel) -> Abstract3dModel,
