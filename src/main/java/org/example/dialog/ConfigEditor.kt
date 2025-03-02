@@ -1,6 +1,8 @@
 package org.example.dialog
 
-import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
+import com.github.grishberg.cad3d.keyboard.cfg.KeyboardSettings
+import com.github.grishberg.cad3d.keyboard.cfg.SettingsContainer
+import com.github.grishberg.cad3d.keyboard.cfg.ThumbClusterSettings
 import java.awt.GridLayout
 import javax.swing.BorderFactory
 import javax.swing.BoxLayout
@@ -12,10 +14,13 @@ import javax.swing.JSpinner
 import javax.swing.SpinnerNumberModel
 
 class ConfigEditor(
-    private val initialConfig: KeyboardConfig, private val onConfigChanged: (KeyboardConfig) -> Unit
+    private val initialSettingsContainer: SettingsContainer,
+    private val onKeyboardSettingsChanged: (KeyboardSettings) -> Unit,
+    private val onThumbClusterSettingsChanged: (ThumbClusterSettings) -> Unit,
 ) : JDialog() {
 
-    private var currentConfig = initialConfig
+    private var currentKeyboardSettings = initialSettingsContainer.keyboardSettings
+    private var currentThumbClusterSettings = initialSettingsContainer.thumbClusterSettings
 
     init {
         title = "Конфигурация клавиатуры"
@@ -39,14 +44,14 @@ class ConfigEditor(
             layout = GridLayout(0, 2)
         }
 
-        addIntSpinner(panel, "Рядов:", currentConfig.rowsCount, 1..6) {
-            currentConfig = currentConfig.copy(rowsCount = it)
-            fireChanges()
+        addIntSpinner(panel, "Рядов:", currentKeyboardSettings.rowsCount, 1..6) {
+            currentKeyboardSettings = currentKeyboardSettings.copy(rowsCount = it)
+            fireKeyboardSettingsChanges()
         }
 
-        addIntSpinner(panel, "Колонок:", currentConfig.columnsCount, 1..10) {
-            currentConfig = currentConfig.copy(columnsCount = it)
-            fireChanges()
+        addIntSpinner(panel, "Колонок:", currentKeyboardSettings.columnsCount, 1..10) {
+            currentKeyboardSettings = currentKeyboardSettings.copy(columnsCount = it)
+            fireKeyboardSettingsChanges()
         }
 
         add(panel)
@@ -58,19 +63,19 @@ class ConfigEditor(
             layout = GridLayout(0, 2)
         }
 
-        addDoubleSpinner(panel, "Кривизна рядов:", currentConfig.rowCurvature, 0.0..50.0, 0.5) {
-            currentConfig = currentConfig.copy(rowCurvature = it)
-            fireChanges()
+        addDoubleSpinner(panel, "Кривизна рядов:", currentKeyboardSettings.rowCurvature, 0.0..50.0, 0.5) {
+            currentKeyboardSettings = currentKeyboardSettings.copy(rowCurvature = it)
+            fireKeyboardSettingsChanges()
         }
 
-        addDoubleSpinner(panel, "Кривизна колонок:", currentConfig.columnCurvature, 0.0..50.0, 0.5) {
-            currentConfig = currentConfig.copy(columnCurvature = it)
-            fireChanges()
+        addDoubleSpinner(panel, "Кривизна колонок:", currentKeyboardSettings.columnCurvature, 0.0..50.0, 0.5) {
+            currentKeyboardSettings = currentKeyboardSettings.copy(columnCurvature = it)
+            fireKeyboardSettingsChanges()
         }
 
-        addDoubleSpinner(panel, "Угол наклона:", currentConfig.tentingAngle, 0.0..90.0, 1.0) {
-            currentConfig = currentConfig.copy(tentingAngle = it)
-            fireChanges()
+        addDoubleSpinner(panel, "Угол наклона:", currentKeyboardSettings.tentingAngle, 0.0..90.0, 1.0) {
+            currentKeyboardSettings = currentKeyboardSettings.copy(tentingAngle = it)
+            fireKeyboardSettingsChanges()
         }
 
         add(panel)
@@ -82,24 +87,24 @@ class ConfigEditor(
             layout = GridLayout(0, 2)
         }
 
-        addDoubleSpinner(panel, "Толщина пластины:", currentConfig.plateThickness, 0.0..10.0, 0.1) {
-            currentConfig = currentConfig.copy(plateThickness = it)
-            fireChanges()
+        addDoubleSpinner(panel, "Толщина пластины:", currentKeyboardSettings.plateThickness, 0.0..10.0, 0.1) {
+            currentKeyboardSettings = currentKeyboardSettings.copy(plateThickness = it)
+            fireKeyboardSettingsChanges()
         }
 
-        addDoubleSpinner(panel, "Z-смещение пластины:", currentConfig.plateZOffset, 0.0..50.0, 0.1) {
-            currentConfig = currentConfig.copy(plateZOffset = it)
-            fireChanges()
+        addDoubleSpinner(panel, "Z-смещение пластины:", currentKeyboardSettings.plateZOffset, 0.0..50.0, 0.1) {
+            currentKeyboardSettings = currentKeyboardSettings.copy(plateZOffset = it)
+            fireKeyboardSettingsChanges()
         }
 
-        addDoubleSpinner(panel, "Высота профиля SA:", currentConfig.saProfileKeyHeight, 0.0..20.0, 0.1) {
-            currentConfig = currentConfig.copy(saProfileKeyHeight = it)
-            fireChanges()
+        addDoubleSpinner(panel, "Высота профиля SA:", currentKeyboardSettings.saProfileKeyHeight, 0.0..20.0, 0.1) {
+            currentKeyboardSettings = currentKeyboardSettings.copy(saProfileKeyHeight = it)
+            fireKeyboardSettingsChanges()
         }
 
-        addDoubleSpinner(panel, "Смещение границ:", currentConfig.bordersOffset, 0.0..50.0, 0.5) {
-            currentConfig = currentConfig.copy(bordersOffset = it)
-            fireChanges()
+        addDoubleSpinner(panel, "Смещение границ:", currentKeyboardSettings.bordersOffset, 0.0..50.0, 0.5) {
+            currentKeyboardSettings = currentKeyboardSettings.copy(bordersOffset = it)
+            fireKeyboardSettingsChanges()
         }
 
         add(panel)
@@ -111,24 +116,24 @@ class ConfigEditor(
             layout = GridLayout(0, 2)
         }
 
-        addCheckbox(panel, "Низкий профиль:", currentConfig.isLowProfile) {
-            currentConfig = currentConfig.copy(isLowProfile = it)
-            fireChanges()
+        addCheckbox(panel, "Низкий профиль:", currentKeyboardSettings.isLowProfile) {
+            currentKeyboardSettings = currentKeyboardSettings.copy(isLowProfile = it)
+            fireKeyboardSettingsChanges()
         }
 
-        addCheckbox(panel, "Хотсвоп:", currentConfig.isHasHotswap) {
-            currentConfig = currentConfig.copy(isHasHotswap = it)
-            fireChanges()
+        addCheckbox(panel, "Хотсвоп:", currentKeyboardSettings.isHasHotswap) {
+            currentKeyboardSettings = currentKeyboardSettings.copy(isHasHotswap = it)
+            fireKeyboardSettingsChanges()
         }
 
-        addCheckbox(panel, "Магнитная площадка:", currentConfig.isMagneticWristRestHolder) {
-            currentConfig = currentConfig.copy(isMagneticWristRestHolder = it)
-            fireChanges()
+        addCheckbox(panel, "Магнитная площадка:", currentKeyboardSettings.isMagneticWristRestHolder) {
+            currentKeyboardSettings = currentKeyboardSettings.copy(isMagneticWristRestHolder = it)
+            fireKeyboardSettingsChanges()
         }
 
-        addIntSpinner(panel, "FN клавиша:", currentConfig.fn, 4..100) {
-            currentConfig = currentConfig.copy(fn = it)
-            fireChanges()
+        addIntSpinner(panel, "FN клавиша:", currentKeyboardSettings.fn, 4..100) {
+            currentKeyboardSettings = currentKeyboardSettings.copy(fn = it)
+            fireKeyboardSettingsChanges()
         }
 
         add(panel)
@@ -140,40 +145,49 @@ class ConfigEditor(
             layout = GridLayout(0, 2)
         }
 
-        addDoubleSpinner(panel, "Смещение по оси X:", currentConfig.thumbClusterSettings.xOffset, 0.0..100.0) {
-            val thumbClusterSettings = currentConfig.thumbClusterSettings
-            currentConfig = currentConfig.copy(thumbClusterSettings = thumbClusterSettings.copy(xOffset = it))
-            fireChanges()
+        addDoubleSpinner(panel, "Смещение по оси X:", currentThumbClusterSettings.xOffset, -100.0..100.0) {
+            currentThumbClusterSettings = currentThumbClusterSettings.copy(xOffset = it)
+            fireThumnClusterSettingsChanges()
         }
 
-        addDoubleSpinner(panel, "Смещение по оси Y:", currentConfig.thumbClusterSettings.yOffset, -100.0..100.0) {
-            val thumbClusterSettings = currentConfig.thumbClusterSettings
-            currentConfig = currentConfig.copy(thumbClusterSettings = thumbClusterSettings.copy(yOffset = it))
-            fireChanges()
+        addDoubleSpinner(panel, "Смещение по оси Y:", currentThumbClusterSettings.yOffset, -100.0..100.0) {
+            currentThumbClusterSettings = currentThumbClusterSettings.copy(yOffset = it)
+            fireThumnClusterSettingsChanges()
         }
 
-        addDoubleSpinner(panel, "Смещение по оси Z:", currentConfig.thumbClusterSettings.zOffset, 0.0..100.0) {
-            val thumbClusterSettings = currentConfig.thumbClusterSettings
-            currentConfig = currentConfig.copy(thumbClusterSettings = thumbClusterSettings.copy(zOffset = it))
-            fireChanges()
+        addDoubleSpinner(panel, "Смещение по оси Z:", currentThumbClusterSettings.zOffset, 0.0..100.0) {
+            currentThumbClusterSettings = currentThumbClusterSettings.copy(zOffset = it)
+            fireThumnClusterSettingsChanges()
         }
 
 
-        addDoubleSpinner(panel, "Поворот вокруг оси Y:", currentConfig.thumbClusterSettings.rotateY, 0.0..100.0) {
-            val thumbClusterSettings = currentConfig.thumbClusterSettings
-            currentConfig = currentConfig.copy(thumbClusterSettings = thumbClusterSettings.copy(rotateY = it))
-            fireChanges()
+        addDoubleSpinner(panel, "Поворот вокруг оси Y:", currentThumbClusterSettings.rotateY, -180.0..180.0) {
+            currentThumbClusterSettings = currentThumbClusterSettings.copy(rotateY = it)
+            fireThumnClusterSettingsChanges()
         }
 
-        addDoubleSpinner(panel, "Поворот вокруг оси Z:", currentConfig.thumbClusterSettings.rotateZ, 0.0..100.0) {
-            val thumbClusterSettings = currentConfig.thumbClusterSettings
-            currentConfig = currentConfig.copy(thumbClusterSettings = thumbClusterSettings.copy(rotateZ = it))
-            fireChanges()
+        addDoubleSpinner(panel, "Поворот вокруг оси Z:", currentThumbClusterSettings.rotateZ, -180.0..180.0) {
+            currentThumbClusterSettings = currentThumbClusterSettings.copy(rotateZ = it)
+            fireThumnClusterSettingsChanges()
+        }
+
+        addDoubleSpinner(
+            panel, "Радиус дуги вокруг оси Z", currentThumbClusterSettings.arcRadiusZ, -1000.0..1000.0
+        ) {
+            currentThumbClusterSettings = currentThumbClusterSettings.copy(arcRadiusZ = it)
+            fireThumnClusterSettingsChanges()
+        }
+
+        addDoubleSpinner(
+            panel, "Радиус дуги вокруг оси Y", currentThumbClusterSettings.arcRadiusY, -1000.0..1000.0
+        ) {
+            currentThumbClusterSettings = currentThumbClusterSettings.copy(arcRadiusY = it)
+            fireThumnClusterSettingsChanges()
         }
 
         /*
-        addDoubleSpinner(panel, "Поворот вокруг оси X:", currentConfig.thumbClusterSettings.r, 0..100) {
-            currentConfig = currentConfig.copy(fn = it)
+        addDoubleSpinner(panel, "Поворот вокруг оси X:", currentThumbClusterSettings.r, 0..100) {
+            currentThumbClusterSettings = currentThumbClusterSettings.copy(fn = it)
             fireChanges()
         }
         */
@@ -218,7 +232,11 @@ class ConfigEditor(
         panel.add(checkbox)
     }
 
-    private fun fireChanges() {
-        onConfigChanged(currentConfig)
+    private fun fireKeyboardSettingsChanges() {
+        onKeyboardSettingsChanged(currentKeyboardSettings)
+    }
+
+    private fun fireThumnClusterSettingsChanges() {
+        onThumbClusterSettingsChanged(currentThumbClusterSettings)
     }
 }

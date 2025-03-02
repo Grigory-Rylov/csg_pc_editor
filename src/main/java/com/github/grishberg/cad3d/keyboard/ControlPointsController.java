@@ -2,7 +2,6 @@ package com.github.grishberg.cad3d.keyboard;
 
 import static com.github.grishberg.cad3d.keyboard.Utils.v3d;
 
-import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig;
 import eu.printingin3d.javascad.coords.V3d;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,7 +13,7 @@ public class ControlPointsController {
 
     private List<OnChangeListener> listeners = new ArrayList<>();
 
-    public ControlPointsController(KeyboardConfig cfg) {
+    public ControlPointsController() {
 
         double topOffset = 10;
         double offset = 12;

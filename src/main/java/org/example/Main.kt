@@ -1,13 +1,7 @@
 package org.example
 
 import com.github.grishberg.cad3d.keyboard.ControlPointsController
-import com.github.grishberg.cad3d.keyboard.KeyPlace
-import com.github.grishberg.cad3d.keyboard.cfg.AssemblySettings
-import com.github.grishberg.cad3d.keyboard.cfg.KeyOffsetProvider
-import com.github.grishberg.cad3d.keyboard.cfg.KeyZAngleProvider
-import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
-import com.github.grishberg.cad3d.keyboard.cfg.PowerSwitcherType
-import com.github.grishberg.cad3d.keyboard.cfg.ThumbClusterSettings
+import com.github.grishberg.cad3d.keyboard.cfg.SettingsHolder
 import com.github.grishberg.cad3d.util.SceneBuilder
 import com.github.grishberg.cad3d.util.SceneBuilderKeyboard
 import com.jogamp.opengl.GL2
@@ -34,10 +28,6 @@ import java.awt.event.MouseWheelEvent
 import java.awt.event.MouseWheelListener
 import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
-import java.io.IOException
-import java.nio.file.Files
-import java.nio.file.Paths
-import java.util.Properties
 import javax.swing.JButton
 import javax.swing.JCheckBox
 import javax.swing.JFrame
@@ -48,55 +38,17 @@ class Main(title: String?) : JFrame(title), GLEventListener {
 
     //    protected GLWindow window;
     protected var animator: Animator? = null
-    private var xOffset = 0.0f
-    private var settingsShowCaps = true
-    private var settingsShowCase = true
-    private var settingsShowMatrix = true
-    private var settingsShowPlate = true
-    private var settingsShowWristRest = true
 
     //public Caps caps;
     // Установка позиции источника света
     var lightPosition = floatArrayOf(0.0f, 1f, 0.5f, 1.0f)
-    private val rowsCount = 3
-    private val colsCount = 6
-    private var cfg = KeyboardConfig(
-        60,  // fn
-        14.0,  // plateZOffset
-        20.1,  // rowCurvature
-        14.0,  // tentingAngle
-        12.1,  // columnCurvature
-        14.2,  // keyswitchHeight
-        14.2,  // keyswitchWidth
-        2.5,  // controls overall height; original=9 with centercol=3; use 16 for centercol=2
-        1.0,  // extra space between the base of keys; original= 2
-        3.0,  // plateThickness
-        LOW_PROFILE_KEYCAP_HEIGHT,  //
-        2,  // centerCol
-        rowsCount,  // rowsCount
-        colsCount,  // colsCount
-        rowsCount - 2,  // centerRow
-        15.7,  // keyPlaceHolderWidth
-        15.7,  // keyPlaceHolderDepth
-        4.0,  // keyPlaceHolderHeight
-        true,  // isLowProfile
-        KeyZAngleProvider(), KeyOffsetProvider(), PowerSwitcherType.None, true,  // hasHotswap
-        false,  // magneticWristRestHolder
-        6.0, //borders offset,
-        makeAssemblySettings(),
-        ThumbClusterSettings(),
-    )
+    private val settingsHolder = SettingsHolder(SETTINGS_FILE)
+
     private val vertexHolderList: MutableList<VertexHolder> = ArrayList()
     private val glu = GLU()
-    private var rotateX = -55.0f
-    private var rotateY = 0.0f
-    private var rotateZ = 0.0f
     private var prevMouseX = 0
     private var prevMouseY = 0
-    private var translateX = 0.0f // Смещение по X
-    private var translateY = 0.0f // Смещение по Y
-    private var translateZ = -300.0f // Смещение по Y
-    private val pointsController = ControlPointsController(cfg)
+    private val pointsController = ControlPointsController()
     private var glCanvas: GLCanvas? = null
     private var controlPanel: JPanel? = null
     private val sceneBuilder: SceneBuilder
@@ -104,8 +56,8 @@ class Main(title: String?) : JFrame(title), GLEventListener {
     private var requestRenderingTime = 0L
 
     init {
-        loadSettings()
-        sceneBuilder = SceneBuilderKeyboard(cfg, pointsController)
+        settingsHolder.loadSettings()
+        sceneBuilder = SceneBuilderKeyboard(settingsHolder.settings.getKeyboardConfig(), pointsController)
         sceneBuilder.setListener { buffers: List<VertexHolder>? ->
             val timeDelta = System.currentTimeMillis() - requestRenderingTime
             println("Rendering time = $timeDelta ms")
@@ -124,24 +76,24 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         controlPanel!!.preferredSize = Dimension(800, 40)
 
         // Добавляем переключатели
-        val keysButton = createToggleButton("Клавиши", settingsShowCaps) {
-            settingsShowCaps = it
+        val keysButton = createToggleButton("Клавиши", settingsHolder.settingsShowCaps) {
+            settingsHolder.settingsShowCaps = it
             rebuildConfigAndRequestRendering()
         }
-        val caseButton = createToggleButton("Корпус", settingsShowCase) {
-            settingsShowCase = it
+        val caseButton = createToggleButton("Корпус", settingsHolder.settingsShowCase) {
+            settingsHolder.settingsShowCase = it
             rebuildConfigAndRequestRendering()
         }
-        val matrixButton = createToggleButton("Матрица", settingsShowMatrix) {
-            settingsShowMatrix = it
+        val matrixButton = createToggleButton("Матрица", settingsHolder.settingsShowMatrix) {
+            settingsHolder.settingsShowMatrix = it
             rebuildConfigAndRequestRendering()
         }
-        val plateButton = createToggleButton("Поддон", settingsShowPlate) {
-            settingsShowPlate = it
+        val plateButton = createToggleButton("Поддон", settingsHolder.settingsShowPlate) {
+            settingsHolder.settingsShowPlate = it
             rebuildConfigAndRequestRendering()
         }
-        val wristRestButton = createToggleButton("Держатель рук", settingsShowWristRest) {
-            settingsShowWristRest = it
+        val wristRestButton = createToggleButton("Держатель рук", settingsHolder.settingsShowWristRest) {
+            settingsHolder.settingsShowWristRest = it
             rebuildConfigAndRequestRendering()
         }
         controlPanel!!.add(keysButton)
@@ -178,7 +130,7 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         // Обработка закрытия окна
         addWindowListener(object : WindowAdapter() {
             override fun windowClosing(e: WindowEvent) {
-                saveSettings()
+                settingsHolder.saveSettings()
                 animator!!.stop()
                 dispose()
             }
@@ -189,16 +141,20 @@ class Main(title: String?) : JFrame(title), GLEventListener {
 
     private fun showConfigDialog() {
         // Создание и отображение редактора
-        val configDialog = ConfigEditor(cfg) {
-            cfg = it
+        val configDialog = ConfigEditor(settingsHolder.settings, onKeyboardSettingsChanged = {
+            settingsHolder.updateSettings(it)
             rebuildConfigAndRequestRendering()
-        }
+        },
+
+            onThumbClusterSettingsChanged = {
+                settingsHolder.updateSettings(it)
+                rebuildConfigAndRequestRendering()
+            })
         configDialog.isVisible = true
     }
 
     private fun rebuildConfigAndRequestRendering() {
-        cfg.assemblySettings = makeAssemblySettings()
-        sceneBuilder.setConfig(cfg)
+        sceneBuilder.setConfig(settingsHolder.settings.getKeyboardConfig())
         requestRenderingTime = System.currentTimeMillis()
         sceneBuilder.requestBuffers()
     }
@@ -208,71 +164,6 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         button.addActionListener { e: ActionEvent? -> onChanged(button.isSelected) }
         button.preferredSize = Dimension(100, 30)
         return button
-    }
-
-    private fun handleSwitchChange(text: String, selected: Boolean) {
-        println(text)
-    }
-
-    private fun saveSettings() {
-        println("save settings")
-        val props = Properties()
-        props.setProperty("rotateX", java.lang.Float.toString(rotateX))
-        props.setProperty("rotateY", java.lang.Float.toString(rotateY))
-        props.setProperty("translateX", java.lang.Float.toString(translateX))
-        props.setProperty("translateY", java.lang.Float.toString(translateY))
-        props.setProperty("translateZ", java.lang.Float.toString(translateZ))
-        props.setProperty("xOffset", java.lang.Float.toString(xOffset))
-        props.setProperty("settingsShowCaps", java.lang.Boolean.toString(settingsShowCaps))
-        props.setProperty("settingsShowCase", java.lang.Boolean.toString(settingsShowCase))
-        props.setProperty("settingsShowMatrix", java.lang.Boolean.toString(settingsShowMatrix))
-        props.setProperty("settingsShowPlate", java.lang.Boolean.toString(settingsShowPlate))
-        props.setProperty("settingsShowWristRest", java.lang.Boolean.toString(settingsShowWristRest))
-        try {
-            Files.newOutputStream(Paths.get(SETTINGS_FILE)).use { output -> props.store(output, "3D Viewer Settings") }
-        } catch (ex: IOException) {
-            System.err.println("Error saving settings: " + ex.message)
-        }
-    }
-
-    private fun makeAssemblySettings(): AssemblySettings {
-        return AssemblySettings(
-            settingsShowCaps,
-            settingsShowCase,
-            settingsShowMatrix,
-            settingsShowPlate,
-            settingsShowWristRest,
-        )
-    }
-
-    // Метод загрузки настроек
-    private fun loadSettings() {
-        val path = Paths.get(SETTINGS_FILE)
-        if (!Files.exists(path)) {
-            return
-        }
-        val props = Properties()
-        try {
-            Files.newInputStream(path).use { input ->
-                props.load(input)
-                rotateX = props.getProperty("rotateX", "-55.0").toFloat()
-                rotateY = props.getProperty("rotateY", "0.0").toFloat()
-                translateX = props.getProperty("translateX", "0.0").toFloat()
-                translateY = props.getProperty("translateY", "0.0").toFloat()
-                translateZ = props.getProperty("translateZ", "-300.0").toFloat()
-                xOffset = props.getProperty("xOffset", "0.0").toFloat()
-                settingsShowCaps = java.lang.Boolean.parseBoolean(props.getProperty("settingsShowCaps", "true"))
-                settingsShowCase = java.lang.Boolean.parseBoolean(props.getProperty("settingsShowCase", "true"))
-                settingsShowMatrix = java.lang.Boolean.parseBoolean(props.getProperty("settingsShowMatrix", "true"))
-                settingsShowPlate = java.lang.Boolean.parseBoolean(props.getProperty("settingsShowPlate", "true"))
-                settingsShowWristRest =
-                    java.lang.Boolean.parseBoolean(props.getProperty("settingsShowWristRest", "true"))
-            }
-        } catch (ex: IOException) {
-            System.err.println("Error loading settings: " + ex.message)
-        } catch (ex: NumberFormatException) {
-            System.err.println("Error loading settings: " + ex.message)
-        }
     }
 
     override fun display(drawable: GLAutoDrawable) {
@@ -285,11 +176,11 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         gl.glMaterialfv(GL2.GL_FRONT, GLLightingFunc.GL_DIFFUSE, materialDiffuse, 0)
 
         // Перемещение куба в нужное место
-        gl.glTranslatef(translateX + xOffset, translateY, translateZ)
+        gl.glTranslatef(settingsHolder.translateX, settingsHolder.translateY, settingsHolder.translateZ)
         gl.glPushMatrix()
-        gl.glRotatef(rotateX, 1.0f, 0.0f, 0.0f)
-        gl.glRotatef(rotateY, 0.0f, 1.0f, 0.0f)
-        gl.glRotatef(rotateZ, 0.0f, 0.0f, 1.0f)
+        gl.glRotatef(settingsHolder.rotateX, 1.0f, 0.0f, 0.0f)
+        gl.glRotatef(settingsHolder.rotateY, 0.0f, 1.0f, 0.0f)
+        gl.glRotatef(settingsHolder.rotateZ, 0.0f, 0.0f, 1.0f)
         for (vertexHolder in vertexHolderList) {
             gl.glBegin(GL2.GL_TRIANGLES)
             var normalArrayIndex = 0
@@ -406,11 +297,11 @@ class Main(title: String?) : JFrame(title), GLEventListener {
             val deltaY = currentMouseY - prevMouseY
             if (e.modifiersEx and InputEvent.CTRL_DOWN_MASK != 0) {
                 // Смещение объекта при зажатом Control
-                translateX += deltaX * MOUSE_TRANSLATE_SENSITIVITY
-                translateY -= deltaY * MOUSE_TRANSLATE_SENSITIVITY
+                settingsHolder.translateX += deltaX * MOUSE_TRANSLATE_SENSITIVITY
+                settingsHolder.translateY -= deltaY * MOUSE_TRANSLATE_SENSITIVITY
             } else {
-                rotateX += deltaY.toFloat()
-                rotateZ += deltaX.toFloat()
+                settingsHolder.rotateX += deltaY.toFloat()
+                settingsHolder.rotateZ += deltaX.toFloat()
             }
             prevMouseX = currentMouseX
             prevMouseY = currentMouseY
@@ -425,11 +316,11 @@ class Main(title: String?) : JFrame(title), GLEventListener {
                 // При зажатом Ctrl - изменение масштаба
             } else {
                 // Без Ctrl - перемещение по осям
-                translateZ -= notches * ZOOM_SENSITIVITY
+                settingsHolder.translateZ -= notches * ZOOM_SENSITIVITY
             }
 
             // Ограничиваем диапазон значений (опционально)
-            translateZ = Math.max(ZOOM_MIN_OFFSET, Math.min(translateZ, ZOOM_MAX_OFFSET))
+            settingsHolder.translateZ = Math.max(ZOOM_MIN_OFFSET, Math.min(settingsHolder.translateZ, ZOOM_MAX_OFFSET))
         }
     }
 
@@ -439,10 +330,10 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         override fun keyPressed(e: KeyEvent) {
             val keyCode = e.keyCode
             when (keyCode) {
-                KeyEvent.VK_A, KeyEvent.VK_LEFT -> translateX -= TRANSLATE_STEP
-                KeyEvent.VK_D, KeyEvent.VK_RIGHT -> translateX += TRANSLATE_STEP
-                KeyEvent.VK_W, KeyEvent.VK_UP -> translateY += TRANSLATE_STEP
-                KeyEvent.VK_S, KeyEvent.VK_DOWN -> translateY -= TRANSLATE_STEP
+                KeyEvent.VK_A, KeyEvent.VK_LEFT -> settingsHolder.translateX -= TRANSLATE_STEP
+                KeyEvent.VK_D, KeyEvent.VK_RIGHT -> settingsHolder.translateX += TRANSLATE_STEP
+                KeyEvent.VK_W, KeyEvent.VK_UP -> settingsHolder.translateY += TRANSLATE_STEP
+                KeyEvent.VK_S, KeyEvent.VK_DOWN -> settingsHolder.translateY -= TRANSLATE_STEP
             }
             //window.reparentWindow(); // Обновляем отображение
         }
@@ -452,15 +343,10 @@ class Main(title: String?) : JFrame(title), GLEventListener {
 
     companion object {
 
-        private const val DEBUG = true
-        private const val LOW_PROFILE_KEYCAP_HEIGHT = 4.5
-        private const val STANDART_KEYCAP_HEIGHT = 12.7
-        private const val SCALE_MULT = 0.001f
-        private const val X_OFFSET_MULT = 0.001f
         private const val ZOOM_SENSITIVITY = 5.0f
         private const val ZOOM_MIN_OFFSET = -1200.0f
         private const val ZOOM_MAX_OFFSET = 0.0f
-        private const val SETTINGS_FILE = "settings.properties"
+        private const val SETTINGS_FILE = "settings.json"
         private const val MOUSE_TRANSLATE_SENSITIVITY = 0.5f // Чувствительность смещения
         private const val TRANSLATE_STEP = 5.0f // Шаг смещения
 

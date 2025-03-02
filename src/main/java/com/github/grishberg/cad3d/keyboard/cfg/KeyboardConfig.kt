@@ -1,13 +1,5 @@
 package com.github.grishberg.cad3d.keyboard.cfg
 
-data class ThumbClusterSettings(
-    val xOffset: Double = 10.0,
-    val yOffset: Double = -40.0,
-    val zOffset: Double = 40.0,
-    val rotateY: Double = 0.0,
-    val rotateZ: Double = 0.0,
-)
-
 data class KeyboardConfig(
     val fn: Int,
     val plateZOffset: Double,
@@ -28,8 +20,8 @@ data class KeyboardConfig(
     val keyPlaceHolderDepth: Double,
     val keyPlaceHolderHeight: Double,
     val isLowProfile: Boolean,
-    val zAngleProvider: KeyZAngleProvider,
-    val columnOffsetProvider: KeyOffsetProvider,
+    val zAngleProvider: KeyZAngleProvider, //Не нужно сериализовывать
+    val columnOffsetProvider: KeyOffsetProvider, //Не нужно сериализовывать
     val powerSwitcherType: PowerSwitcherType,
     val isHasHotswap: Boolean,
     val isMagneticWristRestHolder: Boolean,
@@ -43,3 +35,4 @@ data class KeyboardConfig(
     val lastRow: Int
         get() = rowsCount - 1
 }
+

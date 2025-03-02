@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     kotlin("jvm") version "1.8.0"
     id("java")
+    kotlin("plugin.serialization") version "1.9.0"
     //application
 }
 
@@ -10,6 +11,7 @@ group = "org.example"
 version = "1.0-SNAPSHOT"
 
 dependencies {
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
     // https://mvnrepository.com/artifact/org.jogamp.jogl/jogl-all
     //implementation (files("libs/jogamp-fat.jar"))
 
