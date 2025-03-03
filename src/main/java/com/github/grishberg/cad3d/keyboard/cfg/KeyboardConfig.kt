@@ -27,7 +27,9 @@ data class KeyboardConfig(
     val isMagneticWristRestHolder: Boolean,
     val bordersOffset: Double,
     @field:Volatile var assemblySettings: AssemblySettings,
-    val thumbClusterSettings: ThumbClusterSettings
+    val thumbClusterSettings: ThumbClusterSettings,
+    val screwNutHoleDiameter: Double,
+    val screwHolderWallhickness: Double
 ) {
 
     val lastCol: Int

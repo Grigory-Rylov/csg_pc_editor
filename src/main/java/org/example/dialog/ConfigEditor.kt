@@ -107,6 +107,11 @@ class ConfigEditor(
             fireKeyboardSettingsChanges()
         }
 
+        addDoubleSpinner(panel, "Диаметр закладной гайки, мм:", currentKeyboardSettings.screwNutHoleDiameter, 2.0..10.0, 0.1) {
+            currentKeyboardSettings = currentKeyboardSettings.copy(screwNutHoleDiameter = it)
+            fireKeyboardSettingsChanges()
+        }
+
         add(panel)
     }
 

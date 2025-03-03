@@ -50,6 +50,8 @@ data class KeyboardSettings(
     val isHasHotswap: Boolean,
     val isMagneticWristRestHolder: Boolean,
     val bordersOffset: Double,
+    val screwNutHoleDiameter: Double = 4.0,
+    val screwHolderWallhickness: Double = 1.6,
 )
 
 @Serializable
@@ -88,5 +90,7 @@ data class SettingsContainer(
         bordersOffset = keyboardSettings.bordersOffset,
         assemblySettings = assemblySettings,
         thumbClusterSettings = thumbClusterSettings,
+        screwNutHoleDiameter = keyboardSettings.screwNutHoleDiameter,
+        screwHolderWallhickness = keyboardSettings.screwHolderWallhickness,
     )
 }

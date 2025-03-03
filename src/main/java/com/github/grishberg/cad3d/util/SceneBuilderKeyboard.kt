@@ -11,6 +11,8 @@ import com.github.grishberg.cad3d.keyboard.ThumbConnections
 import com.github.grishberg.cad3d.keyboard.ThumbKeyPlace
 import com.github.grishberg.cad3d.keyboard.Utils
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
+import com.github.grishberg.cad3d.keyboard.screws.ScrewBase
+import com.github.grishberg.cad3d.keyboard.screws.ScrewWallPlaces
 import com.github.grishberg.cad3d.keyboard.walls.Walls
 import com.github.grishberg.cad3d.keyboard.wristrest.WristRest
 import com.github.grishberg.cad3d.util.SceneBuilder.ReadyListener
@@ -120,8 +122,7 @@ class SceneBuilderKeyboard(
                 val context: FacetGenerationContext = ColorFacetGenerationContext(DEFAULT_COLOR)
                 context.setFn(fn)
                 StlExporter.saveStringToFile(
-                    model.toCSG(context).verticesAndColorsAsFloatArray,
-                    File(outDir, name).absolutePath
+                    model.toCSG(context).verticesAndColorsAsFloatArray, File(outDir, name).absolutePath
                 )
             } catch (e: IOException) {
                 throw RuntimeException(e)
@@ -202,13 +203,21 @@ class SceneBuilderKeyboard(
     }
 
     private fun createCase(keyPlace: KeyPlace, thumbKeyPlace: ThumbKeyPlace): Abstract3dModel {
+        createAndAdd(placeWallScrews(keyPlace, thumbKeyPlace), Color.YELLOW, 20)
+
         val borders = Walls(cfg, keyPlace, thumbKeyPlace).createBorders(1.7, 6.0)
-        val walls = Walls(cfg, keyPlace, thumbKeyPlace)
-            .createWalls(1.5, 4.0)
-            .subtractModel(borders)
+        val walls = Walls(cfg, keyPlace, thumbKeyPlace).createWalls(1.5, 4.0).subtractModel(borders)
             .subtractModel(Cube(300.0, 300.0, 50.0).move(0.0, 0.0, -25.0))
         createAndAdd(walls, Color.gray, 30)
         return walls
+    }
+
+    private fun placeWallScrews(keyPlace: KeyPlace, thumbKeyPlace: ThumbKeyPlace): Abstract3dModel {
+        val screwWallPlaces = ScrewWallPlaces(cfg, keyPlace, thumbKeyPlace)
+        val screwBase = ScrewBase(cfg)
+        val screwHolder = screwBase.screwHolder()
+
+        return screwWallPlaces.place(screwHolder)
     }
 
     private fun createWristRest() {
