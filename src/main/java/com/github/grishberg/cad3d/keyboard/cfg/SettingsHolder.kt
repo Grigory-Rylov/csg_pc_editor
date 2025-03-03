@@ -55,9 +55,9 @@ class SettingsHolder(
             fn = 30,
             columnsCount = 6,
             rowsCount = 3,
-            plateZOffset = 14.0,
+            plateZOffset = 8.0,
             rowCurvature = 20.1,
-            tentingAngle = 14.0,
+            tentingAngle = 8.0,
             columnCurvature = 12.1,
             plateThickness = 3.0,
             saProfileKeyHeight = LOW_PROFILE_KEYCAP_HEIGHT,
@@ -72,11 +72,11 @@ class SettingsHolder(
         thumbClusterSettings = ThumbClusterSettings(
             xOffset = 0.0,
             yOffset = -50.0,
-            zOffset = 40.0,
-            rotateY = -30.0,
-            rotateZ = 10.0,
+            zOffset = 35.0,
+            rotateY = -45.0,
+            rotateZ = 18.0,
             arcRadiusZ = 0.0,
-            arcRadiusY = 0.0,
+            arcRadiusY = -80.0,
         )
     )
 
