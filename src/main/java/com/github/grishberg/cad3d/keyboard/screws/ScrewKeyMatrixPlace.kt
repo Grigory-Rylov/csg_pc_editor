@@ -18,11 +18,11 @@ class ScrewKeyMatrixPlace(
 
     fun place(o: Abstract3dModel): Abstract3dModel {
         val models = mutableListOf<Abstract3dModel>()
-        keyPlace.place(0,0, KeyPlaceholder.placeHolderLeft(o))
-        keyPlace.place(0,cfg.lastRow, KeyPlaceholder.placeHolderLeft(o))
-        keyPlace.place(cfg.lastCol,0, KeyPlaceholder.placeHolderRight(o))
-        keyPlace.place(cfg.lastCol,cfg.lastRow, KeyPlaceholder.placeHolderLeft(o))
-        thumbKeyPlace.placeL(KeyPlaceholder.placeHolderLeft(o))
+        models.add(keyPlace.place(0, 0, KeyPlaceholder.placeHolderLeft(o)))
+        models.add(keyPlace.place(0, cfg.lastRow, KeyPlaceholder.placeHolderLeft(o)))
+        models.add(keyPlace.place(cfg.lastCol, 0, KeyPlaceholder.placeHolderRight(o)))
+        models.add(keyPlace.place(cfg.lastCol, cfg.lastRow, KeyPlaceholder.placeHolderLeft(o)))
+        models.add(thumbKeyPlace.placeL(KeyPlaceholder.placeHolderLeft(o)))
 
         return Union(models)
     }

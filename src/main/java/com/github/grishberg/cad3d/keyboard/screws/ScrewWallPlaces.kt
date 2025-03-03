@@ -32,7 +32,7 @@ class ScrewWallPlaces(
 
         models.add(placeTop(o, keyPlace.place(3, 0, cube), offsetY = 12.0))
 
-        models.add(placeBottom(o, thumbKeyPlace.placeL(cube), offsetX = -8.0, offsetY = -4.0))
+        models.add(placeBottom(o, thumbKeyPlace.placeL(cube), offsetX = -2.0, offsetY = -7.0))
         return Union(models)
     }
 
