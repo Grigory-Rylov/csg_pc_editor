@@ -12,6 +12,7 @@ import com.github.grishberg.cad3d.keyboard.ThumbKeyPlace
 import com.github.grishberg.cad3d.keyboard.Utils
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
 import com.github.grishberg.cad3d.keyboard.screws.ScrewBase
+import com.github.grishberg.cad3d.keyboard.screws.ScrewKeyMatrixPlace
 import com.github.grishberg.cad3d.keyboard.screws.ScrewWallPlaces
 import com.github.grishberg.cad3d.keyboard.walls.Walls
 import com.github.grishberg.cad3d.keyboard.wristrest.WristRest
@@ -198,7 +199,12 @@ class SceneBuilderKeyboard(
 
     private fun createBorders(keyPlace: KeyPlace, thumbKeyPlace: ThumbKeyPlace): Abstract3dModel {
         val borders = Walls(cfg, keyPlace, thumbKeyPlace).createBorders(1.5, 4.0)
-        createAndAdd(borders, Color.lightGray, 30)
+
+        val screwBase = ScrewBase(cfg)
+
+        val screws = ScrewKeyMatrixPlace(cfg, keyPlace, thumbKeyPlace).place(screwBase.matrixScrewHole())
+
+        createAndAdd(borders.subtractModel(screws), Color.lightGray, 30)
         return borders
     }
 

@@ -19,12 +19,16 @@ class ScrewBase(private val cfg: KeyboardConfig) {
         return Cylinder(holeHeight, Radius.fromRadius(cfg.screwNutHoleDiameter / 2.0)).moveZ(holeHeight / 2.0)
     }
 
-    fun plateScrewHolde(): Abstract3dModel {
+    fun plateScrewHolder(): Abstract3dModel {
         return Union(
             Cylinder(holeHeight, Radius.fromRadius(cfg.screwNutHoleDiameter / 2.0)),
             // head diameter TODO:
             Cylinder(holeHeight, Radius.fromRadius(cfg.screwNutHoleDiameter / 2.0)),
         )
+    }
+
+    fun matrixScrewHole(): Abstract3dModel {
+        return Cylinder(holeHeight, Radius.fromRadius(cfg.screwNutHoleDiameter / 2.0)).moveZ(holeHeight / 2.0)
     }
 
 }

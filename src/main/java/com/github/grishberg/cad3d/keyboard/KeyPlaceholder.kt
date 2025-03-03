@@ -1,148 +1,123 @@
-package com.github.grishberg.cad3d.keyboard;
+package com.github.grishberg.cad3d.keyboard
 
-import static com.github.grishberg.cad3d.keyboard.Utils.cube;
-import static com.github.grishberg.cad3d.keyboard.Utils.cylinder;
+import eu.printingin3d.javascad.models.Abstract3dModel
 
-import eu.printingin3d.javascad.models.Abstract3dModel;
+object KeyPlaceholder {
 
-public class KeyPlaceholder {
-
-    public static final double CORNER_OFFSET = 7.85;
-    public static final double OFFSET = 6.85;
-    private static final double EDGE_HEIGHT = 1.2;
-    private static final double OUTER_WIDTH = 17.3;
-    private static final double OUTER_HEIGHT = 17.3;
-    private static final double KEY_HOLE_OUTER_WIDTH = 14.7;
-    private static final double KEY_HOLE_INNER_WIDTH = 14;
-    private static final double KEY_HOLE_HEIGHT = 14;
-    private static final double WALL_THICKNESS = 1.5;
-    private static final double HORIZONTAL_WALL_HEIGHT = 4;
-    private static final double VERTICAL_WALL_HEIGHT = 3.2;
-    private static final double TOP_THICKNESS = 4;
-    private static final double CORNER_PLACEHOLDER_TOP_OFFSET = 2;
-    private static final double BASE_TOP_OFFSET = 1.5 + 0.5;
-    private static final double VERTICAL_TOP_OFFSET =
-        BASE_TOP_OFFSET - VERTICAL_WALL_HEIGHT / 2 + 2.6 / 2;
-    private static final double HORIZONTAL_TOP_OFFSET =
-        BASE_TOP_OFFSET - HORIZONTAL_WALL_HEIGHT / 2 + 2.6 / 2;
-
-    public static Abstract3dModel placeHolder() {
-        return cube(OUTER_WIDTH, OUTER_HEIGHT, TOP_THICKNESS).move(0, 0, BASE_TOP_OFFSET)
-            .subtractModel(cube(KEY_HOLE_INNER_WIDTH, KEY_HOLE_HEIGHT, 10))
-            .subtractModel(cube(KEY_HOLE_OUTER_WIDTH, KEY_HOLE_HEIGHT, TOP_THICKNESS).move(
-                0,
-                0,
-                VERTICAL_TOP_OFFSET - EDGE_HEIGHT
-            ))
-            .subtractModel(cube(KEY_HOLE_INNER_WIDTH, KEY_HOLE_HEIGHT, 2).move(
-                0,
-                CORNER_OFFSET,
-                VERTICAL_TOP_OFFSET - 2
-            ));
+    const val CORNER_OFFSET = 7.85
+    const val OFFSET = 6.85
+    private const val EDGE_HEIGHT = 1.2
+    private const val OUTER_WIDTH = 17.3
+    private const val OUTER_HEIGHT = 17.3
+    private const val KEY_HOLE_OUTER_WIDTH = 14.7
+    private const val KEY_HOLE_INNER_WIDTH = 14.0
+    private const val KEY_HOLE_HEIGHT = 14.0
+    private const val WALL_THICKNESS = 1.5
+    private const val HORIZONTAL_WALL_HEIGHT = 4.0
+    private const val VERTICAL_WALL_HEIGHT = 3.2
+    private const val TOP_THICKNESS = 4.0
+    private const val CORNER_PLACEHOLDER_TOP_OFFSET = 2.0
+    private const val BASE_TOP_OFFSET = 1.5 + 0.5
+    private const val VERTICAL_TOP_OFFSET = BASE_TOP_OFFSET - VERTICAL_WALL_HEIGHT / 2 + 2.6 / 2
+    private const val HORIZONTAL_TOP_OFFSET = BASE_TOP_OFFSET - HORIZONTAL_WALL_HEIGHT / 2 + 2.6 / 2
+    fun placeHolder(): Abstract3dModel {
+        return Utils.cube(OUTER_WIDTH, OUTER_HEIGHT, TOP_THICKNESS).move(0.0, 0.0, BASE_TOP_OFFSET)
+            .subtractModel(Utils.cube(KEY_HOLE_INNER_WIDTH, KEY_HOLE_HEIGHT, 10.0)).subtractModel(
+                Utils.cube(KEY_HOLE_OUTER_WIDTH, KEY_HOLE_HEIGHT, TOP_THICKNESS).move(
+                    0.0, 0.0, VERTICAL_TOP_OFFSET - EDGE_HEIGHT
+                )
+            ).subtractModel(
+                Utils.cube(KEY_HOLE_INNER_WIDTH, KEY_HOLE_HEIGHT, 2.0).move(
+                    0.0, CORNER_OFFSET, VERTICAL_TOP_OFFSET - 2
+                )
+            )
     }
 
-    public static Abstract3dModel placeHolderTop(double thickness) {
-        return cube(17.2, thickness, TOP_THICKNESS).
-            move(0.0, CORNER_OFFSET + thickness, CORNER_PLACEHOLDER_TOP_OFFSET);
+    @JvmStatic
+    @JvmOverloads
+    fun placeHolderTop(thickness: Double = WALL_THICKNESS): Abstract3dModel {
+        return Utils.cube(17.2, thickness, TOP_THICKNESS)
+            .move(0.0, CORNER_OFFSET + thickness, CORNER_PLACEHOLDER_TOP_OFFSET)
     }
 
-    public static Abstract3dModel placeHolderTop() {
-        return placeHolderTop(WALL_THICKNESS);
+    @JvmStatic
+    fun placeHolderLeft(obj: Abstract3dModel = Utils.cube(WALL_THICKNESS, 17.2, TOP_THICKNESS)): Abstract3dModel {
+        return obj.move(
+            -CORNER_OFFSET - WALL_THICKNESS, 0.0, CORNER_PLACEHOLDER_TOP_OFFSET
+        )
     }
 
-    public static Abstract3dModel placeHolderLeft() {
-        return cube(WALL_THICKNESS, 17.2, TOP_THICKNESS).move(
-            -CORNER_OFFSET - WALL_THICKNESS,
-            0,
-            CORNER_PLACEHOLDER_TOP_OFFSET
-        );
+    @JvmStatic
+    fun placeHolderRight(obj: Abstract3dModel = Utils.cube(WALL_THICKNESS, 17.2, TOP_THICKNESS)): Abstract3dModel {
+        return obj
+            .move(CORNER_OFFSET + WALL_THICKNESS, 0.0, CORNER_PLACEHOLDER_TOP_OFFSET)
     }
 
-    public static Abstract3dModel placeHolderRight() {
-        return cube(WALL_THICKNESS, 17.2, TOP_THICKNESS)
-            .move(CORNER_OFFSET + WALL_THICKNESS, 0, CORNER_PLACEHOLDER_TOP_OFFSET);
+    @JvmStatic
+    fun placeHolderBottom(): Abstract3dModel {
+        return Utils.cube(17.2, WALL_THICKNESS, TOP_THICKNESS).move(
+            0.0, -CORNER_OFFSET - WALL_THICKNESS, CORNER_PLACEHOLDER_TOP_OFFSET
+        )
     }
 
-    public static Abstract3dModel placeHolderBottom() {
-        return cube(17.2, WALL_THICKNESS, TOP_THICKNESS).move(
-            0,
-            -CORNER_OFFSET - WALL_THICKNESS,
-            CORNER_PLACEHOLDER_TOP_OFFSET
-        );
+    @JvmStatic
+    fun placeHolderTopLeft(): Abstract3dModel {
+        return Utils.cube(WALL_THICKNESS, WALL_THICKNESS, TOP_THICKNESS).move(
+                -CORNER_OFFSET - WALL_THICKNESS, CORNER_OFFSET + WALL_THICKNESS, CORNER_PLACEHOLDER_TOP_OFFSET
+            )
     }
 
-    public static Abstract3dModel placeHolderTopLeft() {
-        return cube(WALL_THICKNESS, WALL_THICKNESS, TOP_THICKNESS)
-            .move(
-                -CORNER_OFFSET - WALL_THICKNESS,
-                CORNER_OFFSET + WALL_THICKNESS,
-                CORNER_PLACEHOLDER_TOP_OFFSET
-            );
+    @JvmStatic
+    fun placeHolderTopLeft(height: Int): Abstract3dModel {
+        return Utils.cube(WALL_THICKNESS, WALL_THICKNESS, height.toDouble()).move(
+                -CORNER_OFFSET - WALL_THICKNESS, CORNER_OFFSET + WALL_THICKNESS, CORNER_PLACEHOLDER_TOP_OFFSET
+            )
     }
 
-    static Abstract3dModel placeHolderTopLeft(int height) {
-        return cube(WALL_THICKNESS, WALL_THICKNESS, height)
-            .move(
-                -CORNER_OFFSET - WALL_THICKNESS,
-                CORNER_OFFSET + WALL_THICKNESS,
-                CORNER_PLACEHOLDER_TOP_OFFSET
-            );
+    @JvmStatic
+    fun placeHolderTopRight(): Abstract3dModel {
+        return Utils.cube(WALL_THICKNESS, WALL_THICKNESS, TOP_THICKNESS).move(
+                CORNER_OFFSET + WALL_THICKNESS, CORNER_OFFSET + WALL_THICKNESS, CORNER_PLACEHOLDER_TOP_OFFSET
+            )
     }
 
-    public static Abstract3dModel placeHolderTopRight() {
-        return cube(WALL_THICKNESS, WALL_THICKNESS, TOP_THICKNESS)
-            .move(
-                CORNER_OFFSET + WALL_THICKNESS,
-                CORNER_OFFSET + WALL_THICKNESS,
-                CORNER_PLACEHOLDER_TOP_OFFSET
-            );
+    @JvmStatic
+    fun placeHolderTopRight(height: Int): Abstract3dModel {
+        return Utils.cube(WALL_THICKNESS, WALL_THICKNESS, height.toDouble()).move(
+                CORNER_OFFSET + WALL_THICKNESS, CORNER_OFFSET + WALL_THICKNESS, CORNER_PLACEHOLDER_TOP_OFFSET
+            )
     }
 
-    public static Abstract3dModel placeHolderTopRight(int height) {
-        return cube(WALL_THICKNESS, WALL_THICKNESS, height)
-            .move(
-                CORNER_OFFSET + WALL_THICKNESS,
-                CORNER_OFFSET + WALL_THICKNESS,
-                CORNER_PLACEHOLDER_TOP_OFFSET
-            );
+    @JvmStatic
+    fun placeHolderBottomLeft(): Abstract3dModel {
+        return Utils.cube(WALL_THICKNESS, WALL_THICKNESS, TOP_THICKNESS).move(
+                -CORNER_OFFSET - WALL_THICKNESS, -CORNER_OFFSET - WALL_THICKNESS, CORNER_PLACEHOLDER_TOP_OFFSET
+            )
     }
 
-    public static Abstract3dModel placeHolderBottomLeft() {
-        return cube(WALL_THICKNESS, WALL_THICKNESS, TOP_THICKNESS)
-            .move(
-                -CORNER_OFFSET - WALL_THICKNESS,
-                -CORNER_OFFSET - WALL_THICKNESS,
-                CORNER_PLACEHOLDER_TOP_OFFSET
-            );
+    @JvmStatic
+    fun placeHolderBottomLeft(height: Int): Abstract3dModel {
+        return Utils.cube(WALL_THICKNESS, WALL_THICKNESS, height.toDouble()).move(
+                -CORNER_OFFSET - WALL_THICKNESS, -CORNER_OFFSET - WALL_THICKNESS, CORNER_PLACEHOLDER_TOP_OFFSET
+            )
     }
 
-    static Abstract3dModel placeHolderBottomLeft(int height) {
-        return cube(WALL_THICKNESS, WALL_THICKNESS, height)
-            .move(
-                -CORNER_OFFSET - WALL_THICKNESS,
-                -CORNER_OFFSET - WALL_THICKNESS,
-                CORNER_PLACEHOLDER_TOP_OFFSET
-            );
+    @JvmStatic
+    fun placeHolderBottomRight(): Abstract3dModel {
+        return Utils.cube(WALL_THICKNESS, WALL_THICKNESS, TOP_THICKNESS).move(
+            CORNER_OFFSET + WALL_THICKNESS, -CORNER_OFFSET - WALL_THICKNESS, CORNER_PLACEHOLDER_TOP_OFFSET
+        )
     }
 
-    public static Abstract3dModel placeHolderBottomRight() {
-        return cube(WALL_THICKNESS, WALL_THICKNESS, TOP_THICKNESS).move(
-            CORNER_OFFSET + WALL_THICKNESS,
-            -CORNER_OFFSET - WALL_THICKNESS,
-            CORNER_PLACEHOLDER_TOP_OFFSET
-        );
+    @JvmStatic
+    fun placeHolderBottomRight(height: Int): Abstract3dModel {
+        return Utils.cube(WALL_THICKNESS, WALL_THICKNESS, height.toDouble()).move(
+            CORNER_OFFSET + WALL_THICKNESS, -CORNER_OFFSET - WALL_THICKNESS, CORNER_PLACEHOLDER_TOP_OFFSET
+        )
     }
 
-    public static Abstract3dModel placeHolderBottomRight(int height) {
-        return cube(WALL_THICKNESS, WALL_THICKNESS, height).move(
-            CORNER_OFFSET + WALL_THICKNESS,
-            -CORNER_OFFSET - WALL_THICKNESS,
-            CORNER_PLACEHOLDER_TOP_OFFSET
-        );
-    }
-
-    public static Abstract3dModel placeCube(double thickness, double height) {
+    fun placeCube(thickness: Double, height: Double): Abstract3dModel {
         //return cube(WALL_THICKNESS, thickness, TOP_THICKNESS);
-        return cylinder(thickness, height).move(0, 0, height - 4);
+        return Utils.cylinder(thickness, height).move(0.0, 0.0, height - 4)
     }
 }

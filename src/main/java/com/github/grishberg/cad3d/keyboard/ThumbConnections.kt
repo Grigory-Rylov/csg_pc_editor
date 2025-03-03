@@ -1,42 +1,24 @@
-package com.github.grishberg.cad3d.keyboard;
+package com.github.grishberg.cad3d.keyboard
 
-import static com.github.grishberg.cad3d.keyboard.KeyPlaceholder.placeHolderLeft;
-import static com.github.grishberg.cad3d.keyboard.KeyPlaceholder.placeHolderRight;
-import static com.github.grishberg.cad3d.keyboard.Utils.hull;
-import static com.github.grishberg.cad3d.keyboard.Utils.union;
+import com.github.grishberg.cad3d.keyboard.KeyPlaceholder.placeHolderLeft
+import com.github.grishberg.cad3d.keyboard.KeyPlaceholder.placeHolderRight
+import eu.printingin3d.javascad.models.Abstract3dModel
 
-import eu.printingin3d.javascad.models.Abstract3dModel;
-import java.util.ArrayList;
+class ThumbConnections(private val thumbKeyPlace: ThumbKeyPlace) {
 
-public class ThumbConnections {
-
-    private final ThumbKeyPlace thumbKeyPlace;
-
-    private final ArrayList<Abstract3dModel> models = new ArrayList<>();
-
-
-    public ThumbConnections(ThumbKeyPlace thumbKeyPlace) {
-        this.thumbKeyPlace = thumbKeyPlace;
-    }
-
-    public Abstract3dModel buildThumbPlaceConnections() {
-        models.clear();
-
+    private val models = ArrayList<Abstract3dModel>()
+    fun buildThumbPlaceConnections(): Abstract3dModel {
+        models.clear()
         addHull(
-            thumbKeyPlace.placeR(placeHolderLeft()),
-            thumbKeyPlace.placeM(placeHolderRight())
-        );
-
+            thumbKeyPlace.placeR(placeHolderLeft()), thumbKeyPlace.placeM(placeHolderRight())
+        )
         addHull(
-            thumbKeyPlace.placeM(placeHolderLeft()),
-            thumbKeyPlace.placeL(placeHolderRight())
-        );
-
-        return union(models);
+            thumbKeyPlace.placeM(placeHolderLeft()), thumbKeyPlace.placeL(placeHolderRight())
+        )
+        return Utils.union(models)
     }
 
-    private void addHull(Abstract3dModel... children) {
-        models.add(hull(children));
+    private fun addHull(vararg children: Abstract3dModel) {
+        models.add(Utils.hull(*children))
     }
-
 }

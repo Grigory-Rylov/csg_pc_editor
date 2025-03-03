@@ -1,63 +1,49 @@
-package com.github.grishberg.cad3d.keyboard;
+package com.github.grishberg.cad3d.keyboard
 
-import static com.github.grishberg.cad3d.keyboard.KeyPlaceholder.placeHolderBottom;
-import static com.github.grishberg.cad3d.keyboard.KeyPlaceholder.placeHolderBottomLeft;
-import static com.github.grishberg.cad3d.keyboard.KeyPlaceholder.placeHolderBottomRight;
-import static com.github.grishberg.cad3d.keyboard.KeyPlaceholder.placeHolderLeft;
-import static com.github.grishberg.cad3d.keyboard.KeyPlaceholder.placeHolderRight;
-import static com.github.grishberg.cad3d.keyboard.KeyPlaceholder.placeHolderTop;
-import static com.github.grishberg.cad3d.keyboard.KeyPlaceholder.placeHolderTopLeft;
-import static com.github.grishberg.cad3d.keyboard.KeyPlaceholder.placeHolderTopRight;
-import static com.github.grishberg.cad3d.keyboard.Utils.hull;
-import static com.github.grishberg.cad3d.keyboard.Utils.union;
+import com.github.grishberg.cad3d.keyboard.KeyPlaceholder.placeHolderBottom
+import com.github.grishberg.cad3d.keyboard.KeyPlaceholder.placeHolderBottomLeft
+import com.github.grishberg.cad3d.keyboard.KeyPlaceholder.placeHolderBottomRight
+import com.github.grishberg.cad3d.keyboard.KeyPlaceholder.placeHolderLeft
+import com.github.grishberg.cad3d.keyboard.KeyPlaceholder.placeHolderRight
+import com.github.grishberg.cad3d.keyboard.KeyPlaceholder.placeHolderTop
+import com.github.grishberg.cad3d.keyboard.KeyPlaceholder.placeHolderTopLeft
+import com.github.grishberg.cad3d.keyboard.KeyPlaceholder.placeHolderTopRight
+import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
+import eu.printingin3d.javascad.models.Abstract3dModel
 
-import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig;
-import eu.printingin3d.javascad.models.Abstract3dModel;
-import java.util.ArrayList;
+class Connections(private val cfg: KeyboardConfig, private val keyPlace: KeyPlace) {
 
-public class Connections {
-
-    private KeyboardConfig cfg;
-    private final KeyPlace keyPlace;
-    private final ArrayList<Abstract3dModel> models = new ArrayList<>();
-
-    public Connections(KeyboardConfig cfg, KeyPlace keyPlace) {
-        this.cfg = cfg;
-        this.keyPlace = keyPlace;
-    }
-
-    public Abstract3dModel buildConnections() {
-        models.clear();
+    private val models = ArrayList<Abstract3dModel>()
+    fun buildConnections(): Abstract3dModel {
+        models.clear()
         // diagonals
-        for (int column = 0; column < cfg.getColumnsCount() - 1; column++) {
-            for (int row = 0; row < cfg.getRowsCount() - 1; row++) {
+        for (column in 0 until cfg.columnsCount - 1) {
+            for (row in 0 until cfg.rowsCount - 1) {
                 addHull(
                     keyPlace.place(column, row, placeHolderBottomRight()),
                     keyPlace.place(column + 1, row, placeHolderBottomLeft()),
                     keyPlace.place(column + 1, row + 1, placeHolderTopLeft()),
                     keyPlace.place(column, row + 1, placeHolderTopRight())
-                );
+                )
             }
         }
 
         //columns
-        for (int column = 0; column < cfg.getColumnsCount() - 1; column++) {
-            for (int row = 0; row < cfg.getRowsCount(); row++) {
+        for (column in 0 until cfg.columnsCount - 1) {
+            for (row in 0 until cfg.rowsCount) {
                 addHull(
-                    keyPlace.place(column, row, placeHolderRight()),
-                    keyPlace.place(column + 1, row, placeHolderLeft())
-                );
+                    keyPlace.place(column, row, placeHolderRight()), keyPlace.place(column + 1, row, placeHolderLeft())
+                )
             }
         }
 
         // rows
-        for (int column = 0; column < cfg.getColumnsCount(); column++) {
-            for (int row = 0; row < cfg.getRowsCount() - 1; row++) {
+        for (column in 0 until cfg.columnsCount) {
+            for (row in 0 until cfg.rowsCount - 1) {
                 addHull(
-                    keyPlace.place(column, row, placeHolderBottom())
-                    , keyPlace.place(column, row + 1, placeHolderTop()));
+                    keyPlace.place(column, row, placeHolderBottom()), keyPlace.place(column, row + 1, placeHolderTop())
+                )
             }
-
         }
         //side
 //        for (int row = 0; row < cfg.getRowsCount(); row++) {
@@ -83,12 +69,10 @@ public class Connections {
 //            );
 //
 //        }
-
-        return union(models);
+        return Utils.union(models)
     }
 
-    private void addHull(Abstract3dModel... children) {
-        models.add(hull(children));
+    private fun addHull(vararg children: Abstract3dModel) {
+        models.add(Utils.hull(*children))
     }
 }
-
