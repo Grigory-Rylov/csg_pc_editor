@@ -16,7 +16,7 @@ class ScrewBase(private val cfg: KeyboardConfig) {
         return Cylinder(height, Radius.fromDiameter(outerDiameter)).moveZ(height / 2.0).subtractModel(screwNutHole())
     }
 
-    fun screwNutHole(): Abstract3dModel {
+    fun screwNutHole(holeHeight: Double = 4.0): Abstract3dModel {
         return Cylinder(holeHeight, Radius.fromDiameter(cfg.screwNutHoleDiameter)).moveZ(holeHeight / 2.0)
     }
 

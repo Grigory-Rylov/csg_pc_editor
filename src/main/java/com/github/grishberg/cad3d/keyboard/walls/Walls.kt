@@ -204,7 +204,7 @@ class Walls(
                 )
             )
 
-            models.add(wallsBuilder.frontWall { obj -> keyPlace.place(4, cfg.lastRow, obj) })
+            models.add(wallsBuilder.frontWall( rightOffset = -4.0) { obj -> keyPlace.place(4, cfg.lastRow, obj) })
 
             models.add(wallsBuilder.frontWall(
                 leftOffset = -4.0,

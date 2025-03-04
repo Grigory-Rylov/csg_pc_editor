@@ -18,8 +18,14 @@ class ScrewsMatrixHolder(
         val cylinder = Cylinder(height, Radius.fromDiameter(outerDiameter))
         val border = Cube(4.0, 10.0, height).moveX(-5.0)
         return Hull(border, cylinder)
-            .subtractModel(screwBase.screwNutHole().moveZ(-2.0))
+            //.subtractModel(screwBase.screwNutHole().moveZ(-2.0))
             .moveZ(verticalOffset)
+
+    }
+
+    fun createNutHole(): Abstract3dModel {
+        val verticalOffset = -5.0
+        return screwBase.screwNutHole(5.0).moveZ(-2.0).moveZ(verticalOffset)
 
     }
 

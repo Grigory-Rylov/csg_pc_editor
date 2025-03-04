@@ -211,31 +211,43 @@ class SceneBuilderKeyboard(
     private fun createCase(keyPlace: KeyPlace, thumbKeyPlace: ThumbKeyPlace): Abstract3dModel {
         val holeVerticalExtra = 2.0
         val holeBorders = Walls(cfg, keyPlace, thumbKeyPlace, topEdgeOffsetZ = holeVerticalExtra / 2).createBorders(
-            1.7,
-            4.0 + holeVerticalExtra
+            1.7, 4.0 + holeVerticalExtra
         )
 
         val screwBase = ScrewBase(cfg)
-        val screwHolder = ScrewsMatrixHolder(cfg, screwBase).create()
-        val screwMatrixHolders =
-            ScrewKeyMatrixPlace(cfg, keyPlace, thumbKeyPlace).place(screwHolder).subtractModel(holeBorders)
+        val matrixWallScrewHolder = ScrewsMatrixHolder(cfg, screwBase).create()
+        val matrixWallNutHole = ScrewsMatrixHolder(cfg, screwBase).createNutHole()
+        val screwKeyMatrixPlace = ScrewKeyMatrixPlace(cfg, keyPlace, thumbKeyPlace)
+        val screwMatrixHolders = screwKeyMatrixPlace.place(matrixWallScrewHolder)
+                //.subtractModel(holeBorders)
 
-        createAndAdd(screwMatrixHolders, Color.CYAN, cfg.fn)
-        createAndAdd(placeWallScrews(keyPlace, thumbKeyPlace), Color.YELLOW, 20)
+        val screwMatrixHoldersHoles = screwKeyMatrixPlace.place(matrixWallNutHole)
+
+
+        //createAndAdd(screwMatrixHoldersHoles, Color.CYAN, cfg.fn)
+        val wallScrews = placeWallScrews(keyPlace, thumbKeyPlace,screwBase.screwHolder())
 
         val topBorderHeight = 6.0
         val topEdgeOffsetZ = -topBorderHeight / 2
-        val walls = Walls(cfg, keyPlace, thumbKeyPlace, topEdgeOffsetZ = topEdgeOffsetZ).createWalls(
-            borderThickness = 1.5, borderHeight = topBorderHeight, bottomBorderHeight = 2.0
-        ).subtractModel(holeBorders).subtractModel(Cube(300.0, 300.0, 50.0).move(0.0, 0.0, -25.0))
+        val walls = Walls(cfg, keyPlace, thumbKeyPlace, topEdgeOffsetZ = topEdgeOffsetZ)
+            .createWalls(
+                borderThickness = 1.5, borderHeight = topBorderHeight, bottomBorderHeight = 2.0
+            )
+            .addModel(screwMatrixHolders)
+            .addModel(wallScrews)
+            .subtractModel(holeBorders)
+            .subtractModel(screwMatrixHoldersHoles)
+            .subtractModel(Cube(300.0, 300.0, 50.0).move(0.0, 0.0, -25.0))
         createAndAdd(walls, Color.gray, 30)
         return walls
     }
 
-    private fun placeWallScrews(keyPlace: KeyPlace, thumbKeyPlace: ThumbKeyPlace): Abstract3dModel {
+    private fun placeWallScrews(
+        keyPlace: KeyPlace,
+        thumbKeyPlace: ThumbKeyPlace,
+        screwHolder: Abstract3dModel,
+    ): Abstract3dModel {
         val screwWallPlaces = ScrewWallPlaces(cfg, keyPlace, thumbKeyPlace)
-        val screwBase = ScrewBase(cfg)
-        val screwHolder = screwBase.screwHolder()
 
         return screwWallPlaces.place(screwHolder)
     }
