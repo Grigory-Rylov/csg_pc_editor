@@ -52,12 +52,12 @@ class Walls(
         return Utils.union(models)
     }
 
-    fun createWalls(borderThickness: Double = 1.5, borderHeight: Double = 4.0): Abstract3dModel {
+    fun createWalls(borderThickness: Double = 1.5, borderHeight: Double = 4.0, bottomBorderHeight: Double = 1.0): Abstract3dModel {
         models.clear()
 
         val bottomEdgePatcher = CircleBottomEdgePatcher(
             thickness = 1.5,
-            objectHeight = 4.0,
+            objectHeight = 1.0,
             radiusX = 100.0,
             radiusY = 80.0,
             centerY = -30.0,
@@ -195,7 +195,7 @@ class Walls(
 
         val bottomEdgePatcher = CircleBottomEdgePatcher(
             thickness = 1.5,
-            objectHeight = 4.0,
+            objectHeight = 1.0,
             radiusX = 100.0,
             radiusY = 60.0,
             centerY = -20.0,

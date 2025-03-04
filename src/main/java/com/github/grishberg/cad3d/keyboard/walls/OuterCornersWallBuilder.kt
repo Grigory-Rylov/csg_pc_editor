@@ -8,6 +8,7 @@ import eu.printingin3d.javascad.tranzitions.Union
 class OuterCornersWallBuilder(
     private val borderThickness: Double = 1.5,
     private val borderHeight: Double = 4.0,
+    private val bottomBorderHeight: Double = 1.0,
     private val verticalOffset: Double = 4.0,
     private val leftOffset: Double = 8.0,
     private val rightOffset: Double = 8.0,
@@ -17,7 +18,7 @@ class OuterCornersWallBuilder(
     private val outerLeftOffset: Double = 15.0,
     private val outerRightOffset: Double = 15.0,
     private val outerBorderZOffset: Double = -6.0,
-    private val bottomEdgePatcher: WallBottomEdgePatcher = DefaultBottomEdgePatcher(borderThickness, borderHeight),
+    private val bottomEdgePatcher: WallBottomEdgePatcher = DefaultBottomEdgePatcher(borderThickness, bottomBorderHeight),
 ) : CornerWallBuilder {
 
     private val offset = 2.0
@@ -123,7 +124,7 @@ class OuterCornersWallBuilder(
         matrixInnerPlace: (Abstract3dModel) -> Abstract3dModel,
     ): Abstract3dModel {
         val thumbVertex = keyPlace(
-            KeyPlaceholder.placeHolderBottomRight().move(rightOffset, 0.0, borderZOffset)
+            KeyPlaceholder.placeHolderBottomRight().move(rightOffset, 0.0, outerBorderZOffset)
         )
         val thumbVertexFront = keyPlace(
             KeyPlaceholder.placeHolderBottomRight().move(0.0, -verticalOffset, borderZOffset)
@@ -133,11 +134,11 @@ class OuterCornersWallBuilder(
         )
 
         val innerLeft = matrixInnerPlace(
-            KeyPlaceholder.placeHolderBottomLeft().move(0.0, -verticalOffset, borderZOffset)
+            KeyPlaceholder.placeHolderBottomLeft().move(0.0, -verticalOffset, outerBorderZOffset)
         )
 
         val innerRight = matrixInnerPlace(
-            KeyPlaceholder.placeHolderBottomRight().move(0.0, -verticalOffset, borderZOffset)
+            KeyPlaceholder.placeHolderBottomRight().move(0.0, -verticalOffset, outerBorderZOffset)
         )
 
         val outerLeft = matrixOuterPlace(
@@ -174,6 +175,6 @@ class OuterCornersWallBuilder(
     }
 
     private fun verticalCube(obj: Abstract3dModel): Abstract3dModel {
-        return KeyPlaceholder.placeCube(borderThickness, borderHeight).moveZ( - borderHeight/2).move(obj.move)
+        return KeyPlaceholder.placeCube(borderThickness, borderHeight).moveZ( 2 - borderHeight/2).move(obj.move)
     }
 }
