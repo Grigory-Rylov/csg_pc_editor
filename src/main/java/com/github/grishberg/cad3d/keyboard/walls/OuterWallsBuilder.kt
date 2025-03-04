@@ -8,6 +8,7 @@ import eu.printingin3d.javascad.tranzitions.Union
 class OuterWallsBuilder(
     private val borderThickness: Double = 1.5,
     private val borderHeight: Double = 4.0,
+    private val bottomBorderHeight: Double = 1.0,
     private val verticalOffset: Double = 5.0,
     private val horizontalOffset: Double = 8.0,
     private val borderZOffset: Double = -2.0,
@@ -15,7 +16,10 @@ class OuterWallsBuilder(
     private val outerVerticalOffset: Double = 10.0,
     private val outerHorizontalOffset: Double = 15.0,
     private val outerBorderZOffset: Double = -6.0,
-    private val bottomEdgePatcher: WallBottomEdgePatcher = DefaultBottomEdgePatcher(borderThickness, borderHeight),
+    private val bottomEdgePatcher: WallBottomEdgePatcher = DefaultBottomEdgePatcher(
+        borderThickness,
+        bottomBorderHeight
+    ),
 ) : WallsBuilder {
 
     override fun backWall(
@@ -272,6 +276,6 @@ class OuterWallsBuilder(
     }
 
     private fun verticalCube(obj: Abstract3dModel): Abstract3dModel {
-        return KeyPlaceholder.placeCube(borderThickness, borderHeight).move(obj.move)
+        return KeyPlaceholder.placeCube(borderThickness, borderHeight).moveZ(-borderHeight / 2).move(obj.move)
     }
 }

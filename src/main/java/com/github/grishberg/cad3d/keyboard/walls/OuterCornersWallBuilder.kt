@@ -174,6 +174,6 @@ class OuterCornersWallBuilder(
     }
 
     private fun verticalCube(obj: Abstract3dModel): Abstract3dModel {
-        return KeyPlaceholder.placeCube(borderThickness, borderHeight).move(obj.move)
+        return KeyPlaceholder.placeCube(borderThickness, borderHeight).moveZ( - borderHeight/2).move(obj.move)
     }
 }

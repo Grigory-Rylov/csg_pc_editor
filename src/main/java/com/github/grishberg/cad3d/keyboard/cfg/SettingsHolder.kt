@@ -52,7 +52,7 @@ class SettingsHolder(
         assemblySettings = AssemblySettings(),
         viewerSettings = createViewerSettings(),
         keyboardSettings = KeyboardSettings(
-            fn = 30,
+            fn = 20,
             columnsCount = 6,
             rowsCount = 3,
             plateZOffset = 8.0,
