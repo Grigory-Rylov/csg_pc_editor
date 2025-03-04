@@ -6,9 +6,10 @@ import eu.printingin3d.javascad.models.Abstract3dModel
 import eu.printingin3d.javascad.tranzitions.Union
 
 class OuterWallsBuilder(
+    private val topEdgeOffsetZ: Double,
     private val borderThickness: Double = 1.5,
     private val borderHeight: Double = 4.0,
-    private val bottomBorderHeight: Double = 1.0,
+    private val bottomBorderHeight: Double,
     private val verticalOffset: Double = 5.0,
     private val horizontalOffset: Double = 8.0,
     private val borderZOffset: Double = -2.0,
@@ -170,23 +171,25 @@ class OuterWallsBuilder(
     }
 
     override fun frontMidWall(
+        leftOffset: Double,
+        rightOffset: Double,
         leftPlace: (Abstract3dModel) -> Abstract3dModel, rightPlace: (Abstract3dModel) -> Abstract3dModel
     ): Abstract3dModel {
         val left =
-            leftPlace(KeyPlaceholder.placeHolderBottomRight().move(0.0, -outerVerticalOffset, outerBorderZOffset))
+            leftPlace(KeyPlaceholder.placeHolderBottomRight().move(leftOffset, -outerVerticalOffset, outerBorderZOffset))
         val right =
-            rightPlace(KeyPlaceholder.placeHolderBottomLeft().move(0.0, -outerVerticalOffset, outerBorderZOffset))
+            rightPlace(KeyPlaceholder.placeHolderBottomLeft().move(rightOffset, -outerVerticalOffset, outerBorderZOffset))
         val border = hull(
             left,
             right,
             verticalCube(
                 leftPlace(
-                    KeyPlaceholder.placeHolderBottomRight().move(0.0, -verticalOffset, borderZOffset)
+                    KeyPlaceholder.placeHolderBottomRight().move(leftOffset, -verticalOffset, borderZOffset)
                 )
             ),
             verticalCube(
                 rightPlace(
-                    KeyPlaceholder.placeHolderBottomLeft().move(0.0, -verticalOffset, borderZOffset)
+                    KeyPlaceholder.placeHolderBottomLeft().move(rightOffset, -verticalOffset, borderZOffset)
                 )
             ),
         )
@@ -276,6 +279,6 @@ class OuterWallsBuilder(
     }
 
     private fun verticalCube(obj: Abstract3dModel): Abstract3dModel {
-        return KeyPlaceholder.placeCube(borderThickness, borderHeight).moveZ(2 -borderHeight / 2).move(obj.move)
+        return KeyPlaceholder.placeCube(borderThickness, borderHeight).moveZ(topEdgeOffsetZ).move(obj.move)
     }
 }

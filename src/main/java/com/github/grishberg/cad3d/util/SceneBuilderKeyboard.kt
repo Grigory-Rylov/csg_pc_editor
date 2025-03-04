@@ -1,6 +1,15 @@
 package com.github.grishberg.cad3d.util
 
-import com.github.grishberg.cad3d.keyboard.*
+import com.github.grishberg.cad3d.keyboard.Connections
+import com.github.grishberg.cad3d.keyboard.ControlPointsController
+import com.github.grishberg.cad3d.keyboard.KeyHolderBottomWalls
+import com.github.grishberg.cad3d.keyboard.KeyPlace
+import com.github.grishberg.cad3d.keyboard.KeyPlaceHoles
+import com.github.grishberg.cad3d.keyboard.KeyPlaceholder
+import com.github.grishberg.cad3d.keyboard.KeySwitchHoles
+import com.github.grishberg.cad3d.keyboard.ThumbConnections
+import com.github.grishberg.cad3d.keyboard.ThumbKeyPlace
+import com.github.grishberg.cad3d.keyboard.Utils
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
 import com.github.grishberg.cad3d.keyboard.screws.ScrewBase
 import com.github.grishberg.cad3d.keyboard.screws.ScrewKeyMatrixPlace
@@ -33,8 +42,7 @@ class SceneBuilderKeyboard(
     private val pointsController: ControlPointsController,
 ) : SceneBuilder {
 
-    @Volatile
-    private var cfg: KeyboardConfig = initialConfig
+    @Volatile private var cfg: KeyboardConfig = initialConfig
 
     private var resolution = 15 // Количество промежуточных точек между заданными точками
     val buffers: MutableList<VertexHolder>
@@ -191,7 +199,7 @@ class SceneBuilderKeyboard(
     }
 
     private fun createBorders(keyPlace: KeyPlace, thumbKeyPlace: ThumbKeyPlace): Abstract3dModel {
-        val borders = Walls(cfg, keyPlace, thumbKeyPlace).createBorders(1.5, 4.0)
+        val borders = Walls(cfg, keyPlace, thumbKeyPlace, topEdgeOffsetZ = 0.0).createBorders(1.5, 4.0)
 
         val screwBase = ScrewBase(cfg)
 
@@ -201,19 +209,25 @@ class SceneBuilderKeyboard(
     }
 
     private fun createCase(keyPlace: KeyPlace, thumbKeyPlace: ThumbKeyPlace): Abstract3dModel {
-        val holeBorders = Walls(cfg, keyPlace, thumbKeyPlace).createBorders(1.7, 6.0)
+        val holeVerticalExtra = 2.0
+        val holeBorders = Walls(cfg, keyPlace, thumbKeyPlace, topEdgeOffsetZ = holeVerticalExtra / 2).createBorders(
+            1.7,
+            4.0 + holeVerticalExtra
+        )
 
         val screwBase = ScrewBase(cfg)
         val screwHolder = ScrewsMatrixHolder(cfg, screwBase).create()
-        val screwMatrixHolders = ScrewKeyMatrixPlace(cfg, keyPlace, thumbKeyPlace)
-            .place(screwHolder)
-            .subtractModel(holeBorders)
+        val screwMatrixHolders =
+            ScrewKeyMatrixPlace(cfg, keyPlace, thumbKeyPlace).place(screwHolder).subtractModel(holeBorders)
 
         createAndAdd(screwMatrixHolders, Color.CYAN, cfg.fn)
         createAndAdd(placeWallScrews(keyPlace, thumbKeyPlace), Color.YELLOW, 20)
 
-        val walls = Walls(cfg, keyPlace, thumbKeyPlace).createWalls(1.5, 7.5).subtractModel(holeBorders)
-            .subtractModel(Cube(300.0, 300.0, 50.0).move(0.0, 0.0, -25.0))
+        val topBorderHeight = 6.0
+        val topEdgeOffsetZ = -topBorderHeight / 2
+        val walls = Walls(cfg, keyPlace, thumbKeyPlace, topEdgeOffsetZ = topEdgeOffsetZ).createWalls(
+            borderThickness = 1.5, borderHeight = topBorderHeight, bottomBorderHeight = 2.0
+        ).subtractModel(holeBorders).subtractModel(Cube(300.0, 300.0, 50.0).move(0.0, 0.0, -25.0))
         createAndAdd(walls, Color.gray, 30)
         return walls
     }

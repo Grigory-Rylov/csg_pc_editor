@@ -112,6 +112,8 @@ class InnerBordersBuilder(
     }
 
     override fun frontMidWall(
+        leftOffset: Double,
+        rightOffset: Double,
         leftPlace: (Abstract3dModel) -> Abstract3dModel, rightPlace: (Abstract3dModel) -> Abstract3dModel
     ): Abstract3dModel {
         return Utils.hull(

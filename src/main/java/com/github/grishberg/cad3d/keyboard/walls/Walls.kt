@@ -16,6 +16,7 @@ class Walls(
     private val cfg: KeyboardConfig,
     private val keyPlace: KeyPlace,
     private val thumbKeyPlace: ThumbKeyPlace,
+    private val topEdgeOffsetZ: Double,
 ) {
 
     private val wallVerticalOffset = 5.0
@@ -52,12 +53,16 @@ class Walls(
         return Utils.union(models)
     }
 
-    fun createWalls(borderThickness: Double = 1.5, borderHeight: Double = 4.0, bottomBorderHeight: Double = 1.0): Abstract3dModel {
+    fun createWalls(
+        borderThickness: Double = 1.5,
+        borderHeight: Double = 4.0,
+        bottomBorderHeight: Double,
+    ): Abstract3dModel {
         models.clear()
 
         val bottomEdgePatcher = CircleBottomEdgePatcher(
             thickness = 1.5,
-            objectHeight = 1.0,
+            objectHeight = bottomBorderHeight,
             radiusX = 100.0,
             radiusY = 80.0,
             centerY = -30.0,
@@ -65,12 +70,18 @@ class Walls(
 
         matrixBorders(
             OuterWallsBuilder(
+                topEdgeOffsetZ = topEdgeOffsetZ,
+                bottomBorderHeight = bottomBorderHeight,
                 verticalOffset = wallVerticalOffset,
+                borderHeight = borderHeight,
                 horizontalOffset = wallHorizontalOffset,
                 borderThickness = borderThickness,
                 bottomEdgePatcher = bottomEdgePatcher
             ), OuterCornersWallBuilder(
+                topEdgeOffsetZ = topEdgeOffsetZ,
+                bottomBorderHeight = bottomBorderHeight,
                 verticalOffset = wallVerticalOffset,
+                borderHeight = borderHeight,
                 leftOffset = wallHorizontalOffset,
                 rightOffset = wallHorizontalOffset,
                 borderThickness = borderThickness,
@@ -80,12 +91,16 @@ class Walls(
 
         thumbWalls(
             OuterWallsBuilder(
+                topEdgeOffsetZ = topEdgeOffsetZ,
+                bottomBorderHeight = bottomBorderHeight,
                 verticalOffset = wallVerticalOffset,
                 horizontalOffset = wallHorizontalOffset,
                 borderThickness = borderThickness,
                 borderHeight = borderHeight
             ),
             OuterCornersWallBuilder(
+                topEdgeOffsetZ = topEdgeOffsetZ,
+                bottomBorderHeight = bottomBorderHeight,
                 verticalOffset = wallVerticalOffset,
                 leftOffset = wallHorizontalOffset,
                 rightOffset = thumbRightOffset,
@@ -124,7 +139,7 @@ class Walls(
                 continue
             }
 
-            if (isWallMode && column < 4) {
+            if (isWallMode) {
                 continue
             }
             //front columns
@@ -142,7 +157,7 @@ class Walls(
             if (column < 2) {
                 continue
             }
-            if (isWallMode && column < 4) {
+            if (isWallMode) {
                 continue
             }
             // front diagonals
@@ -152,7 +167,6 @@ class Walls(
                     rightPlace = { obj -> keyPlace.place(column + 1, cfg.lastRow, obj) },
                 )
             )
-            bordersOffset = cfg.bordersOffset
 
         }
 
@@ -178,112 +192,23 @@ class Walls(
                 )
             )
         }
-    }
 
-    private fun walls(
-        wallsBuilder: WallsBuilder, cornerWallBuilder: CornerWallBuilder, isWallMode: Boolean = false
-    ) {
-        // corners
-        //left back
-        models.add(cornerWallBuilder.backLeft { obj -> keyPlace.place(0, 0, obj) })
-        //left front
-        //models.add(cornerWallBuilder.frontLeft { obj -> keyPlace.place(0, cfg.lastRow, obj) })
-        // right back
-        models.add(cornerWallBuilder.backRight { obj -> keyPlace.place(cfg.lastCol, 0, obj) })
-        // right front
-        models.add(cornerWallBuilder.frontRight { obj -> keyPlace.place(cfg.lastCol, cfg.lastRow, obj) })
-
-        val bottomEdgePatcher = CircleBottomEdgePatcher(
-            thickness = 1.5,
-            objectHeight = 1.0,
-            radiusX = 100.0,
-            radiusY = 60.0,
-            centerY = -20.0,
-        )
-
-        val topPoints = mutableListOf<V3d>()
-        val midPoints = mutableListOf<V3d>()
-        val bottomPoints = mutableListOf<V3d>()
-        for (column in 0 until cfg.columnsCount) {
-            val left = keyPlace.place(column, 0, KeyPlaceholder.placeHolderTopLeft().move(0.0, 8.0, -4.0))
-            val right = keyPlace.place(column, 0, KeyPlaceholder.placeHolderTopRight().move(0.0, 8.0, -4.0))
-
-            val leftMid = keyPlace.place(column, 0, KeyPlaceholder.placeHolderTopLeft().move(0.0, 10.0, -8.0))
-            val rightMid = keyPlace.place(column, 0, KeyPlaceholder.placeHolderTopRight().move(0.0, 10.0, -8.0))
-
-            topPoints.add(left.move)
-            topPoints.add(right.move)
-
-            midPoints.add(leftMid.move)
-            midPoints.add(rightMid.move)
-
-            bottomPoints.add(bottomEdgePatcher.backPoint(left).move)
-            bottomPoints.add(bottomEdgePatcher.backPoint(right).move)
-        }
-
-        val controlPoints = arrayOf(
-            topPoints.toTypedArray(),
-            //topPoints.toTypedArray(),
-            midPoints.toTypedArray(),
-            bottomPoints.toTypedArray(),
-        )
-
-        val bSplineSurface = BicubicSurfaceSpline.bSplineSurface(controlPoints, 10)
-        val surfaceBuilder: Abstract3dModel = SmoothSurface(
-            bSplineSurface, 4.toDouble(), EdgeType.Vertical, EdgeType.Normal, EdgeType.Normal, EdgeType.Vertical
-        )
-
-        models.add(surfaceBuilder)
-
-        //front walls
-        for (column in 2 until cfg.columnsCount) {
-            if (isWallMode && column < 4) {
-                continue
-            }
-            //front columns
-            models.add(wallsBuilder.frontWall { obj -> keyPlace.place(column, cfg.lastRow, obj) })
-
-        }
-
-        for (column in 0 until cfg.columnsCount - 1) {
-            if (column < 2) {
-                continue
-            }
-            if (isWallMode && column < 3) {
-                continue
-            }
+        if (isWallMode) {
             // front diagonals
             models.add(
                 wallsBuilder.frontMidWall(
-                    leftPlace = { obj -> keyPlace.place(column, cfg.lastRow, obj) },
-                    rightPlace = { obj -> keyPlace.place(column + 1, cfg.lastRow, obj) },
-                )
-            )
-            bordersOffset = cfg.bordersOffset
-
-
-            for (row in 0 until cfg.rowsCount) {
-                //left
-                models.add(wallsBuilder.leftWall { obj -> keyPlace.place(0, row, obj) })
-                //right
-                models.add(wallsBuilder.rightWall { obj -> keyPlace.place(cfg.lastCol, row, obj) })
-
-            }
-        }
-        for (row in 0 until cfg.rowsCount - 1) {
-            models.add(
-                wallsBuilder.leftMidWall(
-                    leftPlace = { obj -> keyPlace.place(0, row, obj) },
-                    rightPlace = { obj -> keyPlace.place(0, row + 1, obj) },
+                    leftOffset = -4.0,
+                    rightOffset = -4.0,
+                    leftPlace = { obj -> keyPlace.place(4, cfg.lastRow, obj) },
+                    rightPlace = { obj -> keyPlace.place(5, cfg.lastRow, obj) },
                 )
             )
 
-            models.add(
-                wallsBuilder.rightMidWall(
-                    backPlace = { obj -> keyPlace.place(cfg.lastCol, row, obj) },
-                    frontPlace = { obj -> keyPlace.place(cfg.lastCol, row + 1, obj) },
-                )
-            )
+            models.add(wallsBuilder.frontWall { obj -> keyPlace.place(4, cfg.lastRow, obj) })
+
+            models.add(wallsBuilder.frontWall(
+                leftOffset = -4.0,
+            ) { obj -> keyPlace.place(5, cfg.lastRow, obj) })
         }
     }
 

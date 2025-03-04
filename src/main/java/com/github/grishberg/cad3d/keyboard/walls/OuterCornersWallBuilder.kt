@@ -6,9 +6,10 @@ import eu.printingin3d.javascad.models.Abstract3dModel
 import eu.printingin3d.javascad.tranzitions.Union
 
 class OuterCornersWallBuilder(
+    private val topEdgeOffsetZ: Double,
     private val borderThickness: Double = 1.5,
     private val borderHeight: Double = 4.0,
-    private val bottomBorderHeight: Double = 1.0,
+    private val bottomBorderHeight: Double,
     private val verticalOffset: Double = 4.0,
     private val leftOffset: Double = 8.0,
     private val rightOffset: Double = 8.0,
@@ -20,8 +21,6 @@ class OuterCornersWallBuilder(
     private val outerBorderZOffset: Double = -6.0,
     private val bottomEdgePatcher: WallBottomEdgePatcher = DefaultBottomEdgePatcher(borderThickness, bottomBorderHeight),
 ) : CornerWallBuilder {
-
-    private val offset = 2.0
 
     override fun backLeft(keyPlace: (Abstract3dModel) -> Abstract3dModel): Abstract3dModel {
         val back = keyPlace(KeyPlaceholder.placeHolderTopLeft().move(0.0, outerVerticalOffset, outerBorderZOffset))
@@ -134,11 +133,11 @@ class OuterCornersWallBuilder(
         )
 
         val innerLeft = matrixInnerPlace(
-            KeyPlaceholder.placeHolderBottomLeft().move(0.0, -verticalOffset, outerBorderZOffset)
+            KeyPlaceholder.placeHolderBottomLeft().move(0.0, -verticalOffset, borderZOffset)
         )
 
         val innerRight = matrixInnerPlace(
-            KeyPlaceholder.placeHolderBottomRight().move(0.0, -verticalOffset, outerBorderZOffset)
+            KeyPlaceholder.placeHolderBottomRight().move(0.0, -verticalOffset, borderZOffset)
         )
 
         val outerLeft = matrixOuterPlace(
@@ -175,6 +174,6 @@ class OuterCornersWallBuilder(
     }
 
     private fun verticalCube(obj: Abstract3dModel): Abstract3dModel {
-        return KeyPlaceholder.placeCube(borderThickness, borderHeight).moveZ( 2 - borderHeight/2).move(obj.move)
+        return KeyPlaceholder.placeCube(borderThickness, borderHeight).moveZ(topEdgeOffsetZ).move(obj.move)
     }
 }
