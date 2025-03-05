@@ -14,7 +14,7 @@ class DefaultBottomEdgePatcher(
 
     override fun projection(obj: Abstract3dModel): Abstract3dModel {
         val point = obj.move
-        return KeyPlaceholder.placeCube(thickness, objectHeight).move(V3d(point.x, point.y, 0.0))
+        return KeyPlaceholder.placeCube(thickness, objectHeight).move(V3d(point.x, point.y, objectHeight + objectHeight/2))
     }
 
     override fun leftPoint(o: Abstract3dModel): Abstract3dModel = projection(o)

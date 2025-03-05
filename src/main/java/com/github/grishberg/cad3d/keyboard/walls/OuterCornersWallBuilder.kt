@@ -19,10 +19,13 @@ class OuterCornersWallBuilder(
     private val outerLeftOffset: Double = 15.0,
     private val outerRightOffset: Double = 15.0,
     private val outerBorderZOffset: Double = -6.0,
-    private val bottomEdgePatcher: WallBottomEdgePatcher = DefaultBottomEdgePatcher(borderThickness, bottomBorderHeight),
+    private val bottomEdgePatcher: WallBottomEdgePatcher = DefaultBottomEdgePatcher(
+        borderThickness,
+        bottomBorderHeight
+    ),
 ) : CornerWallBuilder {
 
-    override fun backLeft(keyPlace: (Abstract3dModel) -> Abstract3dModel): Abstract3dModel {
+    override fun backLeft(onlyBottomEdge: Boolean, keyPlace: (Abstract3dModel) -> Abstract3dModel): Abstract3dModel {
         val back = keyPlace(KeyPlaceholder.placeHolderTopLeft().move(0.0, outerVerticalOffset, outerBorderZOffset))
         val left = keyPlace(KeyPlaceholder.placeHolderTopLeft().move(-outerLeftOffset, 0.0, outerBorderZOffset))
         val border = hull(
@@ -40,7 +43,7 @@ class OuterCornersWallBuilder(
         return Union(border, wall)
     }
 
-    override fun backRight(keyPlace: (Abstract3dModel) -> Abstract3dModel): Abstract3dModel {
+    override fun backRight(onlyBottomEdge: Boolean, keyPlace: (Abstract3dModel) -> Abstract3dModel): Abstract3dModel {
         val back = keyPlace(KeyPlaceholder.placeHolderTopRight().move(0.0, outerVerticalOffset, outerBorderZOffset))
         val right = keyPlace(KeyPlaceholder.placeHolderTopRight().move(outerRightOffset, 0.0, outerBorderZOffset))
         val border = hull(
@@ -50,14 +53,12 @@ class OuterCornersWallBuilder(
             right,
         )
         val wall = hull(
-            back, right,
-            bottomEdgePatcher.backPoint(back),
-            bottomEdgePatcher.rightPoint(right)
+            back, right, bottomEdgePatcher.backPoint(back), bottomEdgePatcher.rightPoint(right)
         )
         return Union(border, wall)
     }
 
-    override fun frontLeft(keyPlace: (Abstract3dModel) -> Abstract3dModel): Abstract3dModel {
+    override fun frontLeft(onlyBottomEdge: Boolean, keyPlace: (Abstract3dModel) -> Abstract3dModel): Abstract3dModel {
         val left = keyPlace(
             KeyPlaceholder.placeHolderBottomLeft().move(-outerLeftOffset, 0.0, outerBorderZOffset)
         )
@@ -79,6 +80,13 @@ class OuterCornersWallBuilder(
             left,
         )
 
+        if (onlyBottomEdge) {
+            return hull(
+                bottomEdgePatcher.leftPoint(left),
+                bottomEdgePatcher.frontPoint(front),
+            )
+        }
+
         val wall = hull(
             left, front,
             bottomEdgePatcher.leftPoint(left),
@@ -87,7 +95,7 @@ class OuterCornersWallBuilder(
         return Union(border, wall)
     }
 
-    override fun frontRight(keyPlace: (Abstract3dModel) -> Abstract3dModel): Abstract3dModel {
+    override fun frontRight(onlyBottomEdge: Boolean, keyPlace: (Abstract3dModel) -> Abstract3dModel): Abstract3dModel {
         val front = keyPlace(
             KeyPlaceholder.placeHolderBottomRight().move(0.0, -outerVerticalOffset, outerBorderZOffset)
         )
@@ -109,6 +117,13 @@ class OuterCornersWallBuilder(
             right,
         )
 
+        if (onlyBottomEdge) {
+            return hull(
+                bottomEdgePatcher.frontPoint(front),
+                bottomEdgePatcher.rightPoint(right),
+            )
+        }
+
         val wall = hull(
             front, right,
             bottomEdgePatcher.frontPoint(front),
@@ -118,6 +133,7 @@ class OuterCornersWallBuilder(
     }
 
     override fun frontRightToMatrix(
+        onlyBottomEdge: Boolean,
         keyPlace: (Abstract3dModel) -> Abstract3dModel,
         matrixOuterPlace: (Abstract3dModel) -> Abstract3dModel,
         matrixInnerPlace: (Abstract3dModel) -> Abstract3dModel,
@@ -143,6 +159,13 @@ class OuterCornersWallBuilder(
         val outerLeft = matrixOuterPlace(
             KeyPlaceholder.placeHolderBottomLeft().move(0.0, -outerVerticalOffset, outerBorderZOffset)
         )
+
+        if (onlyBottomEdge) {
+            return hull(
+                bottomEdgePatcher.projection(frontOuter),
+                bottomEdgePatcher.projection(outerLeft),
+            )
+        }
 
         val wall1 = hull(
             verticalCube(thumbVertex),

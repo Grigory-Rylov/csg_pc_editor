@@ -18,16 +18,22 @@ class OuterWallsBuilder(
     private val outerHorizontalOffset: Double = 15.0,
     private val outerBorderZOffset: Double = -6.0,
     private val bottomEdgePatcher: WallBottomEdgePatcher = DefaultBottomEdgePatcher(
-        borderThickness,
-        bottomBorderHeight
+        borderThickness, bottomBorderHeight
     ),
 ) : WallsBuilder {
 
     override fun backWall(
-        onlyBorder: Boolean, keyPlace: (Abstract3dModel) -> Abstract3dModel
+        onlyBorder: Boolean, onlyBottomEdge: Boolean, keyPlace: (Abstract3dModel) -> Abstract3dModel
     ): Abstract3dModel {
         val left = keyPlace(KeyPlaceholder.placeHolderTopLeft().move(0.0, outerVerticalOffset, outerBorderZOffset))
         val right = keyPlace(KeyPlaceholder.placeHolderTopRight().move(0.0, outerVerticalOffset, outerBorderZOffset))
+
+        if(onlyBottomEdge){
+            return hull(
+                bottomEdgePatcher.backPoint(left),
+                bottomEdgePatcher.backPoint(right),
+            )
+        }
 
         val border = hull(
             left, right,
@@ -48,20 +54,28 @@ class OuterWallsBuilder(
             return border
         }
         val wall = hull(
-            left, right,
-            bottomEdgePatcher.backPoint(left),
-            bottomEdgePatcher.backPoint(right)
+            left, right, bottomEdgePatcher.backPoint(left), bottomEdgePatcher.backPoint(right)
         )
         return Union(border, wall)
     }
 
     override fun backMidWall(
-        leftPlace: (Abstract3dModel) -> Abstract3dModel, rightPlace: (Abstract3dModel) -> Abstract3dModel
+        onlyBottomEdge: Boolean,
+        leftPlace: (Abstract3dModel) -> Abstract3dModel,
+        rightPlace: (Abstract3dModel) -> Abstract3dModel
     ): Abstract3dModel {
         val left =
             leftPlace.invoke(KeyPlaceholder.placeHolderTopRight().move(0.0, outerVerticalOffset, outerBorderZOffset))
         val right =
             rightPlace.invoke(KeyPlaceholder.placeHolderTopLeft().move(0.0, outerVerticalOffset, outerBorderZOffset))
+
+        if(onlyBottomEdge){
+            return hull(
+                bottomEdgePatcher.backPoint(left),
+                bottomEdgePatcher.backPoint(right),
+            )
+        }
+
         val border = hull(
             left, right, verticalCube(
                 leftPlace.invoke(
@@ -81,10 +95,18 @@ class OuterWallsBuilder(
         return Union(border, wall)
     }
 
-    override fun leftWall(keyPlace: (Abstract3dModel) -> Abstract3dModel): Abstract3dModel {
+    override fun leftWall(onlyBottomEdge: Boolean, keyPlace: (Abstract3dModel) -> Abstract3dModel): Abstract3dModel {
         val top = keyPlace(KeyPlaceholder.placeHolderTopLeft().move(-outerHorizontalOffset, 0.0, outerBorderZOffset))
         val bottom =
             keyPlace(KeyPlaceholder.placeHolderBottomLeft().move(-outerHorizontalOffset, 0.0, outerBorderZOffset))
+
+        if(onlyBottomEdge){
+            return hull(
+                bottomEdgePatcher.leftPoint(top),
+                bottomEdgePatcher.leftPoint(bottom)
+            )
+        }
+
         val border = hull(
             top, bottom,
             verticalCube(
@@ -108,12 +130,22 @@ class OuterWallsBuilder(
     }
 
     override fun leftMidWall(
-        leftPlace: (Abstract3dModel) -> Abstract3dModel, rightPlace: (Abstract3dModel) -> Abstract3dModel
+        onlyBottomEdge: Boolean,
+        leftPlace: (Abstract3dModel) -> Abstract3dModel,
+        rightPlace: (Abstract3dModel) -> Abstract3dModel
     ): Abstract3dModel {
         val top =
             leftPlace(KeyPlaceholder.placeHolderBottomLeft().move(-outerHorizontalOffset, 0.0, outerBorderZOffset))
         val bottom =
             rightPlace(KeyPlaceholder.placeHolderTopLeft().move(-outerHorizontalOffset, 0.0, outerBorderZOffset))
+
+        if(onlyBottomEdge){
+            return hull(
+                bottomEdgePatcher.leftPoint(top),
+                bottomEdgePatcher.leftPoint(bottom)
+            )
+        }
+
         val border = hull(
             top,
             bottom,
@@ -139,6 +171,7 @@ class OuterWallsBuilder(
     override fun frontWall(
         leftOffset: Double, rightOffset: Double,
         onlyBorder: Boolean,
+        onlyBottomEdge: Boolean,
         keyPlace: (Abstract3dModel) -> Abstract3dModel,
     ): Abstract3dModel {
         val left =
@@ -146,6 +179,13 @@ class OuterWallsBuilder(
         val right = keyPlace(
             KeyPlaceholder.placeHolderBottomRight().move(rightOffset, -outerVerticalOffset, outerBorderZOffset)
         )
+
+        if(onlyBottomEdge){
+            return hull(
+                bottomEdgePatcher.frontPoint(left),
+                bottomEdgePatcher.frontPoint(right),
+            )
+        }
 
         val border = hull(
             left, right,
@@ -173,12 +213,23 @@ class OuterWallsBuilder(
     override fun frontMidWall(
         leftOffset: Double,
         rightOffset: Double,
-        leftPlace: (Abstract3dModel) -> Abstract3dModel, rightPlace: (Abstract3dModel) -> Abstract3dModel
+        onlyBottomEdge: Boolean,
+        leftPlace: (Abstract3dModel) -> Abstract3dModel,
+        rightPlace: (Abstract3dModel) -> Abstract3dModel
     ): Abstract3dModel {
-        val left =
-            leftPlace(KeyPlaceholder.placeHolderBottomRight().move(leftOffset, -outerVerticalOffset, outerBorderZOffset))
-        val right =
-            rightPlace(KeyPlaceholder.placeHolderBottomLeft().move(rightOffset, -outerVerticalOffset, outerBorderZOffset))
+        val left = leftPlace(
+            KeyPlaceholder.placeHolderBottomRight().move(leftOffset, -outerVerticalOffset, outerBorderZOffset)
+        )
+        val right = rightPlace(
+            KeyPlaceholder.placeHolderBottomLeft().move(rightOffset, -outerVerticalOffset, outerBorderZOffset)
+        )
+        if(onlyBottomEdge){
+            return hull(
+                bottomEdgePatcher.frontPoint(left),
+                bottomEdgePatcher.frontPoint(right),
+            )
+        }
+
         val border = hull(
             left,
             right,
@@ -203,10 +254,17 @@ class OuterWallsBuilder(
         return Union(border, wall)
     }
 
-    override fun rightWall(keyPlace: (Abstract3dModel) -> Abstract3dModel): Abstract3dModel {
+    override fun rightWall(onlyBottomEdge: Boolean, keyPlace: (Abstract3dModel) -> Abstract3dModel): Abstract3dModel {
         val top = keyPlace(KeyPlaceholder.placeHolderTopRight().move(outerHorizontalOffset, 0.0, outerBorderZOffset))
         val bottom =
             keyPlace(KeyPlaceholder.placeHolderBottomRight().move(outerHorizontalOffset, 0.0, outerBorderZOffset))
+
+        if(onlyBottomEdge){
+            return hull(
+                bottomEdgePatcher.rightPoint(top),
+                bottomEdgePatcher.rightPoint(bottom),
+            )
+        }
 
         val border = hull(
             top, bottom,
@@ -228,11 +286,20 @@ class OuterWallsBuilder(
     }
 
     override fun rightMidWall(
-        backPlace: (Abstract3dModel) -> Abstract3dModel, frontPlace: (Abstract3dModel) -> Abstract3dModel
+        onlyBottomEdge: Boolean,
+        backPlace: (Abstract3dModel) -> Abstract3dModel,
+        frontPlace: (Abstract3dModel) -> Abstract3dModel
     ): Abstract3dModel {
         val top = frontPlace(KeyPlaceholder.placeHolderTopRight().move(outerHorizontalOffset, 0.0, outerBorderZOffset))
         val bottom =
             backPlace(KeyPlaceholder.placeHolderBottomRight().move(outerHorizontalOffset, 0.0, outerBorderZOffset))
+
+        if(onlyBottomEdge){
+            return hull(
+                bottomEdgePatcher.rightPoint(top),
+                bottomEdgePatcher.rightPoint(bottom),
+            )
+        }
 
         val border = hull(
             bottom, top, verticalCube(
@@ -255,6 +322,7 @@ class OuterWallsBuilder(
     }
 
     override fun midEdge(
+        onlyBottomEdge: Boolean,
         midPlace: (Abstract3dModel) -> Abstract3dModel,
         leftPlace: (Abstract3dModel) -> Abstract3dModel,
         rightPlace: (Abstract3dModel) -> Abstract3dModel
@@ -263,6 +331,13 @@ class OuterWallsBuilder(
             leftPlace(KeyPlaceholder.placeHolderBottomRight().move(0.0, -outerVerticalOffset, outerBorderZOffset))
         val right =
             rightPlace(KeyPlaceholder.placeHolderBottomLeft().move(0.0, -outerVerticalOffset, outerBorderZOffset))
+
+        if(onlyBottomEdge){
+            return hull(
+                bottomEdgePatcher.projection(left),
+                bottomEdgePatcher.projection(right),
+            )
+        }
 
         val border = hull(
             left, right,

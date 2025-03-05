@@ -18,6 +18,7 @@ class InnerBordersBuilder(
 
     override fun backWall(
         onlyBorder: Boolean,
+        onlyBottomEdge: Boolean,
         keyPlace: (Abstract3dModel) -> Abstract3dModel): Abstract3dModel {
         return Utils.hull(
             keyPlace(KeyPlaceholder.placeHolderTop()),
@@ -37,6 +38,7 @@ class InnerBordersBuilder(
     }
 
     override fun backMidWall(
+        onlyBottomEdge: Boolean,
         leftPlace: (Abstract3dModel) -> Abstract3dModel, rightPlace: (Abstract3dModel) -> Abstract3dModel
     ): Abstract3dModel {
         return Utils.hull(
@@ -56,7 +58,7 @@ class InnerBordersBuilder(
         )
     }
 
-    override fun leftWall(keyPlace: (Abstract3dModel) -> Abstract3dModel): Abstract3dModel {
+    override fun leftWall(onlyBottomEdge: Boolean, keyPlace: (Abstract3dModel) -> Abstract3dModel): Abstract3dModel {
         return Utils.hull(
             keyPlace(KeyPlaceholder.placeHolderLeft()),
             verticalCube(
@@ -73,6 +75,7 @@ class InnerBordersBuilder(
     }
 
     override fun leftMidWall(
+        onlyBottomEdge: Boolean,
         leftPlace: (Abstract3dModel) -> Abstract3dModel, rightPlace: (Abstract3dModel) -> Abstract3dModel
     ): Abstract3dModel {
         return Utils.hull(
@@ -94,6 +97,7 @@ class InnerBordersBuilder(
     override fun frontWall(
         leftOffset: Double, rightOffset: Double,
         onlyBorder: Boolean,
+        onlyBottomEdge: Boolean,
         keyPlace: (Abstract3dModel) -> Abstract3dModel
     ): Abstract3dModel {
         return Utils.hull(
@@ -114,6 +118,7 @@ class InnerBordersBuilder(
     override fun frontMidWall(
         leftOffset: Double,
         rightOffset: Double,
+        onlyBottomEdge: Boolean,
         leftPlace: (Abstract3dModel) -> Abstract3dModel, rightPlace: (Abstract3dModel) -> Abstract3dModel
     ): Abstract3dModel {
         return Utils.hull(
@@ -132,7 +137,7 @@ class InnerBordersBuilder(
         )
     }
 
-    override fun rightWall(keyPlace: (Abstract3dModel) -> Abstract3dModel): Abstract3dModel {
+    override fun rightWall(onlyBottomEdge: Boolean,keyPlace: (Abstract3dModel) -> Abstract3dModel): Abstract3dModel {
         return Utils.hull(
             keyPlace(KeyPlaceholder.placeHolderRight()),
             verticalCube(
@@ -145,6 +150,7 @@ class InnerBordersBuilder(
     }
 
     override fun rightMidWall(
+        onlyBottomEdge: Boolean,
         backPlace: (Abstract3dModel) -> Abstract3dModel, frontPlace: (Abstract3dModel) -> Abstract3dModel
     ): Abstract3dModel {
         return Utils.hull(
@@ -164,6 +170,7 @@ class InnerBordersBuilder(
     }
 
     override fun midEdge(
+        onlyBottomEdge: Boolean,
         midPlace: (Abstract3dModel) -> Abstract3dModel,
         leftPlace: (Abstract3dModel) -> Abstract3dModel,
         rightPlace: (Abstract3dModel) -> Abstract3dModel

@@ -199,12 +199,12 @@ class SceneBuilderKeyboard(
     }
 
     private fun createBorders(keyPlace: KeyPlace, thumbKeyPlace: ThumbKeyPlace): Abstract3dModel {
-        val borders = Walls(cfg, keyPlace, thumbKeyPlace, topEdgeOffsetZ = 0.0).createBorders(1.5, 4.0)
-
         val screwBase = ScrewBase(cfg)
-
         val screws = ScrewKeyMatrixPlace(cfg, keyPlace, thumbKeyPlace).place(screwBase.matrixScrewHole())
-        createAndAdd(borders.subtractModel(screws), Color.lightGray, 30)
+
+        val borders = Walls(cfg, keyPlace, thumbKeyPlace, topEdgeOffsetZ = 0.0).createBorders(1.5, 4.0).subtractModel(screws)
+
+        createAndAdd(borders, Color.lightGray, 30)
         return borders
     }
 

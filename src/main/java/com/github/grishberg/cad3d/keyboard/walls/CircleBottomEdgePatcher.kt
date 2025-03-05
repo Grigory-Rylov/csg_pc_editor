@@ -115,7 +115,7 @@ class CircleBottomEdgePatcher(
         ) y1
         else y2
 
-        return V3d(point.x, targetY, 0.0)
+        return V3d(point.x, targetY, objectHeight + objectHeight/2)
     }
 
     private fun projectToEllipseX(
@@ -145,12 +145,12 @@ class CircleBottomEdgePatcher(
         ) x1
         else x2
 
-        return V3d(targetX,point.y,0.0)
+        return V3d(targetX,point.y,objectHeight + objectHeight/2)
     }
 
     override fun projection(obj: Abstract3dModel): Abstract3dModel {
         val point = obj.move
-        return KeyPlaceholder.placeCube(thickness, objectHeight).move(V3d(point.x, point.y, 0.0))
+        return KeyPlaceholder.placeCube(thickness, objectHeight).move(V3d(point.x, point.y, objectHeight + objectHeight/2))
     }
 
 }

@@ -52,6 +52,7 @@ data class KeyboardSettings(
     val bordersOffset: Double,
     val screwNutHoleDiameter: Double = 4.0,
     val screwHolderWallhickness: Double = 1.6,
+    val isSkeletonMode: Boolean,
 )
 
 @Serializable
@@ -92,5 +93,6 @@ data class SettingsContainer(
         thumbClusterSettings = thumbClusterSettings,
         screwNutHoleDiameter = keyboardSettings.screwNutHoleDiameter,
         screwHolderWallhickness = keyboardSettings.screwHolderWallhickness,
+        isSkeletonMode = keyboardSettings.isSkeletonMode,
     )
 }

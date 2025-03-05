@@ -68,6 +68,7 @@ class SettingsHolder(
             isHasHotswap = false,
             isMagneticWristRestHolder = false,
             bordersOffset = 4.0,
+            isSkeletonMode = false,
         ),
         thumbClusterSettings = ThumbClusterSettings(
             xOffset = 0.0,

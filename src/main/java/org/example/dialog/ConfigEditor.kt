@@ -136,7 +136,12 @@ class ConfigEditor(
             fireKeyboardSettingsChanges()
         }
 
-        addIntSpinner(panel, "FN клавиша:", currentKeyboardSettings.fn, 4..100) {
+        addCheckbox(panel, "Упрощенный корпус-скелет:", currentKeyboardSettings.isSkeletonMode) {
+            currentKeyboardSettings = currentKeyboardSettings.copy(isSkeletonMode = it)
+            fireKeyboardSettingsChanges()
+        }
+
+        addIntSpinner(panel, "Количество граней в окружностях:", currentKeyboardSettings.fn, 4..100) {
             currentKeyboardSettings = currentKeyboardSettings.copy(fn = it)
             fireKeyboardSettingsChanges()
         }

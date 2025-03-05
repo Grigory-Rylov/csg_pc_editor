@@ -29,7 +29,8 @@ data class KeyboardConfig(
     @field:Volatile var assemblySettings: AssemblySettings,
     val thumbClusterSettings: ThumbClusterSettings,
     val screwNutHoleDiameter: Double,
-    val screwHolderWallhickness: Double
+    val screwHolderWallhickness: Double,
+    val isSkeletonMode: Boolean,
 ) {
 
     val lastCol: Int
