@@ -1,4 +1,4 @@
-package com.github.grishberg.cad3d.keyboard.walls
+package com.github.grishberg.cad3d.keyboard.casebody
 
 import eu.printingin3d.javascad.models.Abstract3dModel
 

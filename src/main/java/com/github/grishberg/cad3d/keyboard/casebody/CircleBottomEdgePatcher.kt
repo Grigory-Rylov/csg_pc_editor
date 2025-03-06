@@ -1,4 +1,4 @@
-package com.github.grishberg.cad3d.keyboard.walls
+package com.github.grishberg.cad3d.keyboard.casebody
 
 import com.github.grishberg.cad3d.keyboard.KeyPlaceholder
 import eu.printingin3d.javascad.coords.V3d

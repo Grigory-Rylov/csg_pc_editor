@@ -16,6 +16,10 @@ public class Utils {
         return new Union(models);
     }
 
+    public static Abstract3dModel union(Abstract3dModel... models) {
+        return new Union(models);
+    }
+
     public static Abstract3dModel hull(Abstract3dModel... models) {
         return new Hull(models);
     }

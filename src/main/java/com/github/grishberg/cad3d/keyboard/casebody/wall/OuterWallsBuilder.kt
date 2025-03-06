@@ -1,7 +1,11 @@
-package com.github.grishberg.cad3d.keyboard.walls
+package com.github.grishberg.cad3d.keyboard.casebody.wall
 
 import com.github.grishberg.cad3d.keyboard.KeyPlaceholder
 import com.github.grishberg.cad3d.keyboard.Utils.hull
+import com.github.grishberg.cad3d.keyboard.Utils.union
+import com.github.grishberg.cad3d.keyboard.casebody.DefaultBottomEdgePatcher
+import com.github.grishberg.cad3d.keyboard.casebody.WallBottomEdgePatcher
+import com.github.grishberg.cad3d.keyboard.casebody.WallsBuilder
 import eu.printingin3d.javascad.models.Abstract3dModel
 import eu.printingin3d.javascad.tranzitions.Union
 
@@ -29,13 +33,6 @@ class OuterWallsBuilder(
         val left = keyPlace(KeyPlaceholder.placeHolderTopLeft().move(0.0, outerVerticalOffset, outerBorderZOffset))
         val right = keyPlace(KeyPlaceholder.placeHolderTopRight().move(0.0, outerVerticalOffset, outerBorderZOffset))
 
-        if (isSkeletonMode) {
-            return hull(
-                bottomEdgePatcher.backPoint(left),
-                bottomEdgePatcher.backPoint(right),
-            )
-        }
-
         val border = hull(
             left, right,
 
@@ -54,6 +51,14 @@ class OuterWallsBuilder(
         if (onlyBorder) {
             return border
         }
+        if (isSkeletonMode) {
+            return Union(
+                border, hull(
+                    bottomEdgePatcher.backPoint(left),
+                    bottomEdgePatcher.backPoint(right),
+                )
+            )
+        }
         val wall = hull(
             left, right, bottomEdgePatcher.backPoint(left), bottomEdgePatcher.backPoint(right)
         )
@@ -68,13 +73,6 @@ class OuterWallsBuilder(
         val right =
             rightPlace.invoke(KeyPlaceholder.placeHolderTopLeft().move(0.0, outerVerticalOffset, outerBorderZOffset))
 
-        if (isSkeletonMode) {
-            return hull(
-                bottomEdgePatcher.backPoint(left),
-                bottomEdgePatcher.backPoint(right),
-            )
-        }
-
         val border = hull(
             left, right, verticalCube(
                 leftPlace.invoke(
@@ -86,6 +84,14 @@ class OuterWallsBuilder(
                 )
             )
         )
+        if (isSkeletonMode) {
+            return union(
+                border, hull(
+                    bottomEdgePatcher.backPoint(left),
+                    bottomEdgePatcher.backPoint(right),
+                )
+            )
+        }
         val wall = hull(
             left, right,
             bottomEdgePatcher.backPoint(left),
@@ -103,12 +109,6 @@ class OuterWallsBuilder(
             KeyPlaceholder.placeHolderBottomLeft().move(-outerHorizontalOffset, bottomOffset, outerBorderZOffset)
         )
 
-        if (isSkeletonMode) {
-            return hull(
-                bottomEdgePatcher.leftPoint(top), bottomEdgePatcher.leftPoint(bottom)
-            )
-        }
-
         val border = hull(
             top, bottom,
             verticalCube(
@@ -122,6 +122,14 @@ class OuterWallsBuilder(
                 )
             ),
         )
+
+        if (isSkeletonMode) {
+            return union(
+                border, hull(
+                    bottomEdgePatcher.leftPoint(top), bottomEdgePatcher.leftPoint(bottom)
+                )
+            )
+        }
 
         val wall = hull(
             top, bottom,
@@ -139,12 +147,6 @@ class OuterWallsBuilder(
         val bottom =
             rightPlace(KeyPlaceholder.placeHolderTopLeft().move(-outerHorizontalOffset, 0.0, outerBorderZOffset))
 
-        if (isSkeletonMode) {
-            return hull(
-                bottomEdgePatcher.leftPoint(top), bottomEdgePatcher.leftPoint(bottom)
-            )
-        }
-
         val border = hull(
             top,
             bottom,
@@ -159,6 +161,14 @@ class OuterWallsBuilder(
                 )
             ),
         )
+
+        if (isSkeletonMode) {
+            return union(
+                border, hull(
+                    bottomEdgePatcher.leftPoint(top), bottomEdgePatcher.leftPoint(bottom)
+                )
+            )
+        }
 
         val wall = hull(
             top, bottom, bottomEdgePatcher.leftPoint(top), bottomEdgePatcher.leftPoint(bottom)
@@ -178,13 +188,6 @@ class OuterWallsBuilder(
             KeyPlaceholder.placeHolderBottomRight().move(rightOffset, -outerVerticalOffset, outerBorderZOffset)
         )
 
-        if (isSkeletonMode) {
-            return hull(
-                bottomEdgePatcher.frontPoint(left),
-                bottomEdgePatcher.frontPoint(right),
-            )
-        }
-
         val border = hull(
             left, right,
             verticalCube(
@@ -201,6 +204,16 @@ class OuterWallsBuilder(
         if (onlyBorder) {
             return border
         }
+
+        if (isSkeletonMode) {
+            return union(
+                border, hull(
+                    bottomEdgePatcher.frontPoint(left),
+                    bottomEdgePatcher.frontPoint(right),
+                )
+            )
+        }
+
         val wall = hull(
             left, right, bottomEdgePatcher.frontPoint(left), bottomEdgePatcher.frontPoint(right)
         )
@@ -220,12 +233,6 @@ class OuterWallsBuilder(
         val right = rightPlace(
             KeyPlaceholder.placeHolderBottomLeft().move(rightOffset, -outerVerticalOffset, outerBorderZOffset)
         )
-        if (isSkeletonMode) {
-            return hull(
-                bottomEdgePatcher.frontPoint(left),
-                bottomEdgePatcher.frontPoint(right),
-            )
-        }
 
         val border = hull(
             left,
@@ -241,6 +248,15 @@ class OuterWallsBuilder(
                 )
             ),
         )
+
+        if (isSkeletonMode) {
+            return union(
+                border, hull(
+                    bottomEdgePatcher.frontPoint(left),
+                    bottomEdgePatcher.frontPoint(right),
+                )
+            )
+        }
 
         val wall = hull(
             left, right,
@@ -260,13 +276,6 @@ class OuterWallsBuilder(
             KeyPlaceholder.placeHolderBottomRight().move(outerHorizontalOffset, bottomOffset, outerBorderZOffset)
         )
 
-        if (isSkeletonMode) {
-            return hull(
-                bottomEdgePatcher.rightPoint(top),
-                bottomEdgePatcher.rightPoint(bottom),
-            )
-        }
-
         val border = hull(
             top, bottom,
             verticalCube(
@@ -276,6 +285,15 @@ class OuterWallsBuilder(
             ),
             verticalCube(keyPlace(KeyPlaceholder.placeHolderTopRight().move(horizontalOffset, 0.0, borderZOffset))),
         )
+
+        if (isSkeletonMode) {
+            return union(
+                border, hull(
+                    bottomEdgePatcher.rightPoint(top),
+                    bottomEdgePatcher.rightPoint(bottom),
+                )
+            )
+        }
 
         val wall = hull(
             top, bottom,
@@ -293,13 +311,6 @@ class OuterWallsBuilder(
         val bottom =
             backPlace(KeyPlaceholder.placeHolderBottomRight().move(outerHorizontalOffset, 0.0, outerBorderZOffset))
 
-        if (isSkeletonMode) {
-            return hull(
-                bottomEdgePatcher.rightPoint(top),
-                bottomEdgePatcher.rightPoint(bottom),
-            )
-        }
-
         val border = hull(
             bottom, top, verticalCube(
                 backPlace(
@@ -311,6 +322,16 @@ class OuterWallsBuilder(
                 )
             )
         )
+
+
+        if (isSkeletonMode) {
+            return union(
+                border, hull(
+                    bottomEdgePatcher.rightPoint(top),
+                    bottomEdgePatcher.rightPoint(bottom),
+                )
+            )
+        }
 
         val wall = hull(
             top, bottom,
@@ -330,18 +351,20 @@ class OuterWallsBuilder(
         val right =
             rightPlace(KeyPlaceholder.placeHolderBottomLeft().move(0.0, -outerVerticalOffset, outerBorderZOffset))
 
-        if (isSkeletonMode) {
-            return hull(
-                bottomEdgePatcher.projection(left),
-                bottomEdgePatcher.projection(right),
-            )
-        }
-
         val border = hull(
             left, right,
             verticalCube(leftPlace(KeyPlaceholder.placeHolderBottomRight().move(0.0, -verticalOffset, borderZOffset))),
             verticalCube(rightPlace(KeyPlaceholder.placeHolderBottomLeft().move(0.0, -verticalOffset, borderZOffset))),
         )
+
+        if (isSkeletonMode) {
+            return union(
+                border, hull(
+                    bottomEdgePatcher.projection(left),
+                    bottomEdgePatcher.projection(right),
+                )
+            )
+        }
 
         val wall = hull(
             left, right,

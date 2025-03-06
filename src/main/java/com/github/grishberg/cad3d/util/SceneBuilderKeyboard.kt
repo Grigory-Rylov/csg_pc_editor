@@ -6,7 +6,7 @@ import com.github.grishberg.cad3d.keyboard.screws.ScrewBase
 import com.github.grishberg.cad3d.keyboard.screws.ScrewKeyMatrixPlace
 import com.github.grishberg.cad3d.keyboard.screws.ScrewWallPlaces
 import com.github.grishberg.cad3d.keyboard.screws.ScrewsMatrixHolder
-import com.github.grishberg.cad3d.keyboard.walls.Walls
+import com.github.grishberg.cad3d.keyboard.casebody.Walls
 import com.github.grishberg.cad3d.keyboard.wristrest.WristRest
 import com.github.grishberg.cad3d.util.SceneBuilder.ReadyListener
 import eu.printingin3d.javascad.coords.V3d

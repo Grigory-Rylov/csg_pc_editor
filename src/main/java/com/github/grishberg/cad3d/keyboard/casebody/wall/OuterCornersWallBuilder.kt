@@ -1,7 +1,11 @@
-package com.github.grishberg.cad3d.keyboard.walls
+package com.github.grishberg.cad3d.keyboard.casebody.wall
 
 import com.github.grishberg.cad3d.keyboard.KeyPlaceholder
 import com.github.grishberg.cad3d.keyboard.Utils.hull
+import com.github.grishberg.cad3d.keyboard.Utils.union
+import com.github.grishberg.cad3d.keyboard.casebody.CornerWallBuilder
+import com.github.grishberg.cad3d.keyboard.casebody.DefaultBottomEdgePatcher
+import com.github.grishberg.cad3d.keyboard.casebody.WallBottomEdgePatcher
 import eu.printingin3d.javascad.models.Abstract3dModel
 import eu.printingin3d.javascad.tranzitions.Union
 
@@ -194,13 +198,6 @@ class OuterCornersWallBuilder(
             KeyPlaceholder.placeHolderBottomLeft().move(0.0, -outerVerticalOffset, outerBorderZOffset)
         )
 
-        if (isSkeletonMode) {
-            return hull(
-                bottomEdgePatcher.projection(frontOuter),
-                bottomEdgePatcher.projection(outerLeft),
-            )
-        }
-
         val wall1 = hull(
             verticalCube(thumbVertex),
             verticalCube(innerLeft),
@@ -222,10 +219,19 @@ class OuterCornersWallBuilder(
             verticalCube(outerLeft),
         )
 
+
+        if (isSkeletonMode) {
+            return union(
+                topBorder, hull(
+                    bottomEdgePatcher.projection(frontOuter),
+                    bottomEdgePatcher.projection(outerLeft),
+                )
+            )
+        }
+
         return Union(
             wall1,
             bottomBorder,
-
             topBorder,
         )
     }

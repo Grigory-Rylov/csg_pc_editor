@@ -1,8 +1,9 @@
-package com.github.grishberg.cad3d.keyboard.walls
+package com.github.grishberg.cad3d.keyboard.casebody.matrix
 
 import com.github.grishberg.cad3d.keyboard.KeyPlaceholder
 import com.github.grishberg.cad3d.keyboard.ThumbKeyPlace
 import com.github.grishberg.cad3d.keyboard.Utils
+import com.github.grishberg.cad3d.keyboard.casebody.WallsBuilder
 import eu.printingin3d.javascad.models.Abstract3dModel
 
 class InnerBordersBuilder(
