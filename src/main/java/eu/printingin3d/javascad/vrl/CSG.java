@@ -268,36 +268,7 @@ public class CSG {
     }
 
 
-    // Метод для получения вершин в виде массива float
-    public VertexHolder getVerticesAsFloatArray() {
 
-        int verticesCount = 0;
-        List<Facet> facets = toFacets();
-        verticesCount = facets.size() * 3;
-
-
-        float[] verticesArray = new float[verticesCount * 3];
-        float[] normalsArray = new float[verticesCount * 3];
-
-        int i = 0;
-        for (Facet facet : facets) {
-
-            final V3d normal = facet.getNormal();
-            Triangle3d triangle3d = facet.getTriangle();
-            for (V3d vertex : triangle3d.getPoints()) {
-                verticesArray[i] = (float) vertex.getX();
-                verticesArray[i + 1] = (float) vertex.getY();
-                verticesArray[i + 2] = (float) vertex.getZ();
-
-                normalsArray[i] = (float) normal.getX();
-                normalsArray[i + 1] = (float) normal.getY();
-                normalsArray[i + 2] = (float) normal.getZ();
-                i += 3;
-            }
-        }
-
-        return new VertexHolder(verticesArray, normalsArray, verticesCount);
-    }
 
     // Метод для получения вершин в виде массива float
     public VertexHolder getVerticesAndColorsAsFloatArray() {
@@ -333,7 +304,7 @@ public class CSG {
             }
         }
 
-        return new VertexHolder(verticesArray, normalsArray, verticesCount);
+        return new VertexHolder(facets, verticesArray, normalsArray, verticesCount);
     }
 
 	public float[] getVerticesWithColors() {

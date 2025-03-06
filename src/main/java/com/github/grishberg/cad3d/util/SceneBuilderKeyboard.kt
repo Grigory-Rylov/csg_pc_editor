@@ -23,6 +23,7 @@ import eu.printingin3d.javascad.models.Abstract3dModel
 import eu.printingin3d.javascad.models.Cube
 import eu.printingin3d.javascad.models.Cylinder
 import eu.printingin3d.javascad.models.IModel
+import eu.printingin3d.javascad.models.Sphere
 import eu.printingin3d.javascad.models.surfaces.SmoothSurface
 import eu.printingin3d.javascad.models.surfaces.bicubic.BicubicSurfaceSpline
 import eu.printingin3d.javascad.tranzitions.Union
@@ -86,7 +87,8 @@ class SceneBuilderKeyboard(
                 val borders = createBorders(keyPlace, thumbKeyPlace)
                 val matrix = connections.addModel(borders).addModel(createPlaceholders(keyPlace, thumbKeyPlace))
 
-                saveModel("matrix.stl", matrix)
+                //saveModel("matrix.stl", matrix)
+                saveModel("cube.stl", Cube(10.0).subtractModel(Cube(5.0, 5.0, 20.0)), fn = 60)
             }
             if (settings.settingsShowCaps) {
                 createThumbKeyPlace(thumbKeyPlace)
@@ -123,7 +125,7 @@ class SceneBuilderKeyboard(
             try {
                 val context: FacetGenerationContext = ColorFacetGenerationContext(DEFAULT_COLOR)
                 context.setFn(fn)
-                StlExporter.saveStringToFile(
+                StlExporter.saveStl(
                     model.toCSG(context).verticesAndColorsAsFloatArray, File(outDir, name).absolutePath
                 )
             } catch (e: IOException) {
@@ -270,7 +272,7 @@ class SceneBuilderKeyboard(
             try {
                 val context: FacetGenerationContext = ColorFacetGenerationContext(DEFAULT_COLOR)
                 context.setFn(20)
-                StlExporter.saveStringToFile(
+                StlExporter.saveStl(
                     wristRest.toCSG(context).verticesAndColorsAsFloatArray, "out.stl"
                 )
             } catch (e: IOException) {

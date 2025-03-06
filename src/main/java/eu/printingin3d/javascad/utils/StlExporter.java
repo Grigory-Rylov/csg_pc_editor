@@ -1,129 +1,76 @@
 package eu.printingin3d.javascad.utils;
 
+import eu.printingin3d.javascad.coords.Triangle3d;
+import eu.printingin3d.javascad.coords.V3d;
+import eu.printingin3d.javascad.vrl.Facet;
 import eu.printingin3d.javascad.vrl.VertexHolder;
-import java.io.File;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.channels.FileChannel;
+import java.nio.channels.WritableByteChannel;
+import java.util.List;
+
 
 public class StlExporter {
 
-    public static void exportToSTL(
-        VertexHolder vertexHolder,
-        String fileName
-    ) throws IOException {
-        float[] vertices = vertexHolder.getVertex();
-        float[] normals = vertexHolder.getNormals();
-        if (vertices.length != normals.length * 3) {
-            throw new IllegalArgumentException(
-                "Количество вершин не соответствует количеству нормалей");
+    private static final int X = 0;
+    private static final int Y = 0;
+    private static final int Z = 0;
+
+
+    public static void saveStl(VertexHolder holder, String fileName) {
+        List<Facet> originalFacets = holder.getFacets(); // Ваши исходные грани
+
+        List<Facet> fixedFacets =  StlValidator.validateAndRepair(originalFacets);
+
+        try (FileChannel channel = new FileOutputStream(fileName).getChannel()) {
+            StlExporter.writeBinaryStl(originalFacets, channel);
+            System.out.println("Export to " + fileName + " is done.");
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+    }
 
-        try (PrintWriter writer = new PrintWriter(new FileWriter(fileName))) {
-            writer.println("solid exported");
 
-            for (int i = 0; i < vertices.length; i += 9) { // 9 координат на треугольник
-                // Вычисляем среднюю нормаль для треугольника
-                float nx = (normals[i] + normals[i + 3] + normals[i + 6]) / 3.0f;
-                float ny = (normals[i + 1] + normals[i + 4] + normals[i + 7]) / 3.0f;
-                float nz = (normals[i + 2] + normals[i + 5] + normals[i + 8]) / 3.0f;
+    private static void writeBinaryStl(
+        List<Facet> facets,
+        WritableByteChannel channel
+    ) throws IOException {
 
-                writer.printf("  facet normal %e %e %e\n", nx, ny, nz);
-                writer.println("    outer loop");
-                writer.printf(
-                    "      vertex %e %e %e\n",
-                    vertices[i],
-                    vertices[i + 1],
-                    vertices[i + 2]
-                );
-                writer.printf(
-                    "      vertex %e %e %e\n",
-                    vertices[i + 3],
-                    vertices[i + 4],
-                    vertices[i + 5]
-                );
-                writer.printf(
-                    "      vertex %e %e %e\n",
-                    vertices[i + 6],
-                    vertices[i + 7],
-                    vertices[i + 8]
-                );
-                writer.println("    endloop");
-                writer.println("  endfacet");
+        // Заголовок файла (80 байт)
+        byte[] header = new byte[80];
+        ByteBuffer buffer = ByteBuffer.allocate(84 + 50 * facets.size())
+            .order(ByteOrder.LITTLE_ENDIAN)
+            .put(header);
+
+        // Количество треугольников (4 байта)
+        buffer.putInt(facets.size());
+
+        // Запись каждого треугольника
+        for (Facet facet : facets) {
+            V3d normal = facet.getNormal();
+            Triangle3d triangle = facet.getTriangle();
+            List<V3d> points = triangle.getPoints();
+
+            // Нормаль (3 float)
+            buffer.putFloat((float) normal.getX());
+            buffer.putFloat((float) normal.getY());
+            buffer.putFloat((float) normal.getZ());
+
+            // Координаты вершин (3 точки по 3 float)
+            for (V3d point : points) {
+                buffer.putFloat((float) point.getX());
+                buffer.putFloat((float) point.getY());
+                buffer.putFloat((float) point.getZ());
             }
 
-            writer.println("endsolid exported");
-        }
-    }
-    /**
-     * Сохраняет строку в текстовый файл
-     * @param content  - содержимое для сохранения
-     * @param filePath - путь к файлу для записи
-     * @throws IOException при ошибках записи
-     */
-    public static void saveStringToFile(VertexHolder vertexHolder, String filePath) throws IOException {
-        String stl = exportToSTL(vertexHolder);
-        Path path = new File(filePath).toPath();
-        Files.writeString(
-            path,
-            stl,
-            StandardCharsets.UTF_8,
-            StandardOpenOption.CREATE,
-            StandardOpenOption.TRUNCATE_EXISTING,
-            StandardOpenOption.WRITE
-        );
-    }
-
-    public static String exportToSTL(VertexHolder vertexHolder) {
-        float[] vertices = vertexHolder.getVertex();
-        float[] normals = vertexHolder.getNormals();
-
-        StringWriter stringWriter = new StringWriter();
-        PrintWriter writer = new PrintWriter(stringWriter);
-
-        writer.println("solid exported");
-
-        int vertexIndex = 0;
-
-        for (int i = 0; i < normals.length; i += 9) { // 9 координат на треугольник
-            // Вычисляем среднюю нормаль для треугольника
-            float nx = (normals[i] + normals[i + 3] + normals[i + 6]) / 3.0f;
-            float ny = (normals[i + 1] + normals[i + 4] + normals[i + 7]) / 3.0f;
-            float nz = (normals[i + 2] + normals[i + 5] + normals[i + 8]) / 3.0f;
-
-            writer.printf("  facet normal %e %e %e\n", nx, ny, nz);
-            writer.println("    outer loop");
-            writer.printf(
-                "      vertex %e %e %e\n",
-                vertices[vertexIndex],
-                vertices[vertexIndex + 1],
-                vertices[vertexIndex + 2]
-            );
-            writer.printf(
-                "      vertex %e %e %e\n",
-                vertices[vertexIndex + 7],
-                vertices[vertexIndex + 8],
-                vertices[vertexIndex + 9]
-            );
-            writer.printf(
-                "      vertex %e %e %e\n",
-                vertices[vertexIndex + 14],
-                vertices[vertexIndex + 15],
-                vertices[vertexIndex + 16]
-            );
-            writer.println("    endloop");
-            writer.println("  endfacet");
-            vertexIndex += 7 * 3;
+            // Атрибуты (2 байта)
+            buffer.putShort((short) 0);
         }
 
-        writer.println("endsolid exported");
-        writer.flush();
-
-        return stringWriter.toString();
+        buffer.flip();
+        channel.write(buffer);
     }
 }
