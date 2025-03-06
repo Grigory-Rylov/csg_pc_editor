@@ -20,12 +20,13 @@ class OuterCornersWallBuilder(
     private val outerRightOffset: Double = 15.0,
     private val outerBorderZOffset: Double = -6.0,
     private val bottomEdgePatcher: WallBottomEdgePatcher = DefaultBottomEdgePatcher(
-        borderThickness,
-        bottomBorderHeight
+        borderThickness, bottomBorderHeight
     ),
 ) : CornerWallBuilder {
 
-    override fun backLeft(onlyBottomEdge: Boolean, keyPlace: (Abstract3dModel) -> Abstract3dModel): Abstract3dModel {
+    override fun backLeft(
+        onlyBottomEdge: Boolean, keyPlace: (Abstract3dModel) -> Abstract3dModel
+    ): Abstract3dModel {
         val back = keyPlace(KeyPlaceholder.placeHolderTopLeft().move(0.0, outerVerticalOffset, outerBorderZOffset))
         val left = keyPlace(KeyPlaceholder.placeHolderTopLeft().move(-outerLeftOffset, 0.0, outerBorderZOffset))
         val border = hull(
@@ -34,6 +35,21 @@ class OuterCornersWallBuilder(
             back,
             left,
         )
+
+        if (onlyBottomEdge) {
+            return Union(
+                border, hull(
+                    left,
+                    bottomEdgePatcher.leftPoint(left),
+                ), hull(
+                    back,
+                    bottomEdgePatcher.backPoint(back),
+                ), hull(
+                    bottomEdgePatcher.leftPoint(left),
+                    bottomEdgePatcher.backPoint(back),
+                )
+            )
+        }
 
         val wall = hull(
             left, back,
@@ -52,6 +68,14 @@ class OuterCornersWallBuilder(
             back,
             right,
         )
+        if(onlyBottomEdge) {
+            return Union(
+                border,
+                hull(right, bottomEdgePatcher.backPoint(right)),
+                hull(back, bottomEdgePatcher.backPoint(back)),
+                hull(bottomEdgePatcher.backPoint(back), bottomEdgePatcher.rightPoint(right))
+            )
+        }
         val wall = hull(
             back, right, bottomEdgePatcher.backPoint(back), bottomEdgePatcher.rightPoint(right)
         )
@@ -81,9 +105,12 @@ class OuterCornersWallBuilder(
         )
 
         if (onlyBottomEdge) {
-            return hull(
-                bottomEdgePatcher.leftPoint(left),
-                bottomEdgePatcher.frontPoint(front),
+            return Union(
+                border,
+                hull(left, bottomEdgePatcher.leftPoint(left)), hull(front, bottomEdgePatcher.leftPoint(front)), hull(
+                    bottomEdgePatcher.leftPoint(left),
+                    bottomEdgePatcher.frontPoint(front),
+                )
             )
         }
 
@@ -118,9 +145,14 @@ class OuterCornersWallBuilder(
         )
 
         if (onlyBottomEdge) {
-            return hull(
-                bottomEdgePatcher.frontPoint(front),
-                bottomEdgePatcher.rightPoint(right),
+            return Union(
+                border,
+                hull(front, bottomEdgePatcher.frontPoint(front)),
+                hull(right, bottomEdgePatcher.frontPoint(right)),
+                hull(
+                    bottomEdgePatcher.frontPoint(front),
+                    bottomEdgePatcher.rightPoint(right),
+                )
             )
         }
 

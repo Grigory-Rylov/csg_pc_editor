@@ -30,7 +30,9 @@ class ScrewWallPlaces(
 
         models.add(placeBottom(o, keyPlace.place(3, cfg.lastRow, cube), offsetY = -23.5))
 
-        models.add(placeTop(o, keyPlace.place(3, 0, cube), offsetY = 12.0))
+        if (!cfg.isSkeletonMode) {
+            models.add(placeTop(o, keyPlace.place(3, 0, cube), offsetY = 12.0))
+        }
 
         models.add(placeBottom(o, thumbKeyPlace.placeL(cube), offsetX = 0.0, offsetY = -7.0))
         return Union(models)

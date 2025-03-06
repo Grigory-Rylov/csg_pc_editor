@@ -257,6 +257,37 @@ class Walls(
                 onlyBottomEdge = cfg.isSkeletonMode,
                 leftOffset = -4.0,
             ) { obj -> keyPlace.place(5, cfg.lastRow, obj) })
+
+            if(cfg.isSkeletonMode){
+                val topOffset = -10.0
+                val bottomOffset = 6.0
+
+                //left
+                models.add(wallsBuilder.leftWall(topOffset = topOffset, bottomOffset = bottomOffset ) { obj ->
+                    keyPlace.place(0, 0, obj)
+                })
+
+                models.add(wallsBuilder.leftWall(topOffset = topOffset, bottomOffset = bottomOffset) { obj ->
+                    keyPlace.place(0, cfg.lastRow, obj)
+                })
+
+                //right
+                models.add(wallsBuilder.rightWall(topOffset = topOffset, bottomOffset = bottomOffset) { obj ->
+                    keyPlace.place(
+                        cfg.lastCol,
+                        0,
+                        obj
+                    )
+                })
+
+                models.add(wallsBuilder.rightWall(topOffset = topOffset, bottomOffset = bottomOffset) { obj ->
+                    keyPlace.place(
+                        cfg.lastCol,
+                        cfg.lastRow,
+                        obj
+                    )
+                })
+            }
         }
     }
 

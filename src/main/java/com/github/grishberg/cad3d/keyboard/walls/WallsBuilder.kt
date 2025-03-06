@@ -15,7 +15,11 @@ interface WallsBuilder {
         rightPlace: (Abstract3dModel) -> Abstract3dModel,
     ): Abstract3dModel
 
-    fun leftWall(onlyBottomEdge: Boolean = false, keyPlace:(Abstract3dModel) -> Abstract3dModel): Abstract3dModel
+    fun leftWall(
+        onlyBottomEdge: Boolean = false,
+        topOffset: Double = 0.0,
+        bottomOffset: Double = 0.0,
+        keyPlace:(Abstract3dModel) -> Abstract3dModel): Abstract3dModel
     fun leftMidWall(
         onlyBottomEdge: Boolean = false,
         leftPlace: (Abstract3dModel) -> Abstract3dModel,
@@ -35,7 +39,10 @@ interface WallsBuilder {
         leftPlace: (Abstract3dModel) -> Abstract3dModel,
         rightPlace: (Abstract3dModel) -> Abstract3dModel,
     ): Abstract3dModel
-    fun rightWall(onlyBottomEdge: Boolean = false, keyPlace:(Abstract3dModel) -> Abstract3dModel): Abstract3dModel
+    fun rightWall(onlyBottomEdge: Boolean = false,
+        topOffset: Double = 0.0,
+        bottomOffset: Double = 0.0,
+        keyPlace:(Abstract3dModel) -> Abstract3dModel): Abstract3dModel
     fun rightMidWall(
         onlyBottomEdge: Boolean = false,
         backPlace: (Abstract3dModel) -> Abstract3dModel,
