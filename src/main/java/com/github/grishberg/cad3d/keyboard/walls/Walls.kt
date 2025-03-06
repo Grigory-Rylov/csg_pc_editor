@@ -66,6 +66,7 @@ class Walls(
 
         matrixBorders(
             OuterWallsBuilder(
+                isSkeletonMode = cfg.isSkeletonMode,
                 topEdgeOffsetZ = topEdgeOffsetZ,
                 bottomBorderHeight = bottomBorderHeight,
                 verticalOffset = wallVerticalOffset,
@@ -74,6 +75,7 @@ class Walls(
                 borderThickness = borderThickness,
                 bottomEdgePatcher = bottomEdgePatcher
             ), OuterCornersWallBuilder(
+                isSkeletonMode = cfg.isSkeletonMode,
                 topEdgeOffsetZ = topEdgeOffsetZ,
                 bottomBorderHeight = bottomBorderHeight,
                 verticalOffset = wallVerticalOffset,
@@ -87,6 +89,7 @@ class Walls(
 
         thumbWalls(
             OuterWallsBuilder(
+                isSkeletonMode = cfg.isSkeletonMode,
                 topEdgeOffsetZ = topEdgeOffsetZ,
                 bottomBorderHeight = bottomBorderHeight,
                 verticalOffset = wallVerticalOffset,
@@ -95,6 +98,7 @@ class Walls(
                 borderHeight = borderHeight
             ),
             OuterCornersWallBuilder(
+                isSkeletonMode = cfg.isSkeletonMode,
                 topEdgeOffsetZ = topEdgeOffsetZ,
                 bottomBorderHeight = bottomBorderHeight,
                 verticalOffset = wallVerticalOffset,
@@ -119,40 +123,32 @@ class Walls(
     ) {
         // corners
         //left back
-        models.add(cornerWallBuilder.backLeft(onlyBottomEdge = cfg.isSkeletonMode) { obj ->
+        models.add(cornerWallBuilder.backLeft { obj ->
             keyPlace.place(
-                0,
-                0,
-                obj
+                0, 0, obj
             )
         })
         //left front
         //models.add(cornerWallBuilder.frontLeft { obj -> keyPlace.place(0, cfg.lastRow, obj) })
         // right back
-        models.add(cornerWallBuilder.backRight(onlyBottomEdge = cfg.isSkeletonMode) { obj ->
+        models.add(cornerWallBuilder.backRight { obj ->
             keyPlace.place(
-                cfg.lastCol,
-                0,
-                obj
+                cfg.lastCol, 0, obj
             )
         })
         // right front
-        models.add(cornerWallBuilder.frontRight(onlyBottomEdge = cfg.isSkeletonMode) { obj ->
+        models.add(cornerWallBuilder.frontRight { obj ->
             keyPlace.place(
-                cfg.lastCol,
-                cfg.lastRow,
-                obj
+                cfg.lastCol, cfg.lastRow, obj
             )
         })
 
         for (column in 0 until cfg.columnsCount) {
 
             // back columns
-            models.add(wallsBuilder.backWall(onlyBottomEdge = cfg.isSkeletonMode) { obj ->
+            models.add(wallsBuilder.backWall { obj ->
                 keyPlace.place(
-                    column,
-                    0,
-                    obj
+                    column, 0, obj
                 )
             })
             if (column < 2) {
@@ -163,11 +159,9 @@ class Walls(
                 continue
             }
             //front columns
-            models.add(wallsBuilder.frontWall(onlyBottomEdge = cfg.isSkeletonMode) { obj ->
+            models.add(wallsBuilder.frontWall { obj ->
                 keyPlace.place(
-                    column,
-                    cfg.lastRow,
-                    obj
+                    column, cfg.lastRow, obj
                 )
             })
 
@@ -176,7 +170,6 @@ class Walls(
             // back diagonals
             models.add(
                 wallsBuilder.backMidWall(
-                    onlyBottomEdge = cfg.isSkeletonMode,
                     leftPlace = { obj -> keyPlace.place(column, 0, obj) },
                     rightPlace = { obj -> keyPlace.place(column + 1, 0, obj) },
                 )
@@ -190,7 +183,6 @@ class Walls(
             // front diagonals
             models.add(
                 wallsBuilder.frontMidWall(
-                    onlyBottomEdge = cfg.isSkeletonMode,
                     leftPlace = { obj -> keyPlace.place(column, cfg.lastRow, obj) },
                     rightPlace = { obj -> keyPlace.place(column + 1, cfg.lastRow, obj) },
                 )
@@ -200,19 +192,15 @@ class Walls(
 
         for (row in 0 until cfg.rowsCount) {
             //left
-            models.add(wallsBuilder.leftWall(onlyBottomEdge = cfg.isSkeletonMode) { obj ->
+            models.add(wallsBuilder.leftWall { obj ->
                 keyPlace.place(
-                    0,
-                    row,
-                    obj
+                    0, row, obj
                 )
             })
             //right
-            models.add(wallsBuilder.rightWall(onlyBottomEdge = cfg.isSkeletonMode) { obj ->
+            models.add(wallsBuilder.rightWall { obj ->
                 keyPlace.place(
-                    cfg.lastCol,
-                    row,
-                    obj
+                    cfg.lastCol, row, obj
                 )
             })
 
@@ -220,7 +208,6 @@ class Walls(
         for (row in 0 until cfg.rowsCount - 1) {
             models.add(
                 wallsBuilder.leftMidWall(
-                    onlyBottomEdge = cfg.isSkeletonMode,
                     leftPlace = { obj -> keyPlace.place(0, row, obj) },
                     rightPlace = { obj -> keyPlace.place(0, row + 1, obj) },
                 )
@@ -228,7 +215,6 @@ class Walls(
 
             models.add(
                 wallsBuilder.rightMidWall(
-                    onlyBottomEdge = cfg.isSkeletonMode,
                     backPlace = { obj -> keyPlace.place(cfg.lastCol, row, obj) },
                     frontPlace = { obj -> keyPlace.place(cfg.lastCol, row + 1, obj) },
                 )
@@ -239,7 +225,6 @@ class Walls(
             // front diagonals
             models.add(
                 wallsBuilder.frontMidWall(
-                    onlyBottomEdge = cfg.isSkeletonMode,
                     leftOffset = -4.0,
                     rightOffset = -4.0,
                     leftPlace = { obj -> keyPlace.place(4, cfg.lastRow, obj) },
@@ -247,23 +232,20 @@ class Walls(
                 )
             )
 
-            models.add(
-                wallsBuilder.frontWall(
-                    onlyBottomEdge = cfg.isSkeletonMode,
-                    rightOffset = -4.0
-                ) { obj -> keyPlace.place(4, cfg.lastRow, obj) })
+            models.add(wallsBuilder.frontWall(
+                rightOffset = -4.0
+            ) { obj -> keyPlace.place(4, cfg.lastRow, obj) })
 
             models.add(wallsBuilder.frontWall(
-                onlyBottomEdge = cfg.isSkeletonMode,
                 leftOffset = -4.0,
             ) { obj -> keyPlace.place(5, cfg.lastRow, obj) })
 
-            if(cfg.isSkeletonMode){
+            if (cfg.isSkeletonMode) {
                 val topOffset = -10.0
                 val bottomOffset = 6.0
 
                 //left
-                models.add(wallsBuilder.leftWall(topOffset = topOffset, bottomOffset = bottomOffset ) { obj ->
+                models.add(wallsBuilder.leftWall(topOffset = topOffset, bottomOffset = bottomOffset) { obj ->
                     keyPlace.place(0, 0, obj)
                 })
 
@@ -274,17 +256,13 @@ class Walls(
                 //right
                 models.add(wallsBuilder.rightWall(topOffset = topOffset, bottomOffset = bottomOffset) { obj ->
                     keyPlace.place(
-                        cfg.lastCol,
-                        0,
-                        obj
+                        cfg.lastCol, 0, obj
                     )
                 })
 
                 models.add(wallsBuilder.rightWall(topOffset = topOffset, bottomOffset = bottomOffset) { obj ->
                     keyPlace.place(
-                        cfg.lastCol,
-                        cfg.lastRow,
-                        obj
+                        cfg.lastCol, cfg.lastRow, obj
                     )
                 })
             }
@@ -371,7 +349,7 @@ class Walls(
         // right front
         models.add(
             cornerWallBuilder.frontRightToMatrix(
-                onlyBottomEdge = cfg.isSkeletonMode,
+
                 keyPlace = { obj -> thumbKeyPlace.placeR(obj) },
                 matrixOuterPlace = { o -> keyPlace.place(4, cfg.lastRow, o) },
                 matrixInnerPlace = { o -> keyPlace.place(3, cfg.lastRow, o) },
@@ -380,7 +358,7 @@ class Walls(
 
         models.add(wallsBuilder.backWall(onlyBorder = true) { o -> thumbKeyPlace.placeL(o) })
 
-        models.add(wallsBuilder.frontWall(onlyBottomEdge = cfg.isSkeletonMode) { o -> thumbKeyPlace.placeR(o) })
+        models.add(wallsBuilder.frontWall { o -> thumbKeyPlace.placeR(o) })
         //models.add(wallsBuilder.frontWall { o -> ThumbKeyPlace.placeM(o) })
         models.add(wallsBuilder.frontWall { o -> thumbKeyPlace.placeL(o) })
 
@@ -389,7 +367,6 @@ class Walls(
 
         models.add(
             wallsBuilder.midEdge(
-                onlyBottomEdge = cfg.isSkeletonMode,
                 midPlace = { o -> thumbKeyPlace.placeM(o) },
                 leftPlace = { o -> thumbKeyPlace.placeL(o) },
                 rightPlace = { o -> thumbKeyPlace.placeR(o) },

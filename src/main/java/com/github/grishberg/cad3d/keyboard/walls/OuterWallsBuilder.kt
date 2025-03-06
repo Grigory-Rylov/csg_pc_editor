@@ -6,6 +6,7 @@ import eu.printingin3d.javascad.models.Abstract3dModel
 import eu.printingin3d.javascad.tranzitions.Union
 
 class OuterWallsBuilder(
+    private val isSkeletonMode: Boolean,
     private val topEdgeOffsetZ: Double,
     private val borderThickness: Double = 1.5,
     private val borderHeight: Double = 4.0,
@@ -23,12 +24,12 @@ class OuterWallsBuilder(
 ) : WallsBuilder {
 
     override fun backWall(
-        onlyBorder: Boolean, onlyBottomEdge: Boolean, keyPlace: (Abstract3dModel) -> Abstract3dModel
+        onlyBorder: Boolean, keyPlace: (Abstract3dModel) -> Abstract3dModel
     ): Abstract3dModel {
         val left = keyPlace(KeyPlaceholder.placeHolderTopLeft().move(0.0, outerVerticalOffset, outerBorderZOffset))
         val right = keyPlace(KeyPlaceholder.placeHolderTopRight().move(0.0, outerVerticalOffset, outerBorderZOffset))
 
-        if (onlyBottomEdge) {
+        if (isSkeletonMode) {
             return hull(
                 bottomEdgePatcher.backPoint(left),
                 bottomEdgePatcher.backPoint(right),
@@ -60,16 +61,14 @@ class OuterWallsBuilder(
     }
 
     override fun backMidWall(
-        onlyBottomEdge: Boolean,
-        leftPlace: (Abstract3dModel) -> Abstract3dModel,
-        rightPlace: (Abstract3dModel) -> Abstract3dModel
+        leftPlace: (Abstract3dModel) -> Abstract3dModel, rightPlace: (Abstract3dModel) -> Abstract3dModel
     ): Abstract3dModel {
         val left =
             leftPlace.invoke(KeyPlaceholder.placeHolderTopRight().move(0.0, outerVerticalOffset, outerBorderZOffset))
         val right =
             rightPlace.invoke(KeyPlaceholder.placeHolderTopLeft().move(0.0, outerVerticalOffset, outerBorderZOffset))
 
-        if (onlyBottomEdge) {
+        if (isSkeletonMode) {
             return hull(
                 bottomEdgePatcher.backPoint(left),
                 bottomEdgePatcher.backPoint(right),
@@ -96,7 +95,7 @@ class OuterWallsBuilder(
     }
 
     override fun leftWall(
-        onlyBottomEdge: Boolean, topOffset: Double, bottomOffset: Double, keyPlace: (Abstract3dModel) -> Abstract3dModel
+        topOffset: Double, bottomOffset: Double, keyPlace: (Abstract3dModel) -> Abstract3dModel
     ): Abstract3dModel {
         val top =
             keyPlace(KeyPlaceholder.placeHolderTopLeft().move(-outerHorizontalOffset, topOffset, outerBorderZOffset))
@@ -104,7 +103,7 @@ class OuterWallsBuilder(
             KeyPlaceholder.placeHolderBottomLeft().move(-outerHorizontalOffset, bottomOffset, outerBorderZOffset)
         )
 
-        if (onlyBottomEdge) {
+        if (isSkeletonMode) {
             return hull(
                 bottomEdgePatcher.leftPoint(top), bottomEdgePatcher.leftPoint(bottom)
             )
@@ -133,16 +132,14 @@ class OuterWallsBuilder(
     }
 
     override fun leftMidWall(
-        onlyBottomEdge: Boolean,
-        leftPlace: (Abstract3dModel) -> Abstract3dModel,
-        rightPlace: (Abstract3dModel) -> Abstract3dModel
+        leftPlace: (Abstract3dModel) -> Abstract3dModel, rightPlace: (Abstract3dModel) -> Abstract3dModel
     ): Abstract3dModel {
         val top =
             leftPlace(KeyPlaceholder.placeHolderBottomLeft().move(-outerHorizontalOffset, 0.0, outerBorderZOffset))
         val bottom =
             rightPlace(KeyPlaceholder.placeHolderTopLeft().move(-outerHorizontalOffset, 0.0, outerBorderZOffset))
 
-        if (onlyBottomEdge) {
+        if (isSkeletonMode) {
             return hull(
                 bottomEdgePatcher.leftPoint(top), bottomEdgePatcher.leftPoint(bottom)
             )
@@ -173,7 +170,6 @@ class OuterWallsBuilder(
     override fun frontWall(
         leftOffset: Double, rightOffset: Double,
         onlyBorder: Boolean,
-        onlyBottomEdge: Boolean,
         keyPlace: (Abstract3dModel) -> Abstract3dModel,
     ): Abstract3dModel {
         val left =
@@ -182,7 +178,7 @@ class OuterWallsBuilder(
             KeyPlaceholder.placeHolderBottomRight().move(rightOffset, -outerVerticalOffset, outerBorderZOffset)
         )
 
-        if (onlyBottomEdge) {
+        if (isSkeletonMode) {
             return hull(
                 bottomEdgePatcher.frontPoint(left),
                 bottomEdgePatcher.frontPoint(right),
@@ -215,7 +211,6 @@ class OuterWallsBuilder(
     override fun frontMidWall(
         leftOffset: Double,
         rightOffset: Double,
-        onlyBottomEdge: Boolean,
         leftPlace: (Abstract3dModel) -> Abstract3dModel,
         rightPlace: (Abstract3dModel) -> Abstract3dModel
     ): Abstract3dModel {
@@ -225,7 +220,7 @@ class OuterWallsBuilder(
         val right = rightPlace(
             KeyPlaceholder.placeHolderBottomLeft().move(rightOffset, -outerVerticalOffset, outerBorderZOffset)
         )
-        if (onlyBottomEdge) {
+        if (isSkeletonMode) {
             return hull(
                 bottomEdgePatcher.frontPoint(left),
                 bottomEdgePatcher.frontPoint(right),
@@ -257,7 +252,7 @@ class OuterWallsBuilder(
     }
 
     override fun rightWall(
-        onlyBottomEdge: Boolean, topOffset: Double, bottomOffset: Double, keyPlace: (Abstract3dModel) -> Abstract3dModel
+        topOffset: Double, bottomOffset: Double, keyPlace: (Abstract3dModel) -> Abstract3dModel
     ): Abstract3dModel {
         val top =
             keyPlace(KeyPlaceholder.placeHolderTopRight().move(outerHorizontalOffset, topOffset, outerBorderZOffset))
@@ -265,7 +260,7 @@ class OuterWallsBuilder(
             KeyPlaceholder.placeHolderBottomRight().move(outerHorizontalOffset, bottomOffset, outerBorderZOffset)
         )
 
-        if (onlyBottomEdge) {
+        if (isSkeletonMode) {
             return hull(
                 bottomEdgePatcher.rightPoint(top),
                 bottomEdgePatcher.rightPoint(bottom),
@@ -292,15 +287,13 @@ class OuterWallsBuilder(
     }
 
     override fun rightMidWall(
-        onlyBottomEdge: Boolean,
-        backPlace: (Abstract3dModel) -> Abstract3dModel,
-        frontPlace: (Abstract3dModel) -> Abstract3dModel
+        backPlace: (Abstract3dModel) -> Abstract3dModel, frontPlace: (Abstract3dModel) -> Abstract3dModel
     ): Abstract3dModel {
         val top = frontPlace(KeyPlaceholder.placeHolderTopRight().move(outerHorizontalOffset, 0.0, outerBorderZOffset))
         val bottom =
             backPlace(KeyPlaceholder.placeHolderBottomRight().move(outerHorizontalOffset, 0.0, outerBorderZOffset))
 
-        if (onlyBottomEdge) {
+        if (isSkeletonMode) {
             return hull(
                 bottomEdgePatcher.rightPoint(top),
                 bottomEdgePatcher.rightPoint(bottom),
@@ -328,7 +321,6 @@ class OuterWallsBuilder(
     }
 
     override fun midEdge(
-        onlyBottomEdge: Boolean,
         midPlace: (Abstract3dModel) -> Abstract3dModel,
         leftPlace: (Abstract3dModel) -> Abstract3dModel,
         rightPlace: (Abstract3dModel) -> Abstract3dModel
@@ -338,7 +330,7 @@ class OuterWallsBuilder(
         val right =
             rightPlace(KeyPlaceholder.placeHolderBottomLeft().move(0.0, -outerVerticalOffset, outerBorderZOffset))
 
-        if (onlyBottomEdge) {
+        if (isSkeletonMode) {
             return hull(
                 bottomEdgePatcher.projection(left),
                 bottomEdgePatcher.projection(right),

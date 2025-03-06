@@ -121,20 +121,20 @@ class ConfigEditor(
             layout = GridLayout(0, 2)
         }
 
-        addCheckbox(panel, "Низкий профиль:", currentKeyboardSettings.isLowProfile) {
-            currentKeyboardSettings = currentKeyboardSettings.copy(isLowProfile = it)
-            fireKeyboardSettingsChanges()
-        }
+//        addCheckbox(panel, "Низкий профиль:", currentKeyboardSettings.isLowProfile) {
+//            currentKeyboardSettings = currentKeyboardSettings.copy(isLowProfile = it)
+//            fireKeyboardSettingsChanges()
+//        }
 
-        addCheckbox(panel, "Хотсвоп:", currentKeyboardSettings.isHasHotswap) {
+        /*addCheckbox(panel, "Хотсвоп:", currentKeyboardSettings.isHasHotswap) {
             currentKeyboardSettings = currentKeyboardSettings.copy(isHasHotswap = it)
             fireKeyboardSettingsChanges()
-        }
+        }*/
 
-        addCheckbox(panel, "Магнитная площадка:", currentKeyboardSettings.isMagneticWristRestHolder) {
+        /*addCheckbox(panel, "Магнитная площадка:", currentKeyboardSettings.isMagneticWristRestHolder) {
             currentKeyboardSettings = currentKeyboardSettings.copy(isMagneticWristRestHolder = it)
             fireKeyboardSettingsChanges()
-        }
+        }*/
 
         addCheckbox(panel, "Упрощенный корпус-скелет:", currentKeyboardSettings.isSkeletonMode) {
             currentKeyboardSettings = currentKeyboardSettings.copy(isSkeletonMode = it)

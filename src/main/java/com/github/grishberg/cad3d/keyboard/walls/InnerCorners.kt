@@ -13,7 +13,7 @@ class InnerCorners(
     private val borderZOffset: Double = -2.0,
 ) : CornerWallBuilder {
 
-    override fun backLeft(onlyBottomEdge: Boolean, keyPlace: (Abstract3dModel) -> Abstract3dModel): Abstract3dModel {
+    override fun backLeft(keyPlace: (Abstract3dModel) -> Abstract3dModel): Abstract3dModel {
         return Utils.hull(
             verticalCube(keyPlace(KeyPlaceholder.placeHolderTopLeft().move(0.0, verticalOffset, borderZOffset))),
             verticalCube(keyPlace(KeyPlaceholder.placeHolderTopLeft().move(leftOffset, 0.0, borderZOffset))),
@@ -21,7 +21,7 @@ class InnerCorners(
         )
     }
 
-    override fun backRight(onlyBottomEdge: Boolean, keyPlace: (Abstract3dModel) -> Abstract3dModel): Abstract3dModel {
+    override fun backRight(keyPlace: (Abstract3dModel) -> Abstract3dModel): Abstract3dModel {
         return Utils.hull(
             verticalCube(keyPlace(KeyPlaceholder.placeHolderTopRight().move(0.0, verticalOffset, borderZOffset))),
             verticalCube(keyPlace(KeyPlaceholder.placeHolderTopRight().move(rightOffset, 0.0, borderZOffset))),
@@ -29,7 +29,7 @@ class InnerCorners(
         )
     }
 
-    override fun frontLeft(onlyBottomEdge: Boolean, keyPlace: (Abstract3dModel) -> Abstract3dModel): Abstract3dModel {
+    override fun frontLeft(keyPlace: (Abstract3dModel) -> Abstract3dModel): Abstract3dModel {
         return Utils.hull(
             verticalCube(
                 keyPlace(
@@ -43,7 +43,7 @@ class InnerCorners(
         )
     }
 
-    override fun frontRight(onlyBottomEdge: Boolean, keyPlace: (Abstract3dModel) -> Abstract3dModel): Abstract3dModel {
+    override fun frontRight(keyPlace: (Abstract3dModel) -> Abstract3dModel): Abstract3dModel {
         return Utils.hull(
             verticalCube(
                 keyPlace(

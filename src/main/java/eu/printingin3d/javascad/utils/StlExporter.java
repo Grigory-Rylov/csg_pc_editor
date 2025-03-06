@@ -20,10 +20,12 @@ public class StlExporter {
     private static final int Z = 0;
 
 
-    public static void saveStl(VertexHolder holder, String fileName) {
+    public static void saveStl(VertexHolder holder, String fileName, boolean needCheck) {
         List<Facet> originalFacets = holder.getFacets(); // Ваши исходные грани
 
-        List<Facet> fixedFacets =  StlValidator.validateAndRepair(originalFacets);
+        if (needCheck) {
+            List<Facet> fixedFacets = StlValidator.validateAndRepair(originalFacets);
+        }
 
         try (FileChannel channel = new FileOutputStream(fileName).getChannel()) {
             StlExporter.writeBinaryStl(originalFacets, channel);

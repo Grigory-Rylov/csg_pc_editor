@@ -12,6 +12,8 @@ version = "1.0-SNAPSHOT"
 
 dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-swing:1.8.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.0")
     // https://mvnrepository.com/artifact/org.jogamp.jogl/jogl-all
     //implementation (files("libs/jogamp-fat.jar"))
 
