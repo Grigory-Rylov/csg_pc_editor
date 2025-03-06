@@ -117,9 +117,4 @@ object KeyPlaceholder {
             CORNER_OFFSET + WALL_THICKNESS, -CORNER_OFFSET - WALL_THICKNESS, CORNER_PLACEHOLDER_TOP_OFFSET
         )
     }
-
-    fun placeCube(thickness: Double, height: Double): Abstract3dModel {
-        //return cube(WALL_THICKNESS, thickness, TOP_THICKNESS);
-        return Utils.cylinder(thickness, height).move(0.0, 0.0, height - 4)
-    }
 }

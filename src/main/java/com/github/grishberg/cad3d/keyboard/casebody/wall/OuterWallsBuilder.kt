@@ -1,6 +1,7 @@
 package com.github.grishberg.cad3d.keyboard.casebody.wall
 
 import com.github.grishberg.cad3d.keyboard.KeyPlaceholder
+import com.github.grishberg.cad3d.keyboard.Utils
 import com.github.grishberg.cad3d.keyboard.Utils.hull
 import com.github.grishberg.cad3d.keyboard.Utils.union
 import com.github.grishberg.cad3d.keyboard.casebody.DefaultBottomEdgePatcher
@@ -375,6 +376,10 @@ class OuterWallsBuilder(
     }
 
     private fun verticalCube(obj: Abstract3dModel): Abstract3dModel {
-        return KeyPlaceholder.placeCube(borderThickness, borderHeight).moveZ(topEdgeOffsetZ).move(obj.move)
+        return borderObject(borderThickness, borderHeight).moveZ(topEdgeOffsetZ).move(obj.move)
+    }
+
+    private fun borderObject(thickness: Double, height: Double): Abstract3dModel {
+        return Utils.cylinder(thickness, height)
     }
 }

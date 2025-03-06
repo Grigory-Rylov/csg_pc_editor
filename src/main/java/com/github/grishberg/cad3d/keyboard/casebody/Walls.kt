@@ -600,6 +600,10 @@ class Walls(
     }
 
     private fun verticalCube(obj: Abstract3dModel, borderThickness: Double, borderHeight: Double): Abstract3dModel {
-        return KeyPlaceholder.placeCube(borderThickness, borderHeight).move(obj.move)
+        return borderObject(borderThickness, borderHeight).move(obj.move)
+    }
+
+    private fun borderObject(thickness: Double, height: Double): Abstract3dModel {
+        return Utils.cylinder(thickness, height)
     }
 }

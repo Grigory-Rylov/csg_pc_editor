@@ -281,9 +281,13 @@ class SceneBuilderKeyboard(
         val wallScrews = placeWallScrews(keyPlace, thumbKeyPlace, screwBase.screwHolder())
 
         val topBorderHeight = 6.0
-        val topEdgeOffsetZ = -topBorderHeight / 2
-        val walls = Walls(this.cfg, keyPlace, thumbKeyPlace, topEdgeOffsetZ = topEdgeOffsetZ).createWalls(
-            borderThickness = 1.5, borderHeight = topBorderHeight, bottomBorderHeight = 2.0
+        val topEdgeOffsetZ = 2 - topBorderHeight / 2
+        val bottomEdgeHeight = if (cfg.isSkeletonMode) 4.0 else 2.0
+        val walls = Walls(this.cfg, keyPlace, thumbKeyPlace, topEdgeOffsetZ = topEdgeOffsetZ)
+            .createWalls(
+                borderThickness = 1.5,
+                borderHeight = topBorderHeight,
+                bottomBorderHeight = bottomEdgeHeight
         ).subtractModel(holeBorders).subtractModel(Cube(300.0, 300.0, 50.0).move(0.0, 0.0, -25.0))
 
         return ModelHolder(
