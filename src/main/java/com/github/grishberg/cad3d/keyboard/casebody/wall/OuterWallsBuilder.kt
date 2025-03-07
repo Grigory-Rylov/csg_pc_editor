@@ -54,7 +54,13 @@ class OuterWallsBuilder(
         }
         if (isSkeletonMode) {
             return Union(
-                border, hull(
+                border,
+                // connection
+                hull(
+                    right, bottomEdgePatcher.backPoint(right)
+                ),
+                // bottom edge
+                hull(
                     bottomEdgePatcher.backPoint(left),
                     bottomEdgePatcher.backPoint(right),
                 )
@@ -208,7 +214,7 @@ class OuterWallsBuilder(
 
         if (isSkeletonMode) {
             return union(
-                border, hull(
+                border, hull(left, bottomEdgePatcher.frontPoint(left)), hull(
                     bottomEdgePatcher.frontPoint(left),
                     bottomEdgePatcher.frontPoint(right),
                 )
@@ -289,7 +295,8 @@ class OuterWallsBuilder(
 
         if (isSkeletonMode) {
             return union(
-                border, hull(
+                border,
+                hull(
                     bottomEdgePatcher.rightPoint(top),
                     bottomEdgePatcher.rightPoint(bottom),
                 )
@@ -327,7 +334,8 @@ class OuterWallsBuilder(
 
         if (isSkeletonMode) {
             return union(
-                border, hull(
+                border,
+                hull(
                     bottomEdgePatcher.rightPoint(top),
                     bottomEdgePatcher.rightPoint(bottom),
                 )

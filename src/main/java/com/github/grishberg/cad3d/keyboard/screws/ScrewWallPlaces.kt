@@ -16,7 +16,6 @@ class ScrewWallPlaces(
     // TODO: move to cfg
     private val outerVerticalOffset: Double = 10.0,
     private val outerHorizontalOffset: Double = 15.0,
-    private val outerBorderZOffset: Double = -6.0,
 
     ) {
 
@@ -25,7 +24,7 @@ class ScrewWallPlaces(
         val cube = Cube(1.0)
         models.add(placeLeftTop(o, keyPlace.place(0, 0, cube), offsetX = 0.2))
 
-        models.add(placeRightTop(o, keyPlace.place(cfg.lastCol, 0, cube), offsetY = 9.0))
+        models.add(placeRightTop(o, keyPlace.place(cfg.lastCol, 0, cube), offsetY = 10.0))
         models.add(placeRightBottom(o, keyPlace.place(cfg.lastCol, cfg.lastRow, cube), offsetY = -4.0))
 
         models.add(placeBottom(o, keyPlace.place(3, cfg.lastRow, cube), offsetY = -23.5))

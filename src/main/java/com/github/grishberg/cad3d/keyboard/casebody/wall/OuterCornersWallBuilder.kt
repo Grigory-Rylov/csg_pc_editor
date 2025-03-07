@@ -46,7 +46,9 @@ class OuterCornersWallBuilder(
             return Union(
                 border, hull(
                     left,
+                    left.moveY(-2.0),
                     bottomEdgePatcher.leftPoint(left),
+                    bottomEdgePatcher.leftPoint(left.moveY(-2.0)),
                 ), hull(
                     back,
                     bottomEdgePatcher.backPoint(back),
@@ -68,6 +70,7 @@ class OuterCornersWallBuilder(
     override fun backRight(keyPlace: (Abstract3dModel) -> Abstract3dModel): Abstract3dModel {
         val back = keyPlace(KeyPlaceholder.placeHolderTopRight().move(0.0, outerVerticalOffset, outerBorderZOffset))
         val right = keyPlace(KeyPlaceholder.placeHolderTopRight().move(outerRightOffset, 0.0, outerBorderZOffset))
+        val right2 = keyPlace(KeyPlaceholder.placeHolderTopRight().move(outerRightOffset, -2.0, outerBorderZOffset))
         val border = hull(
             verticalCube(keyPlace(KeyPlaceholder.placeHolderTopRight().move(0.0, verticalOffset, borderZOffset))),
             verticalCube(keyPlace(KeyPlaceholder.placeHolderTopRight().move(rightOffset, 0.0, borderZOffset))),
@@ -77,7 +80,12 @@ class OuterCornersWallBuilder(
         if (isSkeletonMode) {
             return Union(
                 border,
-                hull(right, bottomEdgePatcher.backPoint(right)),
+                hull(
+                    right,
+                    right.moveY(-2.0),
+                    bottomEdgePatcher.rightPoint(right),
+                    bottomEdgePatcher.rightPoint(right.moveY(-2.0)),
+                    ),
                 hull(back, bottomEdgePatcher.backPoint(back)),
                 hull(bottomEdgePatcher.backPoint(back), bottomEdgePatcher.rightPoint(right))
             )
@@ -156,7 +164,7 @@ class OuterCornersWallBuilder(
             return Union(
                 border,
                 hull(front, bottomEdgePatcher.frontPoint(front)),
-                hull(right, bottomEdgePatcher.frontPoint(right)),
+                hull(right, bottomEdgePatcher.rightPoint(right)),
                 hull(
                     bottomEdgePatcher.frontPoint(front),
                     bottomEdgePatcher.rightPoint(right),

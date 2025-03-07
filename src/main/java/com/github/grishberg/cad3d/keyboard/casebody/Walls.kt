@@ -245,8 +245,8 @@ class Walls(
             ) { obj -> keyPlace.place(5, cfg.lastRow, obj) })
 
             if (cfg.isSkeletonMode) {
-                val topOffset = -10.0
-                val bottomOffset = 6.0
+                val topOffset = 0.0
+                val bottomOffset = 0.0
 
                 //left
                 models.add(wallsBuilder.leftWall(topOffset = topOffset, bottomOffset = bottomOffset) { obj ->
