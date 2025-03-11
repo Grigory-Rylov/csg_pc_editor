@@ -2,6 +2,7 @@ package com.github.grishberg.cad3d.keyboard.cfg
 
 data class KeyboardConfig(
     val fn: Int,
+    val stlFn: Int,
     val plateZOffset: Double,
     val rowCurvature: Double,
     val tentingAngle: Double,
@@ -31,6 +32,7 @@ data class KeyboardConfig(
     val screwNutHoleDiameter: Double,
     val screwHolderWallhickness: Double,
     val isSkeletonMode: Boolean,
+    val trackball: TrackballConfig,
 ) {
 
     val lastCol: Int

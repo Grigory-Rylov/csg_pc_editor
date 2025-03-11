@@ -1,34 +1,20 @@
-package eu.printingin3d.javascad.vrl;
+package eu.printingin3d.javascad.vrl
 
-import java.util.List;
+import eu.printingin3d.javascad.models.IModel
+import eu.printingin3d.javascad.utils.Color
 
-public class VertexHolder {
+data class VertexHolder(
+    val facets: List<Facet>, val vertex: FloatArray, val normals: FloatArray, val verticesCount: Int
+) {
 
-    private final float[] vertex;
-    private final float[] normals;
-    private final int verticesCount;
-    private final List<Facet> facets;
+    companion object {
 
-    public VertexHolder(List<Facet> facets, float[] vertex, float[] normals, int verticesCount) {
-        this.facets = facets;
-        this.vertex = vertex;
-        this.normals = normals;
-        this.verticesCount = verticesCount;
-    }
-
-    public float[] getVertex() {
-        return vertex;
-    }
-
-    public float[] getNormals() {
-        return normals;
-    }
-
-    public int getVerticesCount() {
-        return verticesCount;
-    }
-
-    public List<Facet> getFacets() {
-        return facets;
+        fun createVertexHolder(model: IModel, color: Color, fn: Int): VertexHolder {
+            val context: FacetGenerationContext = ColorFacetGenerationContext(color)
+            context.setFn(fn)
+            val csg = model.toCSG(context)
+            val vertex = csg.verticesAndColorsAsFloatArray
+            return vertex
+        }
     }
 }

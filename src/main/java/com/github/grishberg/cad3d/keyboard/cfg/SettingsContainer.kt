@@ -19,6 +19,7 @@ data class AssemblySettings(
     val settingsShowMatrix: Boolean = true,
     val settingsShowPlate: Boolean = true,
     val settingsShowWristRest: Boolean = false,
+    val settingsTrackball: Boolean = false,
 )
 
 @Serializable
@@ -30,11 +31,14 @@ data class ThumbClusterSettings(
     val rotateZ: Double = 10.0,
     val arcRadiusZ: Double = 0.0,
     val arcRadiusY: Double = 0.0,
+    val spaceBetweenKey:Double = 5.3,
+    val type: ThumbClusterMode = ThumbClusterMode.SingleColumn3Buttons,
 )
 
 @Serializable
 data class KeyboardSettings(
     val fn: Int,
+    val stlFn: Int,
     val plateZOffset: Double,
     val rowCurvature: Double,
     val tentingAngle: Double,
@@ -53,6 +57,7 @@ data class KeyboardSettings(
     val screwNutHoleDiameter: Double = 4.0,
     val screwHolderWallhickness: Double = 1.6,
     val isSkeletonMode: Boolean,
+    val keyPlaceholderType: KeyPlaceholderType,
 )
 
 @Serializable
@@ -61,10 +66,12 @@ data class SettingsContainer(
     val viewerSettings: ViewerSettings,
     val keyboardSettings: KeyboardSettings,
     val thumbClusterSettings: ThumbClusterSettings,
+    val trackballSettings: TrackballConfig,
 ) {
 
     fun getKeyboardConfig(): KeyboardConfig = KeyboardConfig(
         fn = keyboardSettings.fn,
+        stlFn = keyboardSettings.stlFn,
         plateZOffset = keyboardSettings.plateZOffset,
         rowCurvature = keyboardSettings.rowCurvature,
         tentingAngle = keyboardSettings.tentingAngle,
@@ -94,5 +101,6 @@ data class SettingsContainer(
         screwNutHoleDiameter = keyboardSettings.screwNutHoleDiameter,
         screwHolderWallhickness = keyboardSettings.screwHolderWallhickness,
         isSkeletonMode = keyboardSettings.isSkeletonMode,
+        trackball = trackballSettings,
     )
 }

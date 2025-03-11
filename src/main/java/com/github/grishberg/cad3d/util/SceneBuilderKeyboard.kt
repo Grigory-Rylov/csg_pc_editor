@@ -1,13 +1,24 @@
 package com.github.grishberg.cad3d.util
 
-import com.github.grishberg.cad3d.keyboard.*
+import com.github.grishberg.cad3d.keyboard.Connections
+import com.github.grishberg.cad3d.keyboard.ControlPointsController
+import com.github.grishberg.cad3d.keyboard.KeyHolderBottomWalls
+import com.github.grishberg.cad3d.keyboard.KeyPlace
+import com.github.grishberg.cad3d.keyboard.KeyPlaceHoles
+import com.github.grishberg.cad3d.keyboard.KeyPlaceholder
+import com.github.grishberg.cad3d.keyboard.KeySwitchHoles
+import com.github.grishberg.cad3d.keyboard.ModelHolder
+import com.github.grishberg.cad3d.keyboard.ThumbConnections
+import com.github.grishberg.cad3d.keyboard.ThumbKeyPlace
+import com.github.grishberg.cad3d.keyboard.Utils
+import com.github.grishberg.cad3d.keyboard.casebody.Walls
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
 import com.github.grishberg.cad3d.keyboard.screws.ScrewBase
 import com.github.grishberg.cad3d.keyboard.screws.ScrewKeyMatrixPlace
 import com.github.grishberg.cad3d.keyboard.screws.ScrewWallPlaces
 import com.github.grishberg.cad3d.keyboard.screws.ScrewsMatrixHolder
-import com.github.grishberg.cad3d.keyboard.casebody.Walls
 import com.github.grishberg.cad3d.keyboard.wristrest.WristRest
+import com.github.grishberg.cad3d.trackball.Trackball
 import com.github.grishberg.cad3d.util.SceneBuilder.ReadyListener
 import eu.printingin3d.javascad.coords.V3d
 import eu.printingin3d.javascad.models.Abstract3dModel
@@ -25,7 +36,11 @@ import java.io.IOException
 import java.util.concurrent.Executor
 import java.util.concurrent.Executors
 import javax.swing.SwingUtilities
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.launch
 
 class SceneBuilderKeyboard(
     private val initialConfig: KeyboardConfig,
@@ -64,7 +79,7 @@ class SceneBuilderKeyboard(
 
     private fun create3dModels() {
         val keyPlace = KeyPlace(cfg)
-        val thumbKeyPlace = ThumbKeyPlace(cfg.thumbClusterSettings)
+        val thumbKeyPlace = ThumbKeyPlace(cfg)
 
         coroutineScope.launch {
             val deferredResults = listOf(
@@ -72,6 +87,7 @@ class SceneBuilderKeyboard(
                 async { createCase(cfg, keyPlace, thumbKeyPlace) },
                 async { createKeyCaps(cfg, keyPlace, thumbKeyPlace) },
                 async { createWristRest(cfg, keyPlace, thumbKeyPlace) },
+                async { createTrackball(cfg, keyPlace, thumbKeyPlace) },
             )
 
             // Ожидаем завершения всех задач
@@ -120,8 +136,14 @@ class SceneBuilderKeyboard(
         val result = mutableListOf<VertexHolder>()
 
         val startTime = System.currentTimeMillis()
+
         if (settings.settingsShowCase) {
             val caseWalls = createCaseModel(cfg, keyPlace, thumbKeyPlace)
+            if(settings.settingsTrackball) {
+                val trackBallHolder = Trackball(cfg, keyPlace).createTrackballHolder()
+                result.addAll(trackBallHolder.vertexHolders)
+                //TODO: add to caseWalls
+            }
             result.addAll(caseWalls.vertexHolders)
             saveModel("case.stl", caseWalls.model)
         }
@@ -138,7 +160,7 @@ class SceneBuilderKeyboard(
         val startTime = System.currentTimeMillis()
         if (settings.settingsShowCaps) {
             result.addAll(createThumbKeyPlaceModel(thumbKeyPlace).vertexHolders)
-            result.addAll(createKeycapsModel (keyPlace).vertexHolders)
+            result.addAll(createKeycapsModel(keyPlace).vertexHolders)
         }
         val delta = System.currentTimeMillis() - startTime
         println("createKeyCaps : $delta")
@@ -160,7 +182,23 @@ class SceneBuilderKeyboard(
         return result
     }
 
-    private fun saveModel(name: String, model: Abstract3dModel, fn: Int = 20, needCheck: Boolean = false) {
+    private fun createTrackball(
+        cfg: KeyboardConfig, keyPlace: KeyPlace, thumbKeyPlace: ThumbKeyPlace
+    ): List<VertexHolder> {
+        val settings = cfg.assemblySettings
+        val result = mutableListOf<VertexHolder>()
+        val startTime = System.currentTimeMillis()
+        if (settings.settingsTrackball) {
+            val trackBall = Trackball(cfg, keyPlace).create()
+            result.addAll(trackBall.vertexHolders)
+            saveModel("trackball.stl", trackBall.model)
+        }
+        val delta = System.currentTimeMillis() - startTime
+        println("createTrackball : $delta")
+        return result
+    }
+
+    private fun saveModel(name: String, model: Abstract3dModel, needCheck: Boolean = false) {
         val outDir = File("stl")
         if (!outDir.exists()) {
             outDir.mkdirs()
@@ -169,7 +207,7 @@ class SceneBuilderKeyboard(
         Thread {
             try {
                 val context: FacetGenerationContext = ColorFacetGenerationContext(DEFAULT_COLOR)
-                context.setFn(fn)
+                context.setFn(cfg.stlFn)
                 StlExporter.saveStl(
                     model.toCSG(context).verticesAndColorsAsFloatArray, File(outDir, name).absolutePath, needCheck
                 )
@@ -259,7 +297,7 @@ class SceneBuilderKeyboard(
             Walls(cfg, keyPlace, thumbKeyPlace, topEdgeOffsetZ = 0.0).createBorders(1.5, 4.0).subtractModel(screws)
 
 
-        return ModelHolder(borders, createVertexHolder(borders, Color.lightGray, 30))
+        return ModelHolder(borders, createVertexHolder(borders, Color.lightGray))
     }
 
     private fun createCaseModel(cfg: KeyboardConfig, keyPlace: KeyPlace, thumbKeyPlace: ThumbKeyPlace): ModelHolder {
@@ -281,21 +319,18 @@ class SceneBuilderKeyboard(
         val wallScrews = placeWallScrews(keyPlace, thumbKeyPlace, screwBase.screwHolder())
 
         val topBorderHeight = 6.0
-        val topEdgeOffsetZ =  -topBorderHeight / 2
+        val topEdgeOffsetZ = -topBorderHeight / 2
         val bottomEdgeHeight = if (cfg.isSkeletonMode) 4.0 else 2.0
-        val walls = Walls(this.cfg, keyPlace, thumbKeyPlace, topEdgeOffsetZ = topEdgeOffsetZ)
-            .createWalls(
-                borderThickness = 1.5,
-                borderHeight = topBorderHeight,
-                bottomBorderHeight = bottomEdgeHeight
-        ).subtractModel(holeBorders).subtractModel(Cube(300.0, 300.0, 50.0).move(0.0, 0.0, -25.0))
+        val walls = Walls(this.cfg, keyPlace, thumbKeyPlace, topEdgeOffsetZ = topEdgeOffsetZ).createWalls(
+                borderThickness = 1.5, borderHeight = topBorderHeight, bottomBorderHeight = bottomEdgeHeight
+            ).subtractModel(holeBorders).subtractModel(Cube(300.0, 300.0, 50.0).move(0.0, 0.0, -25.0))
 
         return ModelHolder(
             walls.addModel(screwMatrixHolders).addModel(wallScrews).subtractModel(screwMatrixHoldersHoles),
-            createVertexHolder(walls, Color.gray, 20),
-            createVertexHolder(wallScrews, Color.yellow, 20),
+            createVertexHolder(walls, Color.gray),
+            createVertexHolder(wallScrews, Color.yellow),
             createVertexHolder(
-                screwMatrixHolders.subtractModel(Cube(300.0, 300.0, 50.0).move(0.0, 0.0, -25.0)), Color.CYAN, 20
+                screwMatrixHolders.subtractModel(Cube(300.0, 300.0, 50.0).move(0.0, 0.0, -25.0)), Color.CYAN
             )
 
         )
@@ -318,7 +353,7 @@ class SceneBuilderKeyboard(
         vertexHolders.add(
             createVertexHolder(
                 wristRest // .subtractModel(keyPlaceHoles(-4))
-                , Color.ORANGE, 30
+                , Color.ORANGE
             )
         )
         vertexHolders.addAll(createControlPoints(pointsController.controlPoints))
@@ -345,17 +380,8 @@ class SceneBuilderKeyboard(
         createVertexHolder(model, DEFAULT_COLOR)
     }
 
-    private fun createVertexHolder(model: IModel, color: Color, fn: Int = 20): VertexHolder {
-        val context: FacetGenerationContext = ColorFacetGenerationContext(color)
-        context.setFn(fn)
-        val csg = model.toCSG(context)
-        val vertex = csg.verticesAndColorsAsFloatArray
-        return vertex
-    }
-
-    private data class ModelHolder(val model: Abstract3dModel, val vertexHolders: List<VertexHolder>) { constructor(
-        model: Abstract3dModel, vararg vertexHolders: VertexHolder
-    ) : this(model, vertexHolders.asList())
+    private fun createVertexHolder(model: IModel, color: Color): VertexHolder {
+        return VertexHolder.createVertexHolder(model, color, cfg.fn)
     }
 
     companion object {

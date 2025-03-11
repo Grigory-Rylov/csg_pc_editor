@@ -65,7 +65,7 @@ class Walls(
             objectHeight = bottomBorderHeight,
             radiusX = 100.0,
             radiusY = 80.0,
-            centerY = -30.0,
+            centerY = -35.0,
         )
 
         matrixBorders(

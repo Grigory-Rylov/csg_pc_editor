@@ -7,7 +7,6 @@ import kotlinx.serialization.json.Json
 class SettingsHolder(
     val filePath: String,
 ) {
-
     var rotateX: Float = -55.0f
     var rotateY: Float = 0.0f
     var rotateZ: Float = 0.0f
@@ -48,11 +47,18 @@ class SettingsHolder(
             settings = settings.copy(assemblySettings = settings.assemblySettings.copy(settingsShowWristRest = value))
         }
 
+    var settingsTrackball: Boolean
+        get() = settings.assemblySettings.settingsTrackball
+        set(value) {
+            settings = settings.copy(assemblySettings = settings.assemblySettings.copy(settingsTrackball = value))
+        }
+
     private fun createDefaultSettings() = SettingsContainer(
         assemblySettings = AssemblySettings(),
         viewerSettings = createViewerSettings(),
         keyboardSettings = KeyboardSettings(
             fn = 20,
+            stlFn = 60,
             columnsCount = 6,
             rowsCount = 3,
             plateZOffset = 8.0,
@@ -69,6 +75,7 @@ class SettingsHolder(
             isMagneticWristRestHolder = false,
             bordersOffset = 4.0,
             isSkeletonMode = false,
+            keyPlaceholderType = KeyPlaceholderType.None,
         ),
         thumbClusterSettings = ThumbClusterSettings(
             xOffset = 0.0,
@@ -78,6 +85,11 @@ class SettingsHolder(
             rotateZ = 18.0,
             arcRadiusZ = 0.0,
             arcRadiusY = -80.0,
+        ),
+        trackballSettings = TrackballConfig(
+            mode = TrackballMode.Back,
+            ballDiameter = 25.0,
+            bearingDiameter = 3.175,
         )
     )
 
@@ -103,6 +115,10 @@ class SettingsHolder(
         thumbClusterSettings: ThumbClusterSettings
     ) {
         settings = settings.copy(thumbClusterSettings = thumbClusterSettings)
+    }
+
+    fun updateSettings(tbConfig: TrackballConfig) {
+        settings = settings.copy(trackballSettings = tbConfig)
     }
 
     private val json = Json {

@@ -50,7 +50,6 @@ class Main(title: String?) : JFrame(title), GLEventListener {
     private var prevMouseY = 0
     private val pointsController = ControlPointsController()
     private var glCanvas: GLCanvas? = null
-    private var controlPanel: JPanel? = null
     private val sceneBuilder: SceneBuilder
 
     private var requestRenderingTime = 0L
@@ -71,9 +70,9 @@ class Main(title: String?) : JFrame(title), GLEventListener {
     fun setup() {
         layout = BorderLayout()
         // Создаем панель управления
-        controlPanel = JPanel()
-        controlPanel!!.layout = FlowLayout(FlowLayout.LEFT)
-        controlPanel!!.preferredSize = Dimension(800, 40)
+        val controlPanel = JPanel()
+        controlPanel.layout = FlowLayout(FlowLayout.LEFT)
+        controlPanel.preferredSize = Dimension(800, 40)
 
         // Добавляем переключатели
         val keysButton = createToggleButton("Клавиши", settingsHolder.settingsShowCaps) {
@@ -96,11 +95,17 @@ class Main(title: String?) : JFrame(title), GLEventListener {
             settingsHolder.settingsShowWristRest = it
             rebuildConfigAndRequestRendering()
         }
-        controlPanel!!.add(keysButton)
-        controlPanel!!.add(caseButton)
-        controlPanel!!.add(matrixButton)
-        controlPanel!!.add(plateButton)
-        controlPanel!!.add(wristRestButton)
+        val trackballButton = createToggleButton("Трэкбол", settingsHolder.settingsTrackball) {
+            settingsHolder.settingsTrackball = it
+            rebuildConfigAndRequestRendering()
+        }
+
+        controlPanel.add(keysButton)
+        controlPanel.add(caseButton)
+        controlPanel.add(matrixButton)
+        controlPanel.add(plateButton)
+        controlPanel.add(wristRestButton)
+        controlPanel.add(trackballButton)
 
         val configButton = JButton("Конфигурации")
         configButton.addActionListener {
@@ -147,6 +152,9 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         },
 
             onThumbClusterSettingsChanged = {
+                settingsHolder.updateSettings(it)
+                rebuildConfigAndRequestRendering()
+            }, onTrackballSettingsChanged = {
                 settingsHolder.updateSettings(it)
                 rebuildConfigAndRequestRendering()
             })

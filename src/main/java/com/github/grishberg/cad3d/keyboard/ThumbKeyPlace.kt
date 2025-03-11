@@ -1,16 +1,37 @@
 package com.github.grishberg.cad3d.keyboard
 
+import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
+import com.github.grishberg.cad3d.keyboard.cfg.ThumbClusterMode
 import com.github.grishberg.cad3d.keyboard.cfg.ThumbClusterSettings
 import eu.printingin3d.javascad.coords.V3d
 import eu.printingin3d.javascad.models.Abstract3dModel
 
-class ThumbKeyPlace(val thumbConfig: ThumbClusterSettings) {
+class ThumbKeyPlace(cfg: KeyboardConfig) {
 
+    private val thumbConfig: ThumbClusterSettings = cfg.thumbClusterSettings
     private val radiusZ: Double = thumbConfig.arcRadiusZ
     private val radiusY: Double = thumbConfig.arcRadiusY
+    private val thumbCoordinates = mutableListOf<V3d>()
+
+    init {
+        val count = when (thumbConfig.type) {
+            ThumbClusterMode.SingleColumn4Buttons -> 4
+            else -> 3
+        }
+        var offset = 0.0
+        for (thumb in 0 until count) {
+            thumbCoordinates.add(0, V3d(offset, 0.0, 0.0))
+            offset -= (thumbConfig.spaceBetweenKey + cfg.keyPlaceHolderWidth)
+        }
+    }
 
     fun thumbPlace(obj: Abstract3dModel): Abstract3dModel {
-        return placeR(obj).addModel(placeM(obj)).addModel(placeL(obj))
+        return when (thumbConfig.type) {
+            ThumbClusterMode.SingleColumn4Buttons -> placeR(obj).addModel(placeM(obj)).addModel(placeL(obj))
+                .addModel(placeLM(obj))
+
+            else -> placeR(obj).addModel(placeM(obj)).addModel(placeL(obj))
+        }
     }
 
     private fun convertToArc(point: V3d): ArcResult {
@@ -78,28 +99,37 @@ class ThumbKeyPlace(val thumbConfig: ThumbClusterSettings) {
 
     }
 
-    private fun norimalizeAngle(rotationAngleDegrees: Double): Double {
-        return (rotationAngleDegrees % 360 + 360) % 360;
-    }
-
     fun placeR(obj: Abstract3dModel): Abstract3dModel {
-        val offset = V3d(0.0, 0.0, 0.0)
+        val offset = when (thumbConfig.type) {
+            ThumbClusterMode.SingleColumn4Buttons -> thumbCoordinates[3]
+            else -> thumbCoordinates[2]
+        }
         val arcResult = convertToArc(offset)
         return place(obj, 0.0, arcResult.angleY, arcResult.angleZ, arcResult.offset)
 
     }
 
     fun placeM(obj: Abstract3dModel): Abstract3dModel {
-        val offset = V3d(-20.0, 0.0, 0.0)
+        val offset = when (thumbConfig.type) {
+            ThumbClusterMode.SingleColumn4Buttons -> thumbCoordinates[2]
+            else -> thumbCoordinates[1]
+        }
         val arcResult = convertToArc(offset)
         return place(
             obj, 0.0, arcResult.angleY, arcResult.angleZ, arcResult.offset
         )
-
     }
 
     fun placeL(obj: Abstract3dModel): Abstract3dModel {
-        val offset = V3d(-40.0, 0.0, 0.0)
+        val offset = thumbCoordinates[0]
+        val arcResult = convertToArc(offset)
+        return place(
+            obj, 0.0, arcResult.angleY, arcResult.angleZ, arcResult.offset
+        )
+    }
+
+    fun placeLM(obj: Abstract3dModel): Abstract3dModel {
+        val offset = thumbCoordinates[1]
         val arcResult = convertToArc(offset)
         return place(
             obj, 0.0, arcResult.angleY, arcResult.angleZ, arcResult.offset

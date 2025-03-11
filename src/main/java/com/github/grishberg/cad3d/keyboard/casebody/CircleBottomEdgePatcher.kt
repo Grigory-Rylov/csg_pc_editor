@@ -44,38 +44,6 @@ class CircleBottomEdgePatcher(
     }
 
     /**
-     * Проецирует точку на окружность, изменяя координату Y.
-     *
-     * @param point     Исходная точка
-     * @param centerX   X-координата центра окружности
-     * @param centerY   Y-координата центра окружности
-     * @param radius    Радиус окружности
-     * @return Новая точка на окружности с исходными X и Z
-     */
-    private fun projectToCircle(point: V3d, centerX: Double, centerY: Double, radius: Double): V3d {
-        val dx = point.x - centerX
-        val discriminant = radius * radius - dx * dx
-
-        // Если X за пределами радиуса, возвращаем ближайшую точку на окружности
-        if (discriminant < 0) {
-            return V3d(
-                point.x, centerY,  // Берем центр по Y
-                point.z
-            )
-        }
-
-        // Вычисляем возможные значения Y
-        val sqrtDisc = sqrt(discriminant)
-        val y1 = centerY + sqrtDisc
-        val y2 = centerY - sqrtDisc
-
-        // Выбираем Y, ближайший к исходному значению
-        val newY = if ((abs(y1 - point.y) < abs(y2 - point.y))) y1 else y2
-
-        return V3d(point.x, newY, 0.0)
-    }
-
-    /**
      * Проецирует точку на эллипс, изменяя координату Y.
      *
      * @param point     Исходная точка
