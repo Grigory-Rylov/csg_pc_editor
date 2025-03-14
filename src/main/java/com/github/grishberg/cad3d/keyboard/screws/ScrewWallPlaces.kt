@@ -1,28 +1,33 @@
 package com.github.grishberg.cad3d.keyboard.screws
 
 import com.github.grishberg.cad3d.keyboard.KeyPlace
+import com.github.grishberg.cad3d.keyboard.PlacePointType
 import com.github.grishberg.cad3d.keyboard.ThumbKeyPlace
+import com.github.grishberg.cad3d.keyboard.casebody.wall.ControllerHolderWall
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
+import com.github.grishberg.cad3d.keyboard.cfg.WallsSettings
 import eu.printingin3d.javascad.coords.V3d
 import eu.printingin3d.javascad.models.Abstract3dModel
 import eu.printingin3d.javascad.models.Cube
 import eu.printingin3d.javascad.tranzitions.Union
 
+/**
+ * Установка
+ */
 class ScrewWallPlaces(
     private val cfg: KeyboardConfig,
+    private val wallsSettings: WallsSettings,
     private val keyPlace: KeyPlace,
     private val thumbKeyPlace: ThumbKeyPlace,
-
-    // TODO: move to cfg
-    private val outerVerticalOffset: Double = 10.0,
-    private val outerHorizontalOffset: Double = 15.0,
+    private val controllerHolderWall: ControllerHolderWall,
 
     ) {
 
-    fun place(o: Abstract3dModel): Abstract3dModel {
+    fun place(o: Abstract3dModel, mode: Mode): Abstract3dModel {
         val models = mutableListOf<Abstract3dModel>()
         val cube = Cube(1.0)
-        models.add(placeLeftTop(o, keyPlace.place(0, 0, cube), offsetX = 0.2))
+
+        models.add(placeControllerScrews(o, mode))
 
         models.add(placeRightTop(o, keyPlace.place(cfg.lastCol, 0, cube), offsetY = 10.0))
         models.add(placeRightBottom(o, keyPlace.place(cfg.lastCol, cfg.lastRow, cube), offsetY = -4.0))
@@ -37,29 +42,41 @@ class ScrewWallPlaces(
         return Union(models)
     }
 
-    private fun placeLeftTop(
-        obj: Abstract3dModel,
-        place: Abstract3dModel,
-        offsetX: Double = 0.0,
-        offsetY: Double = 0.0,
-        offsetZ: Double = 0.0
-    ): Abstract3dModel {
-        val p = place.move(-outerHorizontalOffset, outerVerticalOffset, 0.0).move
-        val targetPoint = V3d(p.x, p.y, 0.0)
-        return obj.move(targetPoint.add(V3d(offsetX, offsetY, offsetZ)))
+
+    fun placeControllerScrews(o: Abstract3dModel, mode: Mode): Abstract3dModel {
+        val models = mutableListOf<Abstract3dModel>()
+        val distanceBetweenControllerHolderMount = 40
+
+        val controllerOffsetZ = when (mode) {
+            Mode.Walls -> cfg.controllerPlateHeight
+            else -> 0.0
+        }
+
+        val screwOffset = wallsSettings.borderThickness + cfg.screwHolderWallhickness + cfg.screwNutHoleDiameter / 2
+        val calculatePlacePoint = keyPlace.calculatePlacePoint(
+            0, 0, PlacePointType.BackLeftBottom, -wallsSettings.outerLeftOffset, wallsSettings.outerBorderZOffset
+        )
+        val wallLeftOffset = calculatePlacePoint.x
+        val backWallPoint = V3d(
+            wallLeftOffset + screwOffset, controllerHolderWall.getWallPoint(
+                keyPlace.calculatePlacePoint(
+                    0, 0, PlacePointType.BackLeftBottom
+                )
+            ).y - screwOffset, controllerOffsetZ
+        )
+
+        models.add(o.move(backWallPoint))
+
+        models.add(
+            o.move(
+                V3d(backWallPoint.x + distanceBetweenControllerHolderMount, backWallPoint.y, controllerOffsetZ)
+            )
+        )
+
+        return Union(models)
     }
 
-    private fun placeLeft(
-        obj: Abstract3dModel,
-        place: Abstract3dModel,
-        offsetX: Double = 0.0,
-        offsetY: Double = 0.0,
-        offsetZ: Double = 0.0
-    ): Abstract3dModel {
-        val p = place.move(-outerHorizontalOffset, 0.0, 0.0).move
-        val targetPoint = V3d(p.x, p.y, 0.0)
-        return obj.move(targetPoint.add(V3d(offsetX, offsetY, offsetZ)))
-    }
+
 
     private fun placeRight(
         obj: Abstract3dModel,
@@ -68,7 +85,7 @@ class ScrewWallPlaces(
         offsetY: Double = 0.0,
         offsetZ: Double = 0.0
     ): Abstract3dModel {
-        val p = place.move(outerHorizontalOffset, 0.0, 0.0).move
+        val p = place.move(wallsSettings.outerHorizontalOffset, 0.0, 0.0).move
         val targetPoint = V3d(p.x, p.y, 0.0)
         return obj.move(targetPoint.add(V3d(offsetX, offsetY, offsetZ)))
     }
@@ -80,7 +97,7 @@ class ScrewWallPlaces(
         offsetY: Double = 0.0,
         offsetZ: Double = 0.0
     ): Abstract3dModel {
-        val p = place.move(outerHorizontalOffset, outerVerticalOffset, 0.0).move
+        val p = place.move(wallsSettings.outerHorizontalOffset, wallsSettings.outerVerticalOffset, 0.0).move
         val targetPoint = V3d(p.x, p.y, 0.0)
         return obj.move(targetPoint.add(V3d(offsetX, offsetY, offsetZ)))
     }
@@ -92,7 +109,7 @@ class ScrewWallPlaces(
         offsetY: Double = 0.0,
         offsetZ: Double = 0.0
     ): Abstract3dModel {
-        val p = place.move(outerHorizontalOffset, -outerVerticalOffset, 0.0).move
+        val p = place.move(wallsSettings.outerHorizontalOffset, -wallsSettings.outerVerticalOffset, 0.0).move
         val targetPoint = V3d(p.x, p.y, 0.0)
         return obj.move(targetPoint.add(V3d(offsetX, offsetY, offsetZ)))
     }
@@ -104,7 +121,7 @@ class ScrewWallPlaces(
         offsetY: Double = 0.0,
         offsetZ: Double = 0.0
     ): Abstract3dModel {
-        val p = place.move(0.0, outerVerticalOffset, 0.0).move
+        val p = place.move(0.0, wallsSettings.outerVerticalOffset, 0.0).move
         val targetPoint = V3d(p.x, p.y, 0.0)
         return obj.move(targetPoint.add(V3d(offsetX, offsetY, offsetZ)))
 
@@ -117,9 +134,11 @@ class ScrewWallPlaces(
         offsetY: Double = 0.0,
         offsetZ: Double = 0.0
     ): Abstract3dModel {
-        val p = place.move(0.0, -outerVerticalOffset, 0.0).move
+        val p = place.move(0.0, -wallsSettings.outerVerticalOffset, 0.0).move
         val targetPoint = V3d(p.x, p.y, 0.0)
         return obj.move(targetPoint.add(V3d(offsetX, offsetY, offsetZ)))
     }
 
+    enum class Mode { Walls, Plate, ControllerHolder,
+    }
 }

@@ -171,6 +171,17 @@ public class KeyPlace {
         PlacePointType pointType,
         double xOffset,
         double yOffset
+    ){
+        return calculatePlacePoint(column, row, pointType, xOffset, yOffset, 0);
+    }
+
+    public V3d calculatePlacePoint(
+        int column,
+        int row,
+        PlacePointType pointType,
+        double xOffset,
+        double yOffset,
+        double zOffset
     ) {
         double x = 0.0;
         double y = 0.0;
@@ -180,42 +191,42 @@ public class KeyPlace {
             case BackLeftTop:
                 x = cfg.getKeyPlaceHolderWidth() / -2.0 + xOffset;
                 y = cfg.getKeyPlaceHolderDepth() / 2.0 + yOffset;
-                z = cfg.getKeyPlaceHolderHeight();
+                z = cfg.getKeyPlaceHolderHeight() + zOffset;
                 break;
             case BackRightTop:
                 x = cfg.getKeyPlaceHolderWidth() / 2.0 + xOffset;
                 y = cfg.getKeyPlaceHolderDepth() / 2.0 + yOffset;
-                z = cfg.getKeyPlaceHolderHeight();
+                z = cfg.getKeyPlaceHolderHeight() + zOffset;
                 break;
             case FrontLeftTop:
                 x = cfg.getKeyPlaceHolderWidth() / -2.0 + xOffset;
                 y = cfg.getKeyPlaceHolderDepth() / -2.0 + yOffset;
-                z = cfg.getKeyPlaceHolderHeight();
+                z = cfg.getKeyPlaceHolderHeight() + zOffset;
                 break;
             case FrontRightTop:
                 x = cfg.getKeyPlaceHolderWidth() / 2.0 + xOffset;
                 y = cfg.getKeyPlaceHolderDepth() / -2.0 + yOffset;
-                z = cfg.getKeyPlaceHolderHeight();
+                z = cfg.getKeyPlaceHolderHeight() + zOffset;
                 break;
             case BackLeftBottom:
                 x = cfg.getKeyPlaceHolderWidth() / -2.0 + xOffset;
                 y = cfg.getKeyPlaceHolderDepth() / 2.0 + yOffset;
-                z = 0.0;
+                z = zOffset;
                 break;
             case BackRightBottom:
                 x = cfg.getKeyPlaceHolderWidth() / 2.0 + xOffset;
                 y = cfg.getKeyPlaceHolderDepth() / 2.0 + yOffset;
-                z = 0.0;
+                z = zOffset;
                 break;
             case FrontLeftBottom:
                 x = cfg.getKeyPlaceHolderWidth() / -2.0 + xOffset;
                 y = cfg.getKeyPlaceHolderDepth() / -2.0 + yOffset;
-                z = 0.0;
+                z = zOffset;
                 break;
             case FrontRightBottom:
                 x = cfg.getKeyPlaceHolderWidth() / 2.0 + xOffset;
                 y = cfg.getKeyPlaceHolderDepth() / -2.0 + yOffset;
-                z = 0.0;
+                z = zOffset;
                 break;
         }
 

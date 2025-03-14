@@ -193,6 +193,9 @@ public class V3d extends Basic3dFunc<V3d> {
         return x * b.x + y * b.y + z * b.z;
     }
 
+    public V3d projectionZ(double newZ) {
+        return new V3d(x, y, newZ);
+    }
     // Метод для вычисления скалярного произведения
     public V3d scale(double scale) {
         return new V3d(x * scale, y * scale, z * scale);

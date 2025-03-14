@@ -108,6 +108,20 @@ class CircleBottomEdgePatcher(
         return borderObject(thickness, objectHeight).move(V3d(point.x, point.y, objectHeight / 2))
     }
 
+    override fun verticalPoint(src: V3d): V3d {
+        if (radiusX == 0.0 || radiusY == 0.0) {
+            return V3d(src.x, src.y, 0.0)
+        }
+        return projectToEllipseY(src, centerX, centerY, radiusX, radiusY)
+    }
+
+    override fun horizontalPoint(src: V3d): V3d {
+        if (radiusX == 0.0 || radiusY == 0.0) {
+            return V3d(src.x, src.y, 0.0)
+        }
+        return projectToEllipseX(src, centerX, centerY, radiusX, radiusY)
+    }
+
     private fun borderObject(thickness: Double, height: Double): Abstract3dModel {
         return Utils.cylinder(thickness, height)
     }

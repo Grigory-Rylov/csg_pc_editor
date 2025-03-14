@@ -10,56 +10,48 @@ import com.github.grishberg.cad3d.keyboard.casebody.DefaultBottomEdgePatcher
 import com.github.grishberg.cad3d.keyboard.casebody.WallBottomEdgePatcher
 import com.github.grishberg.cad3d.keyboard.casebody.WallsBuilder
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
+import com.github.grishberg.cad3d.keyboard.cfg.WallsSettings
 import eu.printingin3d.javascad.basic.Radius
 import eu.printingin3d.javascad.coords.V3d
 import eu.printingin3d.javascad.models.Abstract3dModel
 import eu.printingin3d.javascad.models.EdgeType
-import eu.printingin3d.javascad.models.Hull
 import eu.printingin3d.javascad.models.Sphere
 import eu.printingin3d.javascad.models.surfaces.S12x3
 import eu.printingin3d.javascad.models.surfaces.SmoothSurface
 import eu.printingin3d.javascad.models.surfaces.VoronoiSurface
 import eu.printingin3d.javascad.tranzitions.Union
-import java.util.*
-import java.util.function.Consumer
-
+import java.util.Random
 
 class OuterWallsBuilder(
     private val isSkeletonMode: Boolean,
     private val topEdgeOffsetZ: Double,
-    private val borderThickness: Double = 1.5,
-    private val borderHeight: Double = 4.0,
-    private val bottomBorderHeight: Double,
-    private val verticalOffset: Double = 5.0,
-    private val horizontalOffset: Double = 8.0,
-    private val borderZOffset: Double = -2.0,
+    private val cfg: WallsSettings,
 
-    private val outerVerticalOffset: Double = 10.0,
-    private val outerHorizontalOffset: Double = 15.0,
-    private val outerBorderZOffset: Double = -6.0,
     private val bottomEdgePatcher: WallBottomEdgePatcher = DefaultBottomEdgePatcher(
-        borderThickness, bottomBorderHeight
+        cfg.borderThickness, cfg.bottomBorderHeight
     ),
 ) : WallsBuilder {
 
     override fun backWall(
         onlyBorder: Boolean, keyPlace: (Abstract3dModel) -> Abstract3dModel
     ): Abstract3dModel {
-        val left = keyPlace(KeyPlaceholder.placeHolderTopLeft().move(0.0, outerVerticalOffset, outerBorderZOffset))
-        val right = keyPlace(KeyPlaceholder.placeHolderTopRight().move(0.0, outerVerticalOffset, outerBorderZOffset))
+        val left =
+            keyPlace(KeyPlaceholder.placeHolderTopLeft().move(0.0, cfg.outerVerticalOffset, cfg.outerBorderZOffset))
+        val right =
+            keyPlace(KeyPlaceholder.placeHolderTopRight().move(0.0, cfg.outerVerticalOffset, cfg.outerBorderZOffset))
 
         val border = hull(
             left, right,
 
             verticalCube(
                 keyPlace(
-                    KeyPlaceholder.placeHolderTopLeft().move(0.0, verticalOffset, borderZOffset)
+                    KeyPlaceholder.placeHolderTopLeft().move(0.0, cfg.verticalOffset, cfg.borderZOffset)
                 )
             ),
 
             verticalCube(
                 keyPlace(
-                    KeyPlaceholder.placeHolderTopRight().move(0.0, verticalOffset, borderZOffset)
+                    KeyPlaceholder.placeHolderTopRight().move(0.0, cfg.verticalOffset, cfg.borderZOffset)
                 )
             )
         )
@@ -87,24 +79,33 @@ class OuterWallsBuilder(
     }
 
     override fun backMidWall(
-        leftPlace: (Abstract3dModel) -> Abstract3dModel, rightPlace: (Abstract3dModel) -> Abstract3dModel
+        onlyBorder: Boolean,
+        leftPlace: (Abstract3dModel) -> Abstract3dModel,
+        rightPlace: (Abstract3dModel) -> Abstract3dModel
     ): Abstract3dModel {
-        val left =
-            leftPlace.invoke(KeyPlaceholder.placeHolderTopRight().move(0.0, outerVerticalOffset, outerBorderZOffset))
-        val right =
-            rightPlace.invoke(KeyPlaceholder.placeHolderTopLeft().move(0.0, outerVerticalOffset, outerBorderZOffset))
+        val left = leftPlace.invoke(
+            KeyPlaceholder.placeHolderTopRight().move(0.0, cfg.outerVerticalOffset, cfg.outerBorderZOffset)
+        )
+        val right = rightPlace.invoke(
+            KeyPlaceholder.placeHolderTopLeft().move(0.0, cfg.outerVerticalOffset, cfg.outerBorderZOffset)
+        )
 
         val border = hull(
             left, right, verticalCube(
                 leftPlace.invoke(
-                    KeyPlaceholder.placeHolderTopRight().move(0.0, verticalOffset, borderZOffset)
+                    KeyPlaceholder.placeHolderTopRight().move(0.0, cfg.verticalOffset, cfg.borderZOffset)
                 )
             ), verticalCube(
                 rightPlace.invoke(
-                    KeyPlaceholder.placeHolderTopLeft().move(0.0, verticalOffset, borderZOffset)
+                    KeyPlaceholder.placeHolderTopLeft().move(0.0, cfg.verticalOffset, cfg.borderZOffset)
                 )
             )
         )
+
+        if (onlyBorder) {
+            return border
+        }
+
         if (isSkeletonMode) {
             return union(
                 border, hull(
@@ -124,22 +125,24 @@ class OuterWallsBuilder(
     override fun leftWall(
         topOffset: Double, bottomOffset: Double, keyPlace: (Abstract3dModel) -> Abstract3dModel
     ): Abstract3dModel {
-        val top =
-            keyPlace(KeyPlaceholder.placeHolderTopLeft().move(-outerHorizontalOffset, topOffset, outerBorderZOffset))
+        val top = keyPlace(
+            KeyPlaceholder.placeHolderTopLeft().move(-cfg.outerHorizontalOffset, topOffset, cfg.outerBorderZOffset)
+        )
         val bottom = keyPlace(
-            KeyPlaceholder.placeHolderBottomLeft().move(-outerHorizontalOffset, bottomOffset, outerBorderZOffset)
+            KeyPlaceholder.placeHolderBottomLeft()
+                .move(-cfg.outerHorizontalOffset, bottomOffset, cfg.outerBorderZOffset)
         )
 
         val border = hull(
             top, bottom,
             verticalCube(
                 keyPlace(
-                    KeyPlaceholder.placeHolderTopLeft().move(-horizontalOffset, 0.0, borderZOffset)
+                    KeyPlaceholder.placeHolderTopLeft().move(-cfg.leftOffset, 0.0, cfg.borderZOffset)
                 )
             ),
             verticalCube(
                 keyPlace(
-                    KeyPlaceholder.placeHolderBottomLeft().move(-horizontalOffset, 0.0, borderZOffset)
+                    KeyPlaceholder.placeHolderBottomLeft().move(-cfg.leftOffset, 0.0, cfg.borderZOffset)
                 )
             ),
         )
@@ -163,22 +166,24 @@ class OuterWallsBuilder(
     override fun leftMidWall(
         leftPlace: (Abstract3dModel) -> Abstract3dModel, rightPlace: (Abstract3dModel) -> Abstract3dModel
     ): Abstract3dModel {
-        val top =
-            leftPlace(KeyPlaceholder.placeHolderBottomLeft().move(-outerHorizontalOffset, 0.0, outerBorderZOffset))
-        val bottom =
-            rightPlace(KeyPlaceholder.placeHolderTopLeft().move(-outerHorizontalOffset, 0.0, outerBorderZOffset))
+        val top = leftPlace(
+            KeyPlaceholder.placeHolderBottomLeft().move(-cfg.outerHorizontalOffset, 0.0, cfg.outerBorderZOffset)
+        )
+        val bottom = rightPlace(
+            KeyPlaceholder.placeHolderTopLeft().move(-cfg.outerHorizontalOffset, 0.0, cfg.outerBorderZOffset)
+        )
 
         val border = hull(
             top,
             bottom,
             verticalCube(
                 leftPlace(
-                    KeyPlaceholder.placeHolderBottomLeft().move(-horizontalOffset, 0.0, borderZOffset)
+                    KeyPlaceholder.placeHolderBottomLeft().move(-cfg.leftOffset, 0.0, cfg.borderZOffset)
                 )
             ),
             verticalCube(
                 rightPlace(
-                    KeyPlaceholder.placeHolderTopLeft().move(-horizontalOffset, 0.0, borderZOffset)
+                    KeyPlaceholder.placeHolderTopLeft().move(-cfg.leftOffset, 0.0, cfg.borderZOffset)
                 )
             ),
         )
@@ -203,22 +208,23 @@ class OuterWallsBuilder(
         onlyBorder: Boolean,
         keyPlace: (Abstract3dModel) -> Abstract3dModel,
     ): Abstract3dModel {
-        val left =
-            keyPlace(KeyPlaceholder.placeHolderBottomLeft().move(leftOffset, -outerVerticalOffset, outerBorderZOffset))
+        val left = keyPlace(
+            KeyPlaceholder.placeHolderBottomLeft().move(leftOffset, -cfg.outerVerticalOffset, cfg.outerBorderZOffset)
+        )
         val right = keyPlace(
-            KeyPlaceholder.placeHolderBottomRight().move(rightOffset, -outerVerticalOffset, outerBorderZOffset)
+            KeyPlaceholder.placeHolderBottomRight().move(rightOffset, -cfg.outerVerticalOffset, cfg.outerBorderZOffset)
         )
 
         val border = hull(
             left, right,
             verticalCube(
                 keyPlace(
-                    KeyPlaceholder.placeHolderBottomLeft().move(leftOffset, -verticalOffset, borderZOffset)
+                    KeyPlaceholder.placeHolderBottomLeft().move(leftOffset, -cfg.verticalOffset, cfg.borderZOffset)
                 )
             ),
             verticalCube(
                 keyPlace(
-                    KeyPlaceholder.placeHolderBottomRight().move(rightOffset, -verticalOffset, borderZOffset)
+                    KeyPlaceholder.placeHolderBottomRight().move(rightOffset, -cfg.verticalOffset, cfg.borderZOffset)
                 )
             ),
         )
@@ -249,10 +255,10 @@ class OuterWallsBuilder(
         rightPlace: (Abstract3dModel) -> Abstract3dModel
     ): Abstract3dModel {
         val left = leftPlace(
-            KeyPlaceholder.placeHolderBottomRight().move(leftOffset, -outerVerticalOffset, outerBorderZOffset)
+            KeyPlaceholder.placeHolderBottomRight().move(leftOffset, -cfg.outerVerticalOffset, cfg.outerBorderZOffset)
         )
         val right = rightPlace(
-            KeyPlaceholder.placeHolderBottomLeft().move(rightOffset, -outerVerticalOffset, outerBorderZOffset)
+            KeyPlaceholder.placeHolderBottomLeft().move(rightOffset, -cfg.outerVerticalOffset, cfg.outerBorderZOffset)
         )
 
         val border = hull(
@@ -260,12 +266,12 @@ class OuterWallsBuilder(
             right,
             verticalCube(
                 leftPlace(
-                    KeyPlaceholder.placeHolderBottomRight().move(leftOffset, -verticalOffset, borderZOffset)
+                    KeyPlaceholder.placeHolderBottomRight().move(leftOffset, -cfg.verticalOffset, cfg.borderZOffset)
                 )
             ),
             verticalCube(
                 rightPlace(
-                    KeyPlaceholder.placeHolderBottomLeft().move(rightOffset, -verticalOffset, borderZOffset)
+                    KeyPlaceholder.placeHolderBottomLeft().move(rightOffset, -cfg.verticalOffset, cfg.borderZOffset)
                 )
             ),
         )
@@ -291,26 +297,27 @@ class OuterWallsBuilder(
     override fun rightWall(
         topOffset: Double, bottomOffset: Double, keyPlace: (Abstract3dModel) -> Abstract3dModel
     ): Abstract3dModel {
-        val top =
-            keyPlace(KeyPlaceholder.placeHolderTopRight().move(outerHorizontalOffset, topOffset, outerBorderZOffset))
+        val top = keyPlace(
+            KeyPlaceholder.placeHolderTopRight().move(cfg.outerHorizontalOffset, topOffset, cfg.outerBorderZOffset)
+        )
         val bottom = keyPlace(
-            KeyPlaceholder.placeHolderBottomRight().move(outerHorizontalOffset, bottomOffset, outerBorderZOffset)
+            KeyPlaceholder.placeHolderBottomRight()
+                .move(cfg.outerHorizontalOffset, bottomOffset, cfg.outerBorderZOffset)
         )
 
         val border = hull(
             top, bottom,
             verticalCube(
                 keyPlace(
-                    KeyPlaceholder.placeHolderBottomRight().move(horizontalOffset, 0.0, borderZOffset)
+                    KeyPlaceholder.placeHolderBottomRight().move(cfg.rightOffset, 0.0, cfg.borderZOffset)
                 )
             ),
-            verticalCube(keyPlace(KeyPlaceholder.placeHolderTopRight().move(horizontalOffset, 0.0, borderZOffset))),
+            verticalCube(keyPlace(KeyPlaceholder.placeHolderTopRight().move(cfg.rightOffset, 0.0, cfg.borderZOffset))),
         )
 
         if (isSkeletonMode) {
             return union(
-                border,
-                hull(
+                border, hull(
                     bottomEdgePatcher.rightPoint(top),
                     bottomEdgePatcher.rightPoint(bottom),
                 )
@@ -329,18 +336,21 @@ class OuterWallsBuilder(
     override fun rightMidWall(
         backPlace: (Abstract3dModel) -> Abstract3dModel, frontPlace: (Abstract3dModel) -> Abstract3dModel
     ): Abstract3dModel {
-        val top = frontPlace(KeyPlaceholder.placeHolderTopRight().move(outerHorizontalOffset, 0.0, outerBorderZOffset))
-        val bottom =
-            backPlace(KeyPlaceholder.placeHolderBottomRight().move(outerHorizontalOffset, 0.0, outerBorderZOffset))
+        val top = frontPlace(
+            KeyPlaceholder.placeHolderTopRight().move(cfg.outerHorizontalOffset, 0.0, cfg.outerBorderZOffset)
+        )
+        val bottom = backPlace(
+            KeyPlaceholder.placeHolderBottomRight().move(cfg.outerHorizontalOffset, 0.0, cfg.outerBorderZOffset)
+        )
 
         val border = hull(
             bottom, top, verticalCube(
                 backPlace(
-                    KeyPlaceholder.placeHolderBottomRight().move(horizontalOffset, 0.0, borderZOffset)
+                    KeyPlaceholder.placeHolderBottomRight().move(cfg.rightOffset, 0.0, cfg.borderZOffset)
                 )
             ), verticalCube(
                 frontPlace(
-                    KeyPlaceholder.placeHolderTopRight().move(horizontalOffset, 0.0, borderZOffset)
+                    KeyPlaceholder.placeHolderTopRight().move(cfg.rightOffset, 0.0, cfg.borderZOffset)
                 )
             )
         )
@@ -348,8 +358,7 @@ class OuterWallsBuilder(
 
         if (isSkeletonMode) {
             return union(
-                border,
-                hull(
+                border, hull(
                     bottomEdgePatcher.rightPoint(top),
                     bottomEdgePatcher.rightPoint(bottom),
                 )
@@ -369,15 +378,25 @@ class OuterWallsBuilder(
         leftPlace: (Abstract3dModel) -> Abstract3dModel,
         rightPlace: (Abstract3dModel) -> Abstract3dModel
     ): Abstract3dModel {
-        val left =
-            leftPlace(KeyPlaceholder.placeHolderBottomRight().move(0.0, -outerVerticalOffset, outerBorderZOffset))
-        val right =
-            rightPlace(KeyPlaceholder.placeHolderBottomLeft().move(0.0, -outerVerticalOffset, outerBorderZOffset))
+        val left = leftPlace(
+            KeyPlaceholder.placeHolderBottomRight().move(0.0, -cfg.outerVerticalOffset, cfg.outerBorderZOffset)
+        )
+        val right = rightPlace(
+            KeyPlaceholder.placeHolderBottomLeft().move(0.0, -cfg.outerVerticalOffset, cfg.outerBorderZOffset)
+        )
 
         val border = hull(
             left, right,
-            verticalCube(leftPlace(KeyPlaceholder.placeHolderBottomRight().move(0.0, -verticalOffset, borderZOffset))),
-            verticalCube(rightPlace(KeyPlaceholder.placeHolderBottomLeft().move(0.0, -verticalOffset, borderZOffset))),
+            verticalCube(
+                leftPlace(
+                    KeyPlaceholder.placeHolderBottomRight().move(0.0, -cfg.verticalOffset, cfg.borderZOffset)
+                )
+            ),
+            verticalCube(
+                rightPlace(
+                    KeyPlaceholder.placeHolderBottomLeft().move(0.0, -cfg.verticalOffset, cfg.borderZOffset)
+                )
+            ),
         )
 
         if (isSkeletonMode) {
@@ -398,7 +417,7 @@ class OuterWallsBuilder(
     }
 
     fun curveWall(
-        cfg: KeyboardConfig,
+        keyboardConfig: KeyboardConfig,
         keyPlace: KeyPlace,
         thumbKeyPlace: ThumbKeyPlace,
     ): Abstract3dModel {
@@ -406,7 +425,7 @@ class OuterWallsBuilder(
         val topBorderPoints = mutableListOf<V3d>()
         val bottomEdgePoints = mutableListOf<V3d>()
 
-        for (column in 0 until cfg.columnsCount) {
+        for (column in 0 until keyboardConfig.columnsCount) {
             val topKeyPlace = { obj: Abstract3dModel ->
                 keyPlace.place(
                     column, 0, obj
@@ -414,20 +433,22 @@ class OuterWallsBuilder(
             }
 
             val leftTopEdge = topKeyPlace(
-                KeyPlaceholder.placeHolderTopLeft().move(0.0, verticalOffset, borderZOffset)
+                KeyPlaceholder.placeHolderTopLeft().move(0.0, cfg.verticalOffset, cfg.borderZOffset)
             )
 
             val rightTopEdge = topKeyPlace(
-                KeyPlaceholder.placeHolderTopRight().move(0.0, verticalOffset, borderZOffset)
+                KeyPlaceholder.placeHolderTopRight().move(0.0, cfg.verticalOffset, cfg.borderZOffset)
             )
 
             topEdgePoints.add(leftTopEdge.move)
             topEdgePoints.add(rightTopEdge.move)
 
-            val leftBorderEdge =
-                topKeyPlace(KeyPlaceholder.placeHolderTopLeft().move(0.0, outerVerticalOffset, outerBorderZOffset))
-            val rightBorderEdge =
-                topKeyPlace(KeyPlaceholder.placeHolderTopRight().move(0.0, outerVerticalOffset, outerBorderZOffset))
+            val leftBorderEdge = topKeyPlace(
+                KeyPlaceholder.placeHolderTopLeft().move(0.0, cfg.outerVerticalOffset, cfg.outerBorderZOffset)
+            )
+            val rightBorderEdge = topKeyPlace(
+                KeyPlaceholder.placeHolderTopRight().move(0.0, cfg.outerVerticalOffset, cfg.outerBorderZOffset)
+            )
 
             topBorderPoints.add(leftBorderEdge.move)
             topBorderPoints.add(rightBorderEdge.move)
@@ -446,27 +467,21 @@ class OuterWallsBuilder(
             topEdgePoints.toTypedArray(),
         )
 
-
         // Создание случайных сайтов
         val sites: MutableList<V3d> = ArrayList()
         val rand: Random = Random()
         for (i in 0..9) {
             sites.add(
                 V3d(
-                    rand.nextDouble() * 100 - 50,
-                    rand.nextDouble() * 20,
-                    rand.nextDouble() * 50
+                    rand.nextDouble() * 100 - 50, rand.nextDouble() * 20, rand.nextDouble() * 50
                 )
             )
         }
 
         val vs = VoronoiSurface(
-            controlPoints,
-            sites,
-            2.5 // Ширина ребер
+            controlPoints, sites, 2.5 // Ширина ребер
         )
         val contours = vs.calculateVoronoiEdges(4)
-
 
         val holes = mutableListOf<Abstract3dModel>()
         // Визуализация контуров
@@ -477,8 +492,7 @@ class OuterWallsBuilder(
             }
             //holes.add(Hull(points))
             holes.addAll(points)
-        }
-        /*val surfaceBuilder: Abstract3dModel = SmoothSurface(
+        }/*val surfaceBuilder: Abstract3dModel = SmoothSurface(
             BicubicSurfaceSpline.bSplineSurface(controlPoints, 10),
             borderHeight,
             EdgeType.Normal,
@@ -489,7 +503,7 @@ class OuterWallsBuilder(
 */
         val surface = SmoothSurface(
             S12x3.create(controlPoints).buildSurfaceStrategy(5),
-            borderThickness * 2,
+            cfg.borderThickness * 2,
             EdgeType.Vertical,
             EdgeType.Normal,
             EdgeType.HorizontalY,
@@ -499,7 +513,7 @@ class OuterWallsBuilder(
     }
 
     private fun verticalCube(obj: Abstract3dModel): Abstract3dModel {
-        return borderObject(borderThickness, borderHeight).moveZ(topEdgeOffsetZ).move(obj.move)
+        return borderObject(cfg.borderThickness, cfg.borderHeight).moveZ(topEdgeOffsetZ).move(obj.move)
     }
 
     private fun borderObject(thickness: Double, height: Double): Abstract3dModel {

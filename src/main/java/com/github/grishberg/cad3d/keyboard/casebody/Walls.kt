@@ -7,13 +7,17 @@ import com.github.grishberg.cad3d.keyboard.Utils
 import com.github.grishberg.cad3d.keyboard.Utils.hull
 import com.github.grishberg.cad3d.keyboard.casebody.matrix.InnerBordersBuilder
 import com.github.grishberg.cad3d.keyboard.casebody.matrix.InnerCorners
+import com.github.grishberg.cad3d.keyboard.casebody.wall.ControllerHolderWall
+import com.github.grishberg.cad3d.keyboard.casebody.wall.ControllerWallBuilder
 import com.github.grishberg.cad3d.keyboard.casebody.wall.OuterCornersWallBuilder
 import com.github.grishberg.cad3d.keyboard.casebody.wall.OuterWallsBuilder
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
+import com.github.grishberg.cad3d.keyboard.cfg.WallsSettings
 import eu.printingin3d.javascad.models.Abstract3dModel
 
 class Walls(
     private val cfg: KeyboardConfig,
+    private val wallsSettings: WallsSettings,
     private val keyPlace: KeyPlace,
     private val thumbKeyPlace: ThumbKeyPlace,
     private val topEdgeOffsetZ: Double,
@@ -22,12 +26,9 @@ class Walls(
     private val wallVerticalOffset = 5.0
     private val wallHorizontalOffset = 10.0
     private val models = ArrayList<Abstract3dModel>()
-    var bordersOffset = cfg.bordersOffset
     val thumbRightOffset = 4.0
     val thumbOuterRightOffset = 7.0
-    val firstColunsBordersOffset = 4.0
-    val horizontalOffset = 8.0
-    val borderZOffset = -2.0
+
 
     fun createBorders(borderThickness: Double = 1.5, borderHeight: Double = 4.0): Abstract3dModel {
         models.clear()
@@ -54,8 +55,6 @@ class Walls(
     }
 
     fun createWalls(
-        borderThickness: Double = 1.5,
-        borderHeight: Double = 4.0,
         bottomBorderHeight: Double,
     ): Abstract3dModel {
         models.clear()
@@ -67,26 +66,30 @@ class Walls(
             radiusY = 80.0,
             centerY = -35.0,
         )
+        val controllerHolderWall = ControllerHolderWall(cfg.wallsSettings, keyPlace)
+        val controllerWallBuilder = ControllerWallBuilder(
+            controllerHolderWall = controllerHolderWall,
+            keyPlace = keyPlace,
+            isSkeletonMode = cfg.isSkeletonMode,
+            topEdgeOffsetZ = topEdgeOffsetZ,
+            cfg = cfg.wallsSettings,
+            bottomEdgePatcher = bottomEdgePatcher,
+        )
+
+        models.add(
+            controllerWallBuilder.createWall()
+        )
 
         matrixBorders(
             OuterWallsBuilder(
                 isSkeletonMode = cfg.isSkeletonMode,
                 topEdgeOffsetZ = topEdgeOffsetZ,
-                bottomBorderHeight = bottomBorderHeight,
-                verticalOffset = wallVerticalOffset,
-                borderHeight = borderHeight,
-                horizontalOffset = wallHorizontalOffset,
-                borderThickness = borderThickness,
+                cfg = wallsSettings,
                 bottomEdgePatcher = bottomEdgePatcher
             ), OuterCornersWallBuilder(
                 isSkeletonMode = cfg.isSkeletonMode,
                 topEdgeOffsetZ = topEdgeOffsetZ,
-                bottomBorderHeight = bottomBorderHeight,
-                verticalOffset = wallVerticalOffset,
-                borderHeight = borderHeight,
-                leftOffset = wallHorizontalOffset,
-                rightOffset = wallHorizontalOffset,
-                borderThickness = borderThickness,
+                cfg = wallsSettings,
                 bottomEdgePatcher = bottomEdgePatcher
             ), isWallMode = true
         )
@@ -95,22 +98,12 @@ class Walls(
             OuterWallsBuilder(
                 isSkeletonMode = cfg.isSkeletonMode,
                 topEdgeOffsetZ = topEdgeOffsetZ,
-                bottomBorderHeight = bottomBorderHeight,
-                verticalOffset = wallVerticalOffset,
-                horizontalOffset = wallHorizontalOffset,
-                borderThickness = borderThickness,
-                borderHeight = borderHeight
+                cfg = wallsSettings,
             ),
             OuterCornersWallBuilder(
                 isSkeletonMode = cfg.isSkeletonMode,
                 topEdgeOffsetZ = topEdgeOffsetZ,
-                bottomBorderHeight = bottomBorderHeight,
-                verticalOffset = wallVerticalOffset,
-                leftOffset = wallHorizontalOffset,
-                rightOffset = thumbRightOffset,
-                borderThickness = borderThickness,
-                borderHeight = borderHeight,
-                outerRightOffset = thumbOuterRightOffset
+                cfg = wallsSettings,
             ),
             verticalOffset = wallVerticalOffset,
             leftOffset = wallHorizontalOffset,
@@ -127,11 +120,14 @@ class Walls(
     ) {
         // corners
         //left back
-        models.add(cornerWallBuilder.backLeft { obj ->
-            keyPlace.place(
-                0, 0, obj
-            )
-        })
+        if (!isWallMode) {
+            models.add(cornerWallBuilder.backLeft { obj ->
+                keyPlace.place(
+                    0, 0, obj
+                )
+            })
+        }
+
         //left front
         //models.add(cornerWallBuilder.frontLeft { obj -> keyPlace.place(0, cfg.lastRow, obj) })
         // right back
@@ -150,7 +146,8 @@ class Walls(
         for (column in 0 until cfg.columnsCount) {
 
             // back columns
-            models.add(wallsBuilder.backWall { obj ->
+            val onlyBorder = isWallMode && column < 2
+            models.add(wallsBuilder.backWall(onlyBorder) { obj ->
                 keyPlace.place(
                     column, 0, obj
                 )
@@ -172,8 +169,10 @@ class Walls(
         }
         for (column in 0 until cfg.columnsCount - 1) {
             // back diagonals
+            val onlyBorder = isWallMode && column < 2
             models.add(
                 wallsBuilder.backMidWall(
+                    onlyBorder = onlyBorder,
                     leftPlace = { obj -> keyPlace.place(column, 0, obj) },
                     rightPlace = { obj -> keyPlace.place(column + 1, 0, obj) },
                 )

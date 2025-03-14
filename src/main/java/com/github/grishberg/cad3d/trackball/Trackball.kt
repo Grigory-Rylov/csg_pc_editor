@@ -50,9 +50,8 @@ class Trackball(private val cfg: KeyboardConfig, private val keyPlace: KeyPlace)
     fun createTrackballHolder(): ModelHolder {
         val model = trackBallCaseHolder().rotate(Angles3d.xOnly(60.0))
 
-
         return ModelHolder(
-            model,
+            moveTrackball(model),
             VertexHolder.createVertexHolder(moveTrackball(model), Color.GREEN, fn = cfg.fn),
         )
     }
@@ -132,7 +131,7 @@ class Trackball(private val cfg: KeyboardConfig, private val keyPlace: KeyPlace)
             Cylinder(width, Radius.fromDiameter(holeDiameter)).rotate(Angles3d.yOnly(90.0)).moveY(-height)
         ).subtractModel(Cube(midHoleWidth,20.0, 20.0))
 
-        val sensorCase = holder.move(0.0, -diameter / 2 + 3, 15.0).moveZ(-caseHeight / 2 - sensorCaseHeight / 2).moveZ(legOffset + (caseHeight - legHeight) / 2)
+        val sensorCase = holder.move(0.0, -diameter / 2 + 3, 14.5).moveZ(-caseHeight / 2 - sensorCaseHeight / 2).moveZ(legOffset + (caseHeight - legHeight) / 2)
 
 
        return sensorCase

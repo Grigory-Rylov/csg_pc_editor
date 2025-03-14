@@ -20,6 +20,7 @@ data class AssemblySettings(
     val settingsShowPlate: Boolean = true,
     val settingsShowWristRest: Boolean = false,
     val settingsTrackball: Boolean = false,
+    val settingsController: Boolean = true,
 )
 
 @Serializable
@@ -102,5 +103,6 @@ data class SettingsContainer(
         screwHolderWallhickness = keyboardSettings.screwHolderWallhickness,
         isSkeletonMode = keyboardSettings.isSkeletonMode,
         trackball = trackballSettings,
+        wallsSettings = WallsSettings()
     )
 }

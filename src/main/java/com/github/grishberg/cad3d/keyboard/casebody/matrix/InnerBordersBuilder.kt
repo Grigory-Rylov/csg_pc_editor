@@ -38,6 +38,7 @@ class InnerBordersBuilder(
     }
 
     override fun backMidWall(
+        onlyBorder: Boolean,
         leftPlace: (Abstract3dModel) -> Abstract3dModel, rightPlace: (Abstract3dModel) -> Abstract3dModel
     ): Abstract3dModel {
         return Utils.hull(

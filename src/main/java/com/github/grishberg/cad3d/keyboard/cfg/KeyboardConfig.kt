@@ -33,6 +33,8 @@ data class KeyboardConfig(
     val screwHolderWallhickness: Double,
     val isSkeletonMode: Boolean,
     val trackball: TrackballConfig,
+    val wallsSettings: WallsSettings,
+    val controllerPlateHeight: Double = 1.5,
 ) {
 
     val lastCol: Int

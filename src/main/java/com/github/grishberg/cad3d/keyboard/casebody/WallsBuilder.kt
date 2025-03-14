@@ -8,6 +8,7 @@ interface WallsBuilder {
         onlyBorder: Boolean = false,
         keyPlace:(Abstract3dModel) -> Abstract3dModel): Abstract3dModel
     fun backMidWall(
+        onlyBorder: Boolean = false,
         leftPlace: (Abstract3dModel) -> Abstract3dModel,
         rightPlace: (Abstract3dModel) -> Abstract3dModel,
     ): Abstract3dModel
