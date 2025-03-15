@@ -12,6 +12,7 @@ import com.github.grishberg.cad3d.keyboard.ThumbConnections
 import com.github.grishberg.cad3d.keyboard.ThumbKeyPlace
 import com.github.grishberg.cad3d.keyboard.Utils
 import com.github.grishberg.cad3d.keyboard.casebody.Walls
+import com.github.grishberg.cad3d.keyboard.casebody.controllers.ControllerHolderBuilder
 import com.github.grishberg.cad3d.keyboard.casebody.controllers.SuperMiniNRF52840
 import com.github.grishberg.cad3d.keyboard.casebody.wall.ControllerHolderWall
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
@@ -350,20 +351,21 @@ class SceneBuilderKeyboard(
             .subtractModel(screwMatrixHoldersHoles)
 
         //
-        val wallScrews = placeWallScrews(keyPlace, thumbKeyPlace, screwBase.screwHolder())
+        val controllerHolder = ControllerHolderBuilder(cfg)
+        val wallScrews = placeWallScrews(keyPlace, thumbKeyPlace, screwBase.screwHolder(), controllerHolder)
 
         val topBorderHeight = 6.0
         val topEdgeOffsetZ = -topBorderHeight / 2
         val bottomEdgeHeight = if (cfg.isSkeletonMode) 4.0 else 2.0
 
         val walls =
-            Walls(this.cfg, wallsSettings, keyPlace, thumbKeyPlace, topEdgeOffsetZ = topEdgeOffsetZ).createWalls(
-                bottomBorderHeight = bottomEdgeHeight
+            Walls(this.cfg, wallsSettings, keyPlace, thumbKeyPlace, topEdgeOffsetZ = topEdgeOffsetZ)
+                .createWalls(bottomBorderHeight = bottomEdgeHeight
             ).subtractModel(holeBorders).subtractModel(Cube(300.0, 300.0, 50.0).move(0.0, 0.0, -25.0))
 
         return ModelHolder(
             walls.addModel(screwMatrixHolders).addModel(wallScrews).subtractModel(screwMatrixHoldersHoles),
-            createVertexHolder(walls, Color.gray),
+            createVertexHolder(walls.subtractModel(screwMatrixHoldersHoles), Color.gray),
             createVertexHolder(wallScrews, Color.yellow),
             createVertexHolder(
                 screwMatrixHolders.subtractModel(Cube(300.0, 300.0, 50.0).move(0.0, 0.0, -25.0)), Color.CYAN
@@ -376,17 +378,32 @@ class SceneBuilderKeyboard(
         keyPlace: KeyPlace,
         thumbKeyPlace: ThumbKeyPlace,
         screwHolder: Abstract3dModel,
+        controllerHolder: ControllerHolderBuilder,
     ): Abstract3dModel {
 
         val wallsSettings = WallsSettings(bottomBorderHeight = 4.0)
         val controllerHolderWall = ControllerHolderWall(wallsSettings, keyPlace)
-        val screwWallPlaces = ScrewWallPlaces(cfg, wallsSettings, keyPlace, thumbKeyPlace, controllerHolderWall)
+        val screwWallPlaces =
+            ScrewWallPlaces(cfg, wallsSettings, keyPlace, thumbKeyPlace, controllerHolderWall, controllerHolder)
 
         val holderHeight = 2.2
-        val screwWallHolder = Cube(6.0, 4.0, holderHeight).move(0.0, 4.0, holderHeight / 2)
-        val controllerScrewsHolder =
-            screwWallPlaces.placeControllerScrews(screwWallHolder, mode = ScrewWallPlaces.Mode.Walls)
-        return screwWallPlaces.place(screwHolder, mode = ScrewWallPlaces.Mode.Walls).addModel(controllerScrewsHolder)
+        val screwWallHolderBack = Cube(6.0, 4.0, holderHeight).move(0.0, 4.0, holderHeight / 2)
+        val screwWallHolderSide = Cube(6.0, 6.0, holderHeight).move(-5.0, 0.0, holderHeight / 2)
+        val controllerScrewsHolderBack =
+            screwWallPlaces.placeControllerScrews(
+                screwWallHolderBack,
+                heightMode = ScrewWallPlaces.HeightMode.Walls,
+                mode = ScrewWallPlaces.ControllerMode.Back)
+
+        val controllerScrewsHolderSide =
+            screwWallPlaces.placeControllerScrews(
+                screwWallHolderSide,
+                heightMode = ScrewWallPlaces.HeightMode.Walls,
+                mode = ScrewWallPlaces.ControllerMode.Side)
+
+        return screwWallPlaces.place(screwHolder, heightMode = ScrewWallPlaces.HeightMode.Walls)
+            .addModel(controllerScrewsHolderBack)
+            .addModel(controllerScrewsHolderSide)
     }
 
     private fun createWristRestModel(): ModelHolder {

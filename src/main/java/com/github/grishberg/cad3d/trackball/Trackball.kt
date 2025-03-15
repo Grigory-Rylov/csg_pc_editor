@@ -57,7 +57,7 @@ class Trackball(private val cfg: KeyboardConfig, private val keyPlace: KeyPlace)
     }
 
     private fun moveTrackball(model: Abstract3dModel): Abstract3dModel {
-        return keyPlace.place(1, 0, model, V3d(0.0, 24.0, 22.0))
+        return keyPlace.place(1, 0, model, V3d(0.0, 24.0, 23.0))
     }
 
     private fun createTrackballModel(): Abstract3dModel {

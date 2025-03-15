@@ -25,7 +25,7 @@ data class AssemblySettings(
 
 @Serializable
 data class ThumbClusterSettings(
-    val xOffset: Double = 10.0,
+    val xOffset: Double = -10.0,
     val yOffset: Double = -50.0,
     val zOffset: Double = 40.0,
     val rotateY: Double = -30.0,

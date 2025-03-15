@@ -12,7 +12,7 @@ class ScrewsMatrixHolder(
     private val screwBase: ScrewBase,
 ) {
     fun create(): Abstract3dModel {
-        val verticalOffset = -5.0
+        val verticalOffset = -5.8
         val height = 5.0
         val outerDiameter = cfg.screwNutHoleDiameter + cfg.screwHolderWallhickness * 2.0
         val cylinder = Cylinder(height, Radius.fromDiameter(outerDiameter))

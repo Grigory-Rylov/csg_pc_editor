@@ -3,6 +3,7 @@ package com.github.grishberg.cad3d.keyboard.screws
 import com.github.grishberg.cad3d.keyboard.KeyPlace
 import com.github.grishberg.cad3d.keyboard.PlacePointType
 import com.github.grishberg.cad3d.keyboard.ThumbKeyPlace
+import com.github.grishberg.cad3d.keyboard.casebody.controllers.ControllerHolderBuilder
 import com.github.grishberg.cad3d.keyboard.casebody.wall.ControllerHolderWall
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
 import com.github.grishberg.cad3d.keyboard.cfg.WallsSettings
@@ -20,14 +21,15 @@ class ScrewWallPlaces(
     private val keyPlace: KeyPlace,
     private val thumbKeyPlace: ThumbKeyPlace,
     private val controllerHolderWall: ControllerHolderWall,
+    private val controllerHolder: ControllerHolderBuilder,
 
     ) {
 
-    fun place(o: Abstract3dModel, mode: Mode): Abstract3dModel {
+    fun place(o: Abstract3dModel, heightMode: HeightMode): Abstract3dModel {
         val models = mutableListOf<Abstract3dModel>()
         val cube = Cube(1.0)
 
-        models.add(placeControllerScrews(o, mode))
+        models.add(placeControllerScrews(o, heightMode, ControllerMode.All))
 
         models.add(placeRightTop(o, keyPlace.place(cfg.lastCol, 0, cube), offsetY = 10.0))
         models.add(placeRightBottom(o, keyPlace.place(cfg.lastCol, cfg.lastRow, cube), offsetY = -4.0))
@@ -42,13 +44,13 @@ class ScrewWallPlaces(
         return Union(models)
     }
 
-
-    fun placeControllerScrews(o: Abstract3dModel, mode: Mode): Abstract3dModel {
+    fun placeControllerScrews(o: Abstract3dModel, heightMode: HeightMode, mode: ControllerMode): Abstract3dModel {
         val models = mutableListOf<Abstract3dModel>()
-        val distanceBetweenControllerHolderMount = 40
+        val horizontalOffset = controllerHolder.distanceBetweenControllerHolderMountX
+        val verticalOffset = controllerHolder.distanceBetweenControllerHolderMountY
 
-        val controllerOffsetZ = when (mode) {
-            Mode.Walls -> cfg.controllerPlateHeight
+        val controllerOffsetZ = when (heightMode) {
+            HeightMode.Walls -> cfg.controllerPlateHeight
             else -> 0.0
         }
 
@@ -65,18 +67,28 @@ class ScrewWallPlaces(
             ).y - screwOffset, controllerOffsetZ
         )
 
-        models.add(o.move(backWallPoint))
+        if (mode == ControllerMode.All || mode == ControllerMode.Back) {
+            models.add(o.move(backWallPoint))
+        }
 
-        models.add(
-            o.move(
-                V3d(backWallPoint.x + distanceBetweenControllerHolderMount, backWallPoint.y, controllerOffsetZ)
+        if (mode == ControllerMode.All || mode == ControllerMode.Back) {
+            models.add(
+                o.move(
+                    V3d(backWallPoint.x + horizontalOffset, backWallPoint.y, controllerOffsetZ)
+                )
             )
-        )
+        }
+
+        if (mode == ControllerMode.All || mode == ControllerMode.Side) {
+            models.add(
+                o.move(
+                    V3d(backWallPoint.x, backWallPoint.y - verticalOffset, controllerOffsetZ)
+                )
+            )
+        }
 
         return Union(models)
     }
-
-
 
     private fun placeRight(
         obj: Abstract3dModel,
@@ -139,6 +151,8 @@ class ScrewWallPlaces(
         return obj.move(targetPoint.add(V3d(offsetX, offsetY, offsetZ)))
     }
 
-    enum class Mode { Walls, Plate, ControllerHolder,
+    enum class HeightMode { Walls, Plate, ControllerHolder,
     }
+
+    enum class ControllerMode { All, Back, Side, }
 }
