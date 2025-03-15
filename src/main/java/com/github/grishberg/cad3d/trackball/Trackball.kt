@@ -98,7 +98,7 @@ class Trackball(private val cfg: KeyboardConfig, private val keyPlace: KeyPlace)
     }
 
     private fun moveTrackball(model: Abstract3dModel): Abstract3dModel {
-        return keyPlace.place(1, 0, model, V3d(0.0, 24.0, 23.0)).rotate(Angles3d.xOnly(60.0))
+        return keyPlace.place(1, 0, model.rotate(Angles3d.xOnly(60.0)), V3d(0.0, 22.0, 29.0))
     }
 
     private fun createTrackballModel(): Abstract3dModel {
@@ -117,8 +117,7 @@ class Trackball(private val cfg: KeyboardConfig, private val keyPlace: KeyPlace)
 
 
 
-        return outerSphere
-            .subtractModel(sensorCapLegs())
+        return outerSphere.subtractModel(sensorCapLegs())
     }
 
     private fun case(caseHeight: Double): Abstract3dModel {
@@ -242,10 +241,10 @@ class Trackball(private val cfg: KeyboardConfig, private val keyPlace: KeyPlace)
         val height = 2.0
         val offset = legOffset - legHeight
         val leg = Cylinder(3.0, Radius.fromRadius(1.0)).rotate(Angles3d.yOnly(90.0)).moveZ(2.0)
-            .addModel(Cube(3.0, 1.5, height).moveZ(height / 2))
+            .addModel(Cube(3.0, 4.0, height).move(0.0, -1.5, height / 2))
 
         val diameter = controllerDiameter - 0.5
-        val twoLegs = leg.moveY(diameter / 2).addModel(leg.moveY(-diameter / 2))
+        val twoLegs = leg.moveY(diameter / 2).addModel(leg.rotate(Angles3d.zOnly(180.0)).moveY(-diameter / 2))
         return twoLegs.addModel(twoLegs.rotate(Angles3d.zOnly(90.0))).moveZ(offset)
     }
 }
