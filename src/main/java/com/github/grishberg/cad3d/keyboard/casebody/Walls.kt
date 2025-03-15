@@ -21,16 +21,15 @@ class Walls(
     private val keyPlace: KeyPlace,
     private val thumbKeyPlace: ThumbKeyPlace,
     private val topEdgeOffsetZ: Double,
+    private val wallVerticalOffset: Double = 5.0,
+    private val wallHorizontalOffset: Double = 10.0,
 ) {
 
-    private val wallVerticalOffset = 5.0
-    private val wallHorizontalOffset = 10.0
     private val models = ArrayList<Abstract3dModel>()
     val thumbRightOffset = 4.0
     val thumbOuterRightOffset = 7.0
 
-
-    fun createBorders(borderThickness: Double = 1.5, borderHeight: Double = 4.0): Abstract3dModel {
+    fun createBorders(borderThickness: Double = 1.5, borderHeight: Double): Abstract3dModel {
         models.clear()
 
         //columns

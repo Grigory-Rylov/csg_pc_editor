@@ -318,11 +318,12 @@ class SceneBuilderKeyboard(
         val screwBase = ScrewBase(cfg)
         val screws = ScrewKeyMatrixPlace(cfg, keyPlace, thumbKeyPlace).place(screwBase.matrixScrewHole())
 
+        val borderHeigth = 2.5
         val wallsSettings = WallsSettings(
-            borderHeight = 4.0, bottomBorderHeight = 4.0
+            borderHeight = borderHeigth, bottomBorderHeight = 4.0
 
         )
-        val borders = Walls(cfg, wallsSettings, keyPlace, thumbKeyPlace, topEdgeOffsetZ = 0.0).createBorders(1.5, 4.0)
+        val borders = Walls(cfg, wallsSettings, keyPlace, thumbKeyPlace, topEdgeOffsetZ = 0.0).createBorders(1.5, borderHeigth)
             .subtractModel(screws)
 
 
@@ -330,16 +331,20 @@ class SceneBuilderKeyboard(
     }
 
     private fun createCaseModel(cfg: KeyboardConfig, keyPlace: KeyPlace, thumbKeyPlace: ThumbKeyPlace): ModelHolder {
-        val holeVerticalExtra = 2.0
+        val holeVerticalExtra = -3.0
+
+        val borderHeight = 5.0
+        val borderVerticalOffset = 5.0
 
         val wallsSettings = WallsSettings(
-            borderHeight = 4.0, bottomBorderHeight = if (cfg.isSkeletonMode) 4.0 else 2.0
+            verticalOffset = borderVerticalOffset,
+            borderHeight = borderHeight, bottomBorderHeight = if (cfg.isSkeletonMode) 4.0 else 2.0
         )
 
         val holeBorders = Walls(
-            this.cfg, wallsSettings, keyPlace, thumbKeyPlace, topEdgeOffsetZ = holeVerticalExtra / 2
+            this.cfg, wallsSettings, keyPlace, thumbKeyPlace, topEdgeOffsetZ = holeVerticalExtra / 2,
         ).createBorders(
-            1.7, 4.0 + holeVerticalExtra
+            1.7, borderHeight + holeVerticalExtra
         )
 
         val screwBase = ScrewBase(this.cfg)
@@ -354,8 +359,7 @@ class SceneBuilderKeyboard(
         val controllerHolder = ControllerHolderBuilder(cfg)
         val wallScrews = placeWallScrews(keyPlace, thumbKeyPlace, screwBase.screwHolder(), controllerHolder)
 
-        val topBorderHeight = 6.0
-        val topEdgeOffsetZ = -topBorderHeight / 2
+        val topEdgeOffsetZ = -2.0
         val bottomEdgeHeight = if (cfg.isSkeletonMode) 4.0 else 2.0
 
         val walls =
