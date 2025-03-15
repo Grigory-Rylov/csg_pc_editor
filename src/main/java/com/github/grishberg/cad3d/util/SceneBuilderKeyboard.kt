@@ -198,10 +198,23 @@ class SceneBuilderKeyboard(
         val result = mutableListOf<VertexHolder>()
         val startTime = System.currentTimeMillis()
         if (settings.settingsTrackball) {
-            val trackBall = Trackball(cfg, keyPlace).create()
-            result.addAll(trackBall.vertexHolders)
-            saveModel("trackball.stl", trackBall.model)
+            val trackball = Trackball(cfg, keyPlace)
+            val trackBallModelHolder = trackball.create(settings.showTrackbalBall)
+            result.addAll(trackBallModelHolder.vertexHolders)
+            saveModel("trackball.stl", trackBallModelHolder.model)
+
+            if (settings.showTrackballSensor) {
+                result.addAll(trackball.createTrackballSensor().vertexHolders)
+            }
         }
+
+        if (settings.showTrackbalSensorCap) {
+            val trackball = Trackball(cfg, keyPlace)
+            val sensorCap = trackball.createSensorCap()
+            result.addAll(sensorCap.vertexHolders)
+            saveModel("trackballCap.stl", sensorCap.model)
+        }
+
         val delta = System.currentTimeMillis() - startTime
         println("createTrackball : $delta")
         return result
@@ -323,8 +336,9 @@ class SceneBuilderKeyboard(
             borderHeight = borderHeigth, bottomBorderHeight = 4.0
 
         )
-        val borders = Walls(cfg, wallsSettings, keyPlace, thumbKeyPlace, topEdgeOffsetZ = 0.0).createBorders(1.5, borderHeigth)
-            .subtractModel(screws)
+        val borders =
+            Walls(cfg, wallsSettings, keyPlace, thumbKeyPlace, topEdgeOffsetZ = 0.0).createBorders(1.5, borderHeigth)
+                .subtractModel(screws)
 
 
         return ModelHolder(borders, createVertexHolder(borders, Color.lightGray))
@@ -338,7 +352,8 @@ class SceneBuilderKeyboard(
 
         val wallsSettings = WallsSettings(
             verticalOffset = borderVerticalOffset,
-            borderHeight = borderHeight, bottomBorderHeight = if (cfg.isSkeletonMode) 4.0 else 2.0
+            borderHeight = borderHeight,
+            bottomBorderHeight = if (cfg.isSkeletonMode) 4.0 else 2.0
         )
 
         val holeBorders = Walls(
@@ -363,8 +378,8 @@ class SceneBuilderKeyboard(
         val bottomEdgeHeight = if (cfg.isSkeletonMode) 4.0 else 2.0
 
         val walls =
-            Walls(this.cfg, wallsSettings, keyPlace, thumbKeyPlace, topEdgeOffsetZ = topEdgeOffsetZ)
-                .createWalls(bottomBorderHeight = bottomEdgeHeight
+            Walls(this.cfg, wallsSettings, keyPlace, thumbKeyPlace, topEdgeOffsetZ = topEdgeOffsetZ).createWalls(
+                bottomBorderHeight = bottomEdgeHeight
             ).subtractModel(holeBorders).subtractModel(Cube(300.0, 300.0, 50.0).move(0.0, 0.0, -25.0))
 
         return ModelHolder(
@@ -393,21 +408,20 @@ class SceneBuilderKeyboard(
         val holderHeight = 2.2
         val screwWallHolderBack = Cube(6.0, 4.0, holderHeight).move(0.0, 4.0, holderHeight / 2)
         val screwWallHolderSide = Cube(6.0, 6.0, holderHeight).move(-5.0, 0.0, holderHeight / 2)
-        val controllerScrewsHolderBack =
-            screwWallPlaces.placeControllerScrews(
-                screwWallHolderBack,
-                heightMode = ScrewWallPlaces.HeightMode.Walls,
-                mode = ScrewWallPlaces.ControllerMode.Back)
+        val controllerScrewsHolderBack = screwWallPlaces.placeControllerScrews(
+            screwWallHolderBack,
+            heightMode = ScrewWallPlaces.HeightMode.Walls,
+            mode = ScrewWallPlaces.ControllerMode.Back
+        )
 
-        val controllerScrewsHolderSide =
-            screwWallPlaces.placeControllerScrews(
-                screwWallHolderSide,
-                heightMode = ScrewWallPlaces.HeightMode.Walls,
-                mode = ScrewWallPlaces.ControllerMode.Side)
+        val controllerScrewsHolderSide = screwWallPlaces.placeControllerScrews(
+            screwWallHolderSide,
+            heightMode = ScrewWallPlaces.HeightMode.Walls,
+            mode = ScrewWallPlaces.ControllerMode.Side
+        )
 
         return screwWallPlaces.place(screwHolder, heightMode = ScrewWallPlaces.HeightMode.Walls)
-            .addModel(controllerScrewsHolderBack)
-            .addModel(controllerScrewsHolderSide)
+            .addModel(controllerScrewsHolderBack).addModel(controllerScrewsHolderSide)
     }
 
     private fun createWristRestModel(): ModelHolder {

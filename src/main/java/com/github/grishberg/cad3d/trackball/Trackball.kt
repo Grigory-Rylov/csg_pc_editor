@@ -26,29 +26,39 @@ class Trackball(private val cfg: KeyboardConfig, private val keyPlace: KeyPlace)
     private val holeDiameter = cfg.trackball.ballDiameter + cfg.trackball.bearingDiameter
     private val wallSize = 2.0
     private val outerDiameter = holeDiameter + wallSize * 2
-
+    private val holderHolesDistance = 27.0
     private val controllerDiameter = 32.0
-    fun create(): ModelHolder {
+    private val wallWidth = 1.5
+    private val sensorOuterDiameter = controllerDiameter + 1 + wallWidth * 2
+    private val bottomHoleDiameter = controllerDiameter + 1
+    private val sensorCaseHeight = 6.0
+    private val caseHeight = legHeight + 5
+    private val legsBaseOffset = legHeight / 2 - cfg.trackball.ballDiameter / 2
+    private val legOffset = legsBaseOffset - distanceToLens - lensHeight
 
-        val model = createTrackballModel().rotate(Angles3d.xOnly(60.0))
-        val trackballSensor = createTrackballSensor()
+    fun create(withBall: Boolean): ModelHolder {
 
+        val model = createTrackballModel()
 
+        val vertex = mutableListOf(VertexHolder.createVertexHolder(moveTrackball(model), Color.LIGHT_GRAY, fn = cfg.fn))
+
+        if (withBall) {
+            vertex.add(
+                VertexHolder.createVertexHolder(
+                    moveTrackball(Sphere(Radius.fromDiameter(cfg.trackball.ballDiameter))), Color.ORANGE, fn = cfg.fn
+                )
+            )
+        }
         return ModelHolder(
-            model,
-            VertexHolder.createVertexHolder(moveTrackball(model), Color.LIGHT_GRAY, fn = cfg.fn),
-
-            VertexHolder.createVertexHolder(
-                moveTrackball(Sphere(Radius.fromDiameter(cfg.trackball.ballDiameter))), Color.ORANGE, fn = cfg.fn
-            ),
-
-            // VertexHolder.createVertexHolder(moveTrackball(trackballSensor), Color.ORANGE, fn = 20),
-
+            model, vertex
         )
     }
 
+    /**
+     * Держалка трекбола
+     */
     fun createTrackballHolder(): ModelHolder {
-        val model = trackBallCaseHolder().rotate(Angles3d.xOnly(60.0))
+        val model = trackBallCaseHolder()
 
         return ModelHolder(
             moveTrackball(model),
@@ -56,17 +66,45 @@ class Trackball(private val cfg: KeyboardConfig, private val keyPlace: KeyPlace)
         )
     }
 
+    /**
+     * Держалка трекбола
+     */
+    private fun trackBallCaseHolder(): Abstract3dModel {
+
+        val legsBaseOffset = legHeight / 2 - cfg.trackball.ballDiameter / 2
+
+        val legOffset = legsBaseOffset - distanceToLens - lensHeight
+
+        val caseHeight = legHeight + 5
+        val diameter = outerDiameter
+
+        val holeDiameter = 3.2
+        val wall = 1.5
+        val height = holeDiameter + wall * 2
+        val midHoleWidth = 7.1
+        val width = 14.0
+        val holder = Cube(width, 5.0, height).moveY(-2.5 - height).addModel(
+            Cylinder(width, Radius.fromDiameter(height)).rotate(Angles3d.yOnly(90.0)).moveY(-height)
+        ).subtractModel(
+            Cylinder(width, Radius.fromDiameter(holeDiameter)).rotate(Angles3d.yOnly(90.0)).moveY(-height)
+        ).subtractModel(Cube(midHoleWidth, 20.0, 20.0))
+
+        val sensorCase = holder.move(0.0, -diameter / 2 + 3, 14.5).moveZ(-caseHeight / 2 - sensorCaseHeight / 2)
+            .moveZ(legOffset + (caseHeight - legHeight) / 2)
+
+
+        return sensorCase
+
+    }
+
     private fun moveTrackball(model: Abstract3dModel): Abstract3dModel {
-        return keyPlace.place(1, 0, model, V3d(0.0, 24.0, 23.0))
+        return keyPlace.place(1, 0, model, V3d(0.0, 24.0, 23.0)).rotate(Angles3d.xOnly(60.0))
     }
 
     private fun createTrackballModel(): Abstract3dModel {
 
-        val legsBaseOffset = legHeight / 2 - cfg.trackball.ballDiameter / 2
-        val legOffset = legsBaseOffset - distanceToLens - lensHeight
         val legs = createSensorHolderLeg(legHeight).moveZ(legOffset)
 
-        val caseHeight = legHeight + 5
         val case = case(caseHeight).moveZ(legOffset + (caseHeight - legHeight) / 2)
         val innerHole = Sphere(Radius.fromDiameter(holeDiameter))
         val holeCube = Cube(Dims3d(100.0, 100.0, outerDiameter)).rotate(Angles3d.xOnly(-30.0)).moveZ(8.0)
@@ -80,62 +118,28 @@ class Trackball(private val cfg: KeyboardConfig, private val keyPlace: KeyPlace)
 
 
         return outerSphere
+            .subtractModel(sensorCapLegs())
     }
 
-    private fun case(height: Double): Abstract3dModel {
-        val wallWidth = 1.0
+    private fun case(caseHeight: Double): Abstract3dModel {
         val holeDiameter = outerDiameter - wallWidth * 2
-        val sensorOuterDiameter = controllerDiameter + 1 + wallWidth * 2
-        val bottomHoleDiameter = controllerDiameter + 1
+
         val diameter = outerDiameter
         val case =
-            Cylinder(height, Radius.fromDiameter(sensorOuterDiameter), Radius.fromDiameter(diameter)).subtractModel(
+            Cylinder(caseHeight, Radius.fromDiameter(sensorOuterDiameter), Radius.fromDiameter(diameter)).subtractModel(
                 Cylinder(
-                    height, Radius.fromDiameter(bottomHoleDiameter), Radius.fromDiameter(holeDiameter)
+                    caseHeight, Radius.fromDiameter(bottomHoleDiameter), Radius.fromDiameter(holeDiameter)
                 )
             )
 
-        val sensorCaseHeight = 6.0
         val sensorCase = Cylinder(sensorCaseHeight, Radius.fromDiameter(sensorOuterDiameter)).addModel(
-                trackballHolder().move(
-                    0.0,
-                    -diameter / 2 + 3,
-                    15.0
-                )
-            ).subtractModel(Cylinder(sensorCaseHeight, Radius.fromDiameter(bottomHoleDiameter)))
-            .moveZ(-height / 2 - sensorCaseHeight / 2)
+            trackballHolder().move(
+                0.0, -diameter / 2 + 3, 15.0
+            )
+        ).subtractModel(Cylinder(sensorCaseHeight, Radius.fromDiameter(bottomHoleDiameter)))
+            .moveZ(-caseHeight / 2 - sensorCaseHeight / 2)
 
-        return case.addModel(sensorCase)
-            .subtractModel(cylinderHoles().moveZ(-5.5))
-    }
-
-    private fun trackBallCaseHolder(): Abstract3dModel {
-        val sensorCaseHeight = 6.0
-
-        val legsBaseOffset = legHeight / 2 - cfg.trackball.ballDiameter / 2
-
-        val legOffset = legsBaseOffset - distanceToLens - lensHeight
-
-        val caseHeight = legHeight + 5
-        val diameter = outerDiameter
-
-
-        val holeDiameter = 3.2
-        val wall = 1.5
-        val height = holeDiameter + wall * 2
-        val midHoleWidth = 7.1
-        val width = 14.0
-        val holder = Cube(width, 5.0, height).moveY(-2.5 - height).addModel(
-            Cylinder(width, Radius.fromDiameter(height)).rotate(Angles3d.yOnly(90.0)).moveY(-height)
-        ).subtractModel(
-            Cylinder(width, Radius.fromDiameter(holeDiameter)).rotate(Angles3d.yOnly(90.0)).moveY(-height)
-        ).subtractModel(Cube(midHoleWidth,20.0, 20.0))
-
-        val sensorCase = holder.move(0.0, -diameter / 2 + 3, 14.5).moveZ(-caseHeight / 2 - sensorCaseHeight / 2).moveZ(legOffset + (caseHeight - legHeight) / 2)
-
-
-       return sensorCase
-
+        return case.addModel(sensorCase).subtractModel(cylinderHoles().moveZ(-5.5))
     }
 
     private fun cylinderHoles(): Abstract3dModel {
@@ -151,15 +155,17 @@ class Trackball(private val cfg: KeyboardConfig, private val keyPlace: KeyPlace)
         val height = holeDiameter + wall * 2
         val width = 7.0
         return Cube(width, 5.0, height).moveY(-2.5).addModel(
-                Cylinder(width, Radius.fromDiameter(height)).rotate(Angles3d.yOnly(90.0)).moveY(-height)
-            ).subtractModel(
-                Cylinder(width, Radius.fromDiameter(holeDiameter)).rotate(Angles3d.yOnly(90.0)).moveY(-height)
-            )
+            Cylinder(width, Radius.fromDiameter(height)).rotate(Angles3d.yOnly(90.0)).moveY(-height)
+        ).subtractModel(
+            Cylinder(width, Radius.fromDiameter(holeDiameter)).rotate(Angles3d.yOnly(90.0)).moveY(-height)
+        )
     }
 
+    /**
+     * Держатель сенсора (ножки)
+     */
     private fun createSensorHolderLeg(height: Double): Abstract3dModel {
         val holesDiameter = 2.4
-        val holderHolesDistance = 27.0
         val legDiameter = 5.5
 
         val holeHeight = 4.0
@@ -193,14 +199,53 @@ class Trackball(private val cfg: KeyboardConfig, private val keyPlace: KeyPlace)
         return bearing.moveX(radius).rotate(Angles3d(0.0, yAngle, zAngle))
     }
 
-    private fun createTrackballSensor(): Abstract3dModel {
+    fun createTrackballSensor(): ModelHolder {
         val plateHeight = 1.65
         val legsBaseOffset = -cfg.trackball.ballDiameter / 2
         val legOffset = legsBaseOffset - distanceToLens - lensHeight
-        return Cylinder(plateHeight, Radius.fromDiameter(controllerDiameter)).addModel(
-            Cube(
-                8.15, 16.71, lensHeight
-            ).moveZ(lensHeight / 2 + plateHeight / 2)
-        ).moveZ(-plateHeight / 2).moveZ(legOffset)
+
+        val holeCylinder = Cylinder(4.0, Radius.fromDiameter(2.0))
+        val holes = holeCylinder.moveY(holderHolesDistance / 2).addModel(holeCylinder.moveY(-holderHolesDistance / 2))
+
+        val trackballSensor =
+            Cylinder(plateHeight, Radius.fromDiameter(controllerDiameter)).subtractModel(holes).addModel(
+                Cube(
+                    8.15, 16.71, lensHeight
+                ).moveZ(lensHeight / 2 + plateHeight / 2)
+            ).moveZ(-plateHeight / 2).moveZ(legOffset)
+
+        return ModelHolder(
+            moveTrackball(trackballSensor),
+            VertexHolder.createVertexHolder(moveTrackball(trackballSensor), Color.ORANGE, fn = 20),
+        )
+    }
+
+    fun createSensorCap(): ModelHolder {
+        val model = sensorCapModel()
+
+        return ModelHolder(
+            moveTrackball(model),
+            VertexHolder.createVertexHolder(moveTrackball(model), Color.BLUE, fn = cfg.fn),
+        )
+    }
+
+    private fun sensorCapModel(): Abstract3dModel {
+        val height = 1.5
+        val offset = legOffset - legHeight
+        val case = Cylinder(
+            height, Radius.fromDiameter(sensorOuterDiameter)
+        ).moveZ(offset).addModel(sensorCapLegs())
+        return case
+    }
+
+    private fun sensorCapLegs(): Abstract3dModel {
+        val height = 2.0
+        val offset = legOffset - legHeight
+        val leg = Cylinder(3.0, Radius.fromRadius(1.0)).rotate(Angles3d.yOnly(90.0)).moveZ(2.0)
+            .addModel(Cube(3.0, 1.5, height).moveZ(height / 2))
+
+        val diameter = controllerDiameter - 0.5
+        val twoLegs = leg.moveY(diameter / 2).addModel(leg.moveY(-diameter / 2))
+        return twoLegs.addModel(twoLegs.rotate(Angles3d.zOnly(90.0))).moveZ(offset)
     }
 }
