@@ -12,8 +12,13 @@ import com.github.grishberg.cad3d.keyboard.ThumbConnections
 import com.github.grishberg.cad3d.keyboard.ThumbKeyPlace
 import com.github.grishberg.cad3d.keyboard.Utils
 import com.github.grishberg.cad3d.keyboard.casebody.Walls
+import com.github.grishberg.cad3d.keyboard.casebody.controllers.Controller
+import com.github.grishberg.cad3d.keyboard.casebody.controllers.ControllerFactory
 import com.github.grishberg.cad3d.keyboard.casebody.controllers.ControllerHolderBuilder
+import com.github.grishberg.cad3d.keyboard.casebody.controllers.ControllerHolderDimensions
+import com.github.grishberg.cad3d.keyboard.casebody.controllers.ControllerPlace
 import com.github.grishberg.cad3d.keyboard.casebody.controllers.SuperMiniNRF52840
+import com.github.grishberg.cad3d.keyboard.casebody.controllers.switcher.SwitcherFactory
 import com.github.grishberg.cad3d.keyboard.casebody.wall.ControllerHolderWall
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
 import com.github.grishberg.cad3d.keyboard.cfg.TrackballMode
@@ -86,14 +91,39 @@ class SceneBuilderKeyboard(
         val keyPlace = KeyPlace(cfg)
         val thumbKeyPlace = ThumbKeyPlace(cfg)
 
+        val controllerPlace = ControllerPlace(keyPlace)
+        val controllerFactory = ControllerFactory(cfg, controllerPlace)
+        val controller = controllerFactory.createController()
+        val controllerHolderDimensions = ControllerHolderDimensions()
+
+        val wallsSettings = WallsSettings(bottomBorderHeight = 4.0)
+        val controllerHolderWall = ControllerHolderWall(wallsSettings, keyPlace)
+        val screwWallPlaces = ScrewWallPlaces(
+            cfg,
+            wallsSettings,
+            keyPlace,
+            thumbKeyPlace,
+            controllerHolderWall,
+            controllerHolderDimensions
+        )
+
         coroutineScope.launch {
             val deferredResults = listOf(
                 async { createMatrix(cfg, keyPlace, thumbKeyPlace) },
-                async { createCase(cfg, keyPlace, thumbKeyPlace) },
+                async { createCase(cfg, keyPlace, thumbKeyPlace, screwWallPlaces) },
                 async { createKeyCaps(cfg, keyPlace, thumbKeyPlace) },
                 async { createWristRest(cfg, keyPlace, thumbKeyPlace) },
                 async { createTrackball(cfg, keyPlace, thumbKeyPlace) },
-                async { createController(cfg, keyPlace, thumbKeyPlace) },
+                async { createController(cfg, controllerPlace, controller) },
+                async {
+                    createControllerHolder(
+                        cfg,
+                        controllerPlace,
+                        controller,
+                        controllerHolderDimensions,
+                        screwWallPlaces
+                    )
+                },
             )
 
             // Ожидаем завершения всех задач
@@ -137,7 +167,12 @@ class SceneBuilderKeyboard(
         return result
     }
 
-    private fun createCase(cfg: KeyboardConfig, keyPlace: KeyPlace, thumbKeyPlace: ThumbKeyPlace): List<VertexHolder> {
+    private fun createCase(
+        cfg: KeyboardConfig,
+        keyPlace: KeyPlace,
+        thumbKeyPlace: ThumbKeyPlace,
+        screwWallPlaces: ScrewWallPlaces,
+    ): List<VertexHolder> {
         val settings = cfg.assemblySettings
         val result = mutableListOf<VertexHolder>()
 
@@ -145,7 +180,7 @@ class SceneBuilderKeyboard(
 
         var tbHolder: Abstract3dModel? = null
         if (settings.settingsShowCase) {
-            val caseWalls = createCaseModel(cfg, keyPlace, thumbKeyPlace)
+            val caseWalls = createCaseModel(cfg, keyPlace, thumbKeyPlace, screwWallPlaces)
             if (cfg.trackball.mode != TrackballMode.None) {
                 val trackBallHolder = Trackball(cfg, keyPlace).createTrackballHolder()
                 tbHolder = trackBallHolder.model
@@ -221,18 +256,41 @@ class SceneBuilderKeyboard(
     }
 
     private fun createController(
-        cfg: KeyboardConfig, keyPlace: KeyPlace, thumbKeyPlace: ThumbKeyPlace
+        cfg: KeyboardConfig, controllerPlace: ControllerPlace, controller: Controller,
     ): List<VertexHolder> {
         val settings = cfg.assemblySettings
         val result = mutableListOf<VertexHolder>()
         val startTime = System.currentTimeMillis()
-        if (settings.settingsController) {
-            val trackBall = SuperMiniNRF52840(cfg, keyPlace).create()
+        if (settings.showController) {
+            val trackBall = SuperMiniNRF52840(cfg, controllerPlace).create()
             result.addAll(trackBall.vertexHolders)
-
         }
+
         val delta = System.currentTimeMillis() - startTime
-        println("createTrackball : $delta")
+        println("createController : $delta")
+        return result
+    }
+
+    private fun createControllerHolder(
+        cfg: KeyboardConfig, controllerPlace: ControllerPlace, controller: Controller,
+        controllerHolderDimensions: ControllerHolderDimensions, screwWallPlaces: ScrewWallPlaces,
+    ): List<VertexHolder> {
+        val settings = cfg.assemblySettings
+        val result = mutableListOf<VertexHolder>()
+        val startTime = System.currentTimeMillis()
+        if (settings.showControllerHolder) {
+            val switcherFactory = SwitcherFactory(cfg)
+            val switcher = switcherFactory.createSwitcher()
+
+            val controllerHolder = ControllerHolderBuilder(
+                cfg, controller, controllerPlace, controllerHolderDimensions, screwWallPlaces, switcher
+            ).create()
+            result.addAll(controllerHolder.vertexHolders)
+            saveModel("controller_holder.stl", controllerHolder.model)
+        }
+
+        val delta = System.currentTimeMillis() - startTime
+        println("createControllerHolder : $delta")
         return result
     }
 
@@ -344,7 +402,12 @@ class SceneBuilderKeyboard(
         return ModelHolder(borders, createVertexHolder(borders, Color.lightGray))
     }
 
-    private fun createCaseModel(cfg: KeyboardConfig, keyPlace: KeyPlace, thumbKeyPlace: ThumbKeyPlace): ModelHolder {
+    private fun createCaseModel(
+        cfg: KeyboardConfig,
+        keyPlace: KeyPlace,
+        thumbKeyPlace: ThumbKeyPlace,
+        screwWallPlaces: ScrewWallPlaces,
+    ): ModelHolder {
         val holeVerticalExtra = -3.0
 
         val borderHeight = 5.0
@@ -371,8 +434,7 @@ class SceneBuilderKeyboard(
             .subtractModel(screwMatrixHoldersHoles)
 
         //
-        val controllerHolder = ControllerHolderBuilder(cfg)
-        val wallScrews = placeWallScrews(keyPlace, thumbKeyPlace, screwBase.screwHolder(), controllerHolder)
+        val wallScrews = placeWallScrews(screwBase.screwHolder(), screwWallPlaces)
 
         val topEdgeOffsetZ = -2.0
         val bottomEdgeHeight = if (cfg.isSkeletonMode) 4.0 else 2.0
@@ -394,16 +456,9 @@ class SceneBuilderKeyboard(
     }
 
     private fun placeWallScrews(
-        keyPlace: KeyPlace,
-        thumbKeyPlace: ThumbKeyPlace,
         screwHolder: Abstract3dModel,
-        controllerHolder: ControllerHolderBuilder,
+        screwWallPlaces: ScrewWallPlaces,
     ): Abstract3dModel {
-
-        val wallsSettings = WallsSettings(bottomBorderHeight = 4.0)
-        val controllerHolderWall = ControllerHolderWall(wallsSettings, keyPlace)
-        val screwWallPlaces =
-            ScrewWallPlaces(cfg, wallsSettings, keyPlace, thumbKeyPlace, controllerHolderWall, controllerHolder)
 
         val holderHeight = 2.2
         val screwWallHolderBack = Cube(6.0, 4.0, holderHeight).move(0.0, 4.0, holderHeight / 2)

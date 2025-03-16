@@ -107,6 +107,15 @@ class Main(title: String?) : JFrame(title), GLEventListener {
             settingsHolder.showTrackballSensorCap = it
             rebuildConfigAndRequestRendering()
         }
+        val showControllerHolderButton = createToggleButton("Держатель контроллера", settingsHolder.showControllerHolder) {
+            settingsHolder.showControllerHolder = it
+            rebuildConfigAndRequestRendering()
+        }
+
+        val showControllerButton = createToggleButton("Контроллера", settingsHolder.showController) {
+            settingsHolder.showController = it
+            rebuildConfigAndRequestRendering()
+        }
 
         controlPanel.add(keysButton)
         controlPanel.add(caseButton)
@@ -116,6 +125,8 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         controlPanel.add(trackballButton)
         controlPanel.add(trackballSensorButton)
         controlPanel.add(trackballSensorCapButton)
+        controlPanel.add(showControllerHolderButton)
+        controlPanel.add(showControllerButton)
 
         val configButton = JButton("Конфигурации")
         configButton.addActionListener {

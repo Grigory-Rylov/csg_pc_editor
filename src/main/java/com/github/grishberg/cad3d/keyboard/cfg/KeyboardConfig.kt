@@ -31,6 +31,7 @@ data class KeyboardConfig(
     val thumbClusterSettings: ThumbClusterSettings,
     val screwNutHoleDiameter: Double,
     val screwHolderWallhickness: Double,
+    val screwBoltDiameter: Double = 3.0,
     val isSkeletonMode: Boolean,
     val trackball: TrackballConfig,
     val wallsSettings: WallsSettings,

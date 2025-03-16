@@ -65,6 +65,17 @@ class SettingsHolder(
             settings = settings.copy(assemblySettings = settings.assemblySettings.copy(showTrackbalSensorCap = value))
         }
 
+    var showControllerHolder: Boolean
+        get() = settings.assemblySettings.showControllerHolder
+        set(value) {
+            settings = settings.copy(assemblySettings = settings.assemblySettings.copy(showControllerHolder = value))
+        }
+    var showController: Boolean
+        get() = settings.assemblySettings.showController
+        set(value) {
+            settings = settings.copy(assemblySettings = settings.assemblySettings.copy(showController = value))
+        }
+
     private fun createDefaultSettings() = SettingsContainer(
         assemblySettings = AssemblySettings(),
         viewerSettings = createViewerSettings(),

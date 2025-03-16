@@ -3,7 +3,7 @@ package com.github.grishberg.cad3d.keyboard.screws
 import com.github.grishberg.cad3d.keyboard.KeyPlace
 import com.github.grishberg.cad3d.keyboard.PlacePointType
 import com.github.grishberg.cad3d.keyboard.ThumbKeyPlace
-import com.github.grishberg.cad3d.keyboard.casebody.controllers.ControllerHolderBuilder
+import com.github.grishberg.cad3d.keyboard.casebody.controllers.ControllerHolderDimensions
 import com.github.grishberg.cad3d.keyboard.casebody.wall.ControllerHolderWall
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
 import com.github.grishberg.cad3d.keyboard.cfg.WallsSettings
@@ -21,9 +21,8 @@ class ScrewWallPlaces(
     private val keyPlace: KeyPlace,
     private val thumbKeyPlace: ThumbKeyPlace,
     private val controllerHolderWall: ControllerHolderWall,
-    private val controllerHolder: ControllerHolderBuilder,
-
-    ) {
+    private val controllerHolderDimensions: ControllerHolderDimensions,
+) {
 
     fun place(o: Abstract3dModel, heightMode: HeightMode): Abstract3dModel {
         val models = mutableListOf<Abstract3dModel>()
@@ -46,8 +45,8 @@ class ScrewWallPlaces(
 
     fun placeControllerScrews(o: Abstract3dModel, heightMode: HeightMode, mode: ControllerMode): Abstract3dModel {
         val models = mutableListOf<Abstract3dModel>()
-        val horizontalOffset = controllerHolder.distanceBetweenControllerHolderMountX
-        val verticalOffset = controllerHolder.distanceBetweenControllerHolderMountY
+        val horizontalOffset = controllerHolderDimensions.distanceBetweenControllerHolderMountX
+        val verticalOffset = controllerHolderDimensions.distanceBetweenControllerHolderMountY
 
         val controllerOffsetZ = when (heightMode) {
             HeightMode.Walls -> cfg.controllerPlateHeight
@@ -67,7 +66,7 @@ class ScrewWallPlaces(
             ).y - screwOffset, controllerOffsetZ
         )
 
-        if (mode == ControllerMode.All || mode == ControllerMode.Back) {
+        if (mode == ControllerMode.All || mode == ControllerMode.Back || mode == ControllerMode.Side) {
             models.add(o.move(backWallPoint))
         }
 

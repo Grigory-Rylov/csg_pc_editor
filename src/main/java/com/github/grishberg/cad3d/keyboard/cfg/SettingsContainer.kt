@@ -20,10 +20,11 @@ data class AssemblySettings(
     val settingsShowPlate: Boolean = true,
     val settingsShowWristRest: Boolean = false,
     val settingsTrackball: Boolean = false,
-    val settingsController: Boolean = true,
+    val showController: Boolean = true,
     val showTrackballSensor: Boolean = false,
     val showTrackbalSensorCap: Boolean = false,
     val showTrackbalBall: Boolean = false,
+    val showControllerHolder: Boolean = false,
 )
 
 @Serializable
