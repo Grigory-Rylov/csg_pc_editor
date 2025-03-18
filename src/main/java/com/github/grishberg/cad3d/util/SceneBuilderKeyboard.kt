@@ -18,6 +18,7 @@ import com.github.grishberg.cad3d.keyboard.casebody.controllers.ControllerHolder
 import com.github.grishberg.cad3d.keyboard.casebody.controllers.ControllerHolderDimensions
 import com.github.grishberg.cad3d.keyboard.casebody.controllers.ControllerPlace
 import com.github.grishberg.cad3d.keyboard.casebody.controllers.SuperMiniNRF52840
+import com.github.grishberg.cad3d.keyboard.casebody.controllers.battery.BatteryFactory
 import com.github.grishberg.cad3d.keyboard.casebody.controllers.switcher.SwitcherFactory
 import com.github.grishberg.cad3d.keyboard.casebody.wall.ControllerHolderWall
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
@@ -99,12 +100,7 @@ class SceneBuilderKeyboard(
         val wallsSettings = WallsSettings(bottomBorderHeight = 4.0)
         val controllerHolderWall = ControllerHolderWall(wallsSettings, keyPlace)
         val screwWallPlaces = ScrewWallPlaces(
-            cfg,
-            wallsSettings,
-            keyPlace,
-            thumbKeyPlace,
-            controllerHolderWall,
-            controllerHolderDimensions
+            cfg, wallsSettings, keyPlace, thumbKeyPlace, controllerHolderWall, controllerHolderDimensions
         )
 
         coroutineScope.launch {
@@ -117,11 +113,7 @@ class SceneBuilderKeyboard(
                 async { createController(cfg, controllerPlace, controller) },
                 async {
                     createControllerHolder(
-                        cfg,
-                        controllerPlace,
-                        controller,
-                        controllerHolderDimensions,
-                        screwWallPlaces
+                        cfg, controllerPlace, controller, controllerHolderDimensions, screwWallPlaces
                     )
                 },
             )
@@ -280,10 +272,16 @@ class SceneBuilderKeyboard(
         val startTime = System.currentTimeMillis()
         if (settings.showControllerHolder) {
             val switcherFactory = SwitcherFactory(cfg)
-            val switcher = switcherFactory.createSwitcher()
+            val batteryFactory = BatteryFactory(cfg)
 
             val controllerHolder = ControllerHolderBuilder(
-                cfg, controller, controllerPlace, controllerHolderDimensions, screwWallPlaces, switcher
+                cfg,
+                controller,
+                controllerPlace,
+                controllerHolderDimensions,
+                screwWallPlaces,
+                switcherFactory.createSwitcher(),
+                batteryFactory.create()
             ).create()
             result.addAll(controllerHolder.vertexHolders)
             saveModel("controller_holder.stl", controllerHolder.model)

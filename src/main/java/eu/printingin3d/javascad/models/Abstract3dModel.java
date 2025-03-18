@@ -59,27 +59,27 @@ public abstract class Abstract3dModel implements IModel {
 		return result;
 	}
 
-	public Abstract3dModel move(double x, double y, double z) {
+	public Abstract3dModel move(Number x, Number y, Number z) {
 		Abstract3dModel result = cloneModel();
-		result.move = this.move.add(new V3d(x, y, z));
+		result.move = this.move.add(new V3d(x.doubleValue(), y.doubleValue(), z.doubleValue()));
 		return result;
 	}
 
-	public Abstract3dModel moveY(double y) {
+	public Abstract3dModel moveY(Number y) {
 		Abstract3dModel result = cloneModel();
-		result.move = this.move.add(new V3d(0, y, 0));
+		result.move = this.move.add(new V3d(0, y.doubleValue(), 0));
 		return result;
 	}
 
-	public Abstract3dModel moveX(double x) {
+	public Abstract3dModel moveX(Number x) {
 		Abstract3dModel result = cloneModel();
-		result.move = this.move.add(new V3d(x, 0, 0));
+		result.move = this.move.add(new V3d(x.doubleValue(), 0, 0));
 		return result;
 	}
 
-	public Abstract3dModel moveZ(double z) {
+	public Abstract3dModel moveZ(Number z) {
 		Abstract3dModel result = cloneModel();
-		result.move = this.move.add(new V3d(0, 0, z));
+		result.move = this.move.add(new V3d(0, 0, z.doubleValue()));
 		return result;
 	}
 

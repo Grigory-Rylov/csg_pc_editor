@@ -8,5 +8,7 @@ interface Controller {
     val depth: Double
     val height: Double
 
+    val isWireless: Boolean
+
     fun create(): ModelHolder
 }

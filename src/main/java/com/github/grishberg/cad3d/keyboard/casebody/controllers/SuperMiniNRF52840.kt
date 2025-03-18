@@ -17,8 +17,10 @@ class SuperMiniNRF52840(
 ) : Controller {
 
     override val width = 17.78
-    override val depth = 34.0
+    override val depth = 35.0
     override val height = 1.7
+
+    override val isWireless: Boolean = true
 
     override fun create(): ModelHolder {
         val usbPort = createUsb().move(0.0, depth / 2 - 1.0, height / 2)
