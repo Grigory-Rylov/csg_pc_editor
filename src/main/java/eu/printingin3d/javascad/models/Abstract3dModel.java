@@ -83,6 +83,11 @@ public abstract class Abstract3dModel implements IModel {
 		return result;
 	}
 
+	public Abstract3dModel resetZ() {
+		Abstract3dModel result = cloneModel();
+		result.move = new V3d(this.move.x, this.move.y, 0);
+		return result;
+	}
 
 	/**
 	 * <p>Add moves to this model, which converts this to an {@link Union}, representing more than one model.</p>

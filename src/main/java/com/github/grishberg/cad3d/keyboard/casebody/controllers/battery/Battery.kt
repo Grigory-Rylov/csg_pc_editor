@@ -9,4 +9,6 @@ interface Battery {
     val height: Double
 
     fun create(): Abstract3dModel
+
+    fun createBatteryPreview(): Abstract3dModel
 }

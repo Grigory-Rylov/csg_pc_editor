@@ -28,7 +28,7 @@ class ControllerHolderBuilder(
     private val battery: Battery,
 ) {
 
-    fun create(): ModelHolder {
+    fun create(showPreview: Boolean): ModelHolder {
         var model = createControllerModel()
 
         val vertexHolders = mutableListOf(
@@ -38,13 +38,21 @@ class ControllerHolderBuilder(
         )
 
         if (controller.isWireless) {
-            val battery = placeBatteryHolder(battery.create())
-            model = model.addModel(battery)
+            val batteryHolder = placeBatteryHolder(battery.create())
+            model = model.addModel(batteryHolder)
             vertexHolders.add(
                 VertexHolder.createVertexHolder(
                     model, Color.YELLOW, 20
                 )
             )
+
+            if (showPreview) {
+                vertexHolders.add(
+                    VertexHolder.createVertexHolder(
+                        placeBatteryHolder(battery.createBatteryPreview()), Color.RED, 20
+                    )
+                )
+            }
         }
         return ModelHolder(model, vertexHolders)
     }

@@ -22,4 +22,8 @@ class SquareBattery : Battery {
             .subtractModel(hole.moveZ(holeHeight/2 + wallWidth))
             .moveZ(height/2)
     }
+
+    override fun createBatteryPreview(): Abstract3dModel {
+        return Cube(innerWidth + 0.5, innerDepth + 0.5, innerHeight).moveZ(innerHeight/2)
+    }
 }
