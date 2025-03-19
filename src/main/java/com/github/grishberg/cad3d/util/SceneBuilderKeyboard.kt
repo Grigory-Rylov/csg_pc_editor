@@ -24,6 +24,7 @@ import com.github.grishberg.cad3d.keyboard.casebody.wall.ControllerHolderWall
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
 import com.github.grishberg.cad3d.keyboard.cfg.TrackballMode
 import com.github.grishberg.cad3d.keyboard.cfg.WallsSettings
+import com.github.grishberg.cad3d.keyboard.plate.Plate
 import com.github.grishberg.cad3d.keyboard.screws.ScrewBase
 import com.github.grishberg.cad3d.keyboard.screws.ScrewKeyMatrixPlace
 import com.github.grishberg.cad3d.keyboard.screws.ScrewWallPlaces
@@ -103,10 +104,18 @@ class SceneBuilderKeyboard(
             cfg, wallsSettings, keyPlace, thumbKeyPlace, controllerHolderWall, controllerHolderDimensions
         )
 
+        val topEdgeOffsetZ = -2.0
+        val walls = Walls(
+            this.cfg, wallsSettings, keyPlace, thumbKeyPlace, topEdgeOffsetZ = topEdgeOffsetZ, isPlateMode = false
+        )
+
+        val wallsForPlate = Walls(
+            this.cfg, wallsSettings.copy(borderThickness = cfg.plateThickness, borderHeight = cfg.plateThickness), keyPlace, thumbKeyPlace, topEdgeOffsetZ = topEdgeOffsetZ, isPlateMode = true
+        )
+
         coroutineScope.launch {
-            val deferredResults = listOf(
-                async { createMatrix(cfg, keyPlace, thumbKeyPlace) },
-                async { createCase(cfg, keyPlace, thumbKeyPlace, screwWallPlaces) },
+            val deferredResults = listOf(async { createMatrix(cfg, keyPlace, thumbKeyPlace) },
+                async { createCase(cfg, keyPlace, thumbKeyPlace, screwWallPlaces, walls) },
                 async { createKeyCaps(cfg, keyPlace, thumbKeyPlace) },
                 async { createWristRest(cfg, keyPlace, thumbKeyPlace) },
                 async { createTrackball(cfg, keyPlace, thumbKeyPlace) },
@@ -116,7 +125,9 @@ class SceneBuilderKeyboard(
                         cfg, controllerPlace, controller, controllerHolderDimensions, screwWallPlaces
                     )
                 },
-            )
+                async {
+                    createPlate(cfg, wallsForPlate)
+                })
 
             // Ожидаем завершения всех задач
             val allResults = deferredResults.awaitAll()
@@ -164,6 +175,7 @@ class SceneBuilderKeyboard(
         keyPlace: KeyPlace,
         thumbKeyPlace: ThumbKeyPlace,
         screwWallPlaces: ScrewWallPlaces,
+        walls: Walls,
     ): List<VertexHolder> {
         val settings = cfg.assemblySettings
         val result = mutableListOf<VertexHolder>()
@@ -172,7 +184,7 @@ class SceneBuilderKeyboard(
 
         var tbHolder: Abstract3dModel? = null
         if (settings.settingsShowCase) {
-            val caseWalls = createCaseModel(cfg, keyPlace, thumbKeyPlace, screwWallPlaces)
+            val caseWalls = createCaseModel(cfg, keyPlace, thumbKeyPlace, screwWallPlaces, walls)
             if (cfg.trackball.mode != TrackballMode.None) {
                 val trackBallHolder = Trackball(cfg, keyPlace).createTrackballHolder()
                 tbHolder = trackBallHolder.model
@@ -282,13 +294,30 @@ class SceneBuilderKeyboard(
                 screwWallPlaces,
                 switcherFactory.createSwitcher(),
                 batteryFactory.create()
-            ).create()
+            ).create(showPreview = true)
             result.addAll(controllerHolder.vertexHolders)
             saveModel("controller_holder.stl", controllerHolder.model)
         }
 
         val delta = System.currentTimeMillis() - startTime
         println("createControllerHolder : $delta")
+        return result
+    }
+
+    private fun createPlate(cfg: KeyboardConfig, walls: Walls): List<VertexHolder> {
+        val settings = cfg.assemblySettings
+        val result = mutableListOf<VertexHolder>()
+        val startTime = System.currentTimeMillis()
+        if (settings.settingsShowPlate) {
+
+            val plate = Plate(cfg, walls).create()
+
+            result.addAll(plate.vertexHolders)
+            //saveModel("controller_holder.stl", controllerHolder.model)
+        }
+
+        val delta = System.currentTimeMillis() - startTime
+        println("createPlate : $delta")
         return result
     }
 
@@ -393,8 +422,9 @@ class SceneBuilderKeyboard(
 
         )
         val borders =
-            Walls(cfg, wallsSettings, keyPlace, thumbKeyPlace, topEdgeOffsetZ = 0.0).createBorders(1.5, borderHeigth)
-                .subtractModel(screws)
+            Walls(cfg, wallsSettings, keyPlace, thumbKeyPlace, topEdgeOffsetZ = 0.0, isPlateMode = false).createBorders(
+                1.5, borderHeigth
+            ).subtractModel(screws)
 
 
         return ModelHolder(borders, createVertexHolder(borders, Color.lightGray))
@@ -405,6 +435,7 @@ class SceneBuilderKeyboard(
         keyPlace: KeyPlace,
         thumbKeyPlace: ThumbKeyPlace,
         screwWallPlaces: ScrewWallPlaces,
+        walls: Walls,
     ): ModelHolder {
         val holeVerticalExtra = -3.0
 
@@ -418,7 +449,12 @@ class SceneBuilderKeyboard(
         )
 
         val holeBorders = Walls(
-            this.cfg, wallsSettings, keyPlace, thumbKeyPlace, topEdgeOffsetZ = holeVerticalExtra / 2,
+            this.cfg,
+            wallsSettings,
+            keyPlace,
+            thumbKeyPlace,
+            topEdgeOffsetZ = holeVerticalExtra / 2,
+            isPlateMode = false,
         ).createBorders(
             1.7, borderHeight + holeVerticalExtra
         )
@@ -434,17 +470,15 @@ class SceneBuilderKeyboard(
         //
         val wallScrews = placeWallScrews(screwBase.screwHolder(), screwWallPlaces)
 
-        val topEdgeOffsetZ = -2.0
         val bottomEdgeHeight = if (cfg.isSkeletonMode) 4.0 else 2.0
 
-        val walls =
-            Walls(this.cfg, wallsSettings, keyPlace, thumbKeyPlace, topEdgeOffsetZ = topEdgeOffsetZ).createWalls(
-                bottomBorderHeight = bottomEdgeHeight
-            ).subtractModel(holeBorders).subtractModel(Cube(300.0, 300.0, 50.0).move(0.0, 0.0, -25.0))
+        val wallsModel = walls.createWalls(
+            bottomBorderHeight = bottomEdgeHeight
+        ).subtractModel(holeBorders).subtractModel(Cube(300.0, 300.0, 50.0).move(0.0, 0.0, -25.0))
 
         return ModelHolder(
-            walls.addModel(screwMatrixHolders).addModel(wallScrews).subtractModel(screwMatrixHoldersHoles),
-            createVertexHolder(walls.subtractModel(screwMatrixHoldersHoles), Color.gray),
+            wallsModel.addModel(screwMatrixHolders).addModel(wallScrews).subtractModel(screwMatrixHoldersHoles),
+            createVertexHolder(wallsModel.subtractModel(screwMatrixHoldersHoles), Color.gray),
             createVertexHolder(wallScrews, Color.yellow),
             createVertexHolder(
                 screwMatrixHolders.subtractModel(Cube(300.0, 300.0, 50.0).move(0.0, 0.0, -25.0)), Color.CYAN
