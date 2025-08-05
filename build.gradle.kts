@@ -21,6 +21,9 @@ dependencies {
 //    implementation("org.jogamp.jogl:jogl-all:2.5.0")
     implementation (files("libs/jogl-all-2.5.0.jar"))
     implementation (files("libs/jogl-all-2.5.0-natives-macosx-universal.jar"))
+    testImplementation("junit:junit:4.13.1")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
+    testImplementation(kotlin("test"))
 }
 
 tasks.test {

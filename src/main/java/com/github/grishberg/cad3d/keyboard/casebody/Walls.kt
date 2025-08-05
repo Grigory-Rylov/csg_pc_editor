@@ -23,6 +23,7 @@ class Walls(
     private val topEdgeOffsetZ: Double,
     private val wallVerticalOffset: Double = 5.0,
     private val wallHorizontalOffset: Double = 10.0,
+    isPlateMode: Boolean = false,
 ) {
 
     private val models = ArrayList<Abstract3dModel>()

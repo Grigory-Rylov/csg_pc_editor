@@ -68,7 +68,7 @@ public final class Polygon {
     /**
      * The color of the polygon. 
      */
-    private final Color color;
+    public final Color color;
 
     private Polygon(List<V3d> vertices, V3d normal, double dist, Color color) {
         this.vertices = vertices;
