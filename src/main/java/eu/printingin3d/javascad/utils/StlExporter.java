@@ -1,8 +1,11 @@
 package eu.printingin3d.javascad.utils;
 
+import com.github.grishberg.cad3d.util.PolygonValidator;
 import eu.printingin3d.javascad.coords.Triangle3d;
+import eu.printingin3d.javascad.coords.Triangulator;
 import eu.printingin3d.javascad.coords.V3d;
 import eu.printingin3d.javascad.vrl.Facet;
+import eu.printingin3d.javascad.vrl.Polygon;
 import eu.printingin3d.javascad.vrl.VertexHolder;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -10,6 +13,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
 import java.nio.channels.WritableByteChannel;
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -20,7 +24,27 @@ public class StlExporter {
     private static final int Z = 0;
 
 
-    public static void saveStl(VertexHolder holder, String fileName, boolean needCheck) {
+    public static void saveStl(List<Polygon> polygons, String fileName) {
+
+        List<Polygon> fixPolygons = new PolygonValidator().fixPolygons(polygons);
+
+        List<Facet> facetsFromPolygons = new ArrayList<>();
+        for (Polygon p : fixPolygons) {
+            List<Triangle3d> triangles = Triangulator.triangulate(p.getVertices());
+            for (Triangle3d t : triangles) {
+                facetsFromPolygons.add(new Facet(t, p.getNormal(), p.getColor()));
+            }
+        }
+
+        try (FileChannel channel = new FileOutputStream(fileName).getChannel()) {
+            StlExporter.writeBinaryStl(facetsFromPolygons, channel);
+            System.out.println("Export to " + fileName + " is done.");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void saveStl0(VertexHolder holder, String fileName, boolean needCheck) {
         List<Facet> originalFacets = holder.getFacets(); // Ваши исходные грани
 
         if (needCheck) {

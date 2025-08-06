@@ -110,11 +110,17 @@ class SceneBuilderKeyboard(
         )
 
         val wallsForPlate = Walls(
-            this.cfg, wallsSettings.copy(borderThickness = cfg.plateThickness, borderHeight = cfg.plateThickness), keyPlace, thumbKeyPlace, topEdgeOffsetZ = topEdgeOffsetZ, isPlateMode = true
+            this.cfg,
+            wallsSettings.copy(borderThickness = cfg.plateThickness, borderHeight = cfg.plateThickness),
+            keyPlace,
+            thumbKeyPlace,
+            topEdgeOffsetZ = topEdgeOffsetZ,
+            isPlateMode = true
         )
 
         coroutineScope.launch {
-            val deferredResults = listOf(async { createMatrix(cfg, keyPlace, thumbKeyPlace) },
+            val deferredResults = listOf(
+                async { createMatrix(cfg, keyPlace, thumbKeyPlace) },
                 async { createCase(cfg, keyPlace, thumbKeyPlace, screwWallPlaces, walls) },
                 async { createKeyCaps(cfg, keyPlace, thumbKeyPlace) },
                 async { createWristRest(cfg, keyPlace, thumbKeyPlace) },
@@ -332,7 +338,7 @@ class SceneBuilderKeyboard(
                 val context: FacetGenerationContext = ColorFacetGenerationContext(DEFAULT_COLOR)
                 context.setFn(cfg.stlFn)
                 StlExporter.saveStl(
-                    model.toCSG(context).verticesAndColorsAsFloatArray, File(outDir, name).absolutePath, needCheck
+                    model.toCSG(context).polygons, File(outDir, name).absolutePath
                 )
             } catch (e: IOException) {
                 throw RuntimeException(e)

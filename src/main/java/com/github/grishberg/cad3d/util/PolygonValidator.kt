@@ -46,10 +46,10 @@ class PolygonValidator {
         val lineToEdges = mutableMapOf<LineKey, MutableList<EdgeInfo>>()
         
         for (polygon in polygons) {
-            val verts = polygon.vertices
-            for (i in verts.indices) {
-                val a = verts[i]
-                val b = verts[(i + 1) % verts.size]
+            val vertices = polygon.vertices
+            for (i in vertices.indices) {
+                val a = vertices[i]
+                val b = vertices[(i + 1) % vertices.size]
                 val key = LineKey(a, b)
                 lineToEdges.computeIfAbsent(key) { mutableListOf() }
                     .add(EdgeInfo(polygon, i, a, b))

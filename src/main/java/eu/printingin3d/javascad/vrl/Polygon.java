@@ -128,6 +128,9 @@ public final class Polygon {
         return normal;
     }
 
+    public Color getColor() {
+        return color;
+    }
     /**
      * Flips this polygon.
      *

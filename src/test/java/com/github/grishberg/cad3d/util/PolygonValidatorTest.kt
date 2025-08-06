@@ -1,7 +1,9 @@
 package com.github.grishberg.cad3d.util
 
 import eu.printingin3d.javascad.coords.V3d
+import eu.printingin3d.javascad.models.Cube
 import eu.printingin3d.javascad.utils.Color
+import eu.printingin3d.javascad.utils.StlExporter
 import eu.printingin3d.javascad.vrl.Polygon
 import junit.framework.TestCase.assertEquals
 import org.junit.jupiter.api.Test
@@ -56,5 +58,13 @@ class PolygonValidatorTest {
         assertEquals(4, fixed.size)
         // Проверяем, что оба полигона теперь имеют по 4 вершины
         assertEquals(6, fixed[0].vertices.size)
+    }
+
+    @Test
+    fun test2() {
+        val cube1 = Cube(10.0)
+        val cube2 = Cube(5.0, 5.0, 12.0)
+        val result = cube1.subtractModel(cube2).toCSG()
+        StlExporter.saveStl(result.polygons, "cube.stl")
     }
 }
