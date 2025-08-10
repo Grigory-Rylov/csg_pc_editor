@@ -4,7 +4,7 @@ plugins {
     kotlin("jvm") version "1.8.0"
     id("java")
     kotlin("plugin.serialization") version "1.9.0"
-    //application
+    application
 }
 
 group = "org.example"
@@ -33,11 +33,9 @@ tasks.test {
 kotlin {
     jvmToolchain(11)
 }
-/*
 application {
-    mainClass.set("MainKt")
+    mainClass.set("org.example.MainKt")
 }
-*/
 
 val compileKotlin: KotlinCompile by tasks
 compileKotlin.kotlinOptions {

@@ -1,9 +1,10 @@
 package org.example
 
+import com.github.grishberg.cad3d.common.DebugCmd
 import com.github.grishberg.cad3d.keyboard.ControlPointsController
 import com.github.grishberg.cad3d.keyboard.cfg.SettingsHolder
 import com.github.grishberg.cad3d.util.SceneBuilder
-import com.github.grishberg.cad3d.util.SceneBuilderKeyboard
+import com.github.grishberg.cad3d.util.SceneBuilderTest
 import com.jogamp.opengl.GL2
 import com.jogamp.opengl.GLAutoDrawable
 import com.jogamp.opengl.GLCapabilities
@@ -13,6 +14,8 @@ import com.jogamp.opengl.awt.GLCanvas
 import com.jogamp.opengl.fixedfunc.GLLightingFunc
 import com.jogamp.opengl.glu.GLU
 import com.jogamp.opengl.util.Animator
+import eu.printingin3d.javascad.coords.V3d
+import eu.printingin3d.javascad.utils.Color
 import eu.printingin3d.javascad.vrl.VertexHolder
 import java.awt.BorderLayout
 import java.awt.Dimension
@@ -31,7 +34,11 @@ import java.awt.event.WindowEvent
 import javax.swing.JButton
 import javax.swing.JCheckBox
 import javax.swing.JFrame
+import javax.swing.JLabel
 import javax.swing.JPanel
+import org.example.debug.DebugRecorderImpl
+import org.example.debug.DebugVisualizerAdapter
+import org.example.debug.DebugVisualizerImpl
 import org.example.dialog.ConfigEditor
 
 class Main(title: String?) : JFrame(title), GLEventListener {
@@ -51,12 +58,24 @@ class Main(title: String?) : JFrame(title), GLEventListener {
     private val pointsController = ControlPointsController()
     private var glCanvas: GLCanvas? = null
     private val sceneBuilder: SceneBuilder
+    private val debugVisualizer = DebugVisualizerImpl()
+    private val debugAdapter = DebugVisualizerAdapter(debugVisualizer)
+    private val debugCommands = mutableListOf<DebugCmd>()
+    private lateinit var debugRecorder: DebugRecorderImpl
 
     private var requestRenderingTime = 0L
+    private var showDebugInfo = false
+    private var currentDebugCommandIndex = 0
+    private lateinit var debugNavigationPanel: JPanel
+    private lateinit var debugInfoLabel: JLabel
+    private lateinit var prevDebugButton: JButton
+    private lateinit var nextDebugButton: JButton
 
     init {
         settingsHolder.loadSettings()
-        sceneBuilder = SceneBuilderKeyboard(settingsHolder.settings.getKeyboardConfig(), pointsController)
+        //sceneBuilder = SceneBuilderKeyboard(settingsHolder.settings.getKeyboardConfig(), pointsController)
+        debugRecorder = DebugRecorderImpl()
+        sceneBuilder = SceneBuilderTest(debugRecorder)
         sceneBuilder.setListener { buffers: List<VertexHolder>? ->
             val timeDelta = System.currentTimeMillis() - requestRenderingTime
             println("Rendering time = $timeDelta ms")
@@ -107,14 +126,27 @@ class Main(title: String?) : JFrame(title), GLEventListener {
             settingsHolder.showTrackballSensorCap = it
             rebuildConfigAndRequestRendering()
         }
-        val showControllerHolderButton = createToggleButton("Держатель контроллера", settingsHolder.showControllerHolder) {
-            settingsHolder.showControllerHolder = it
-            rebuildConfigAndRequestRendering()
-        }
+        val showControllerHolderButton =
+            createToggleButton("Держатель контроллера", settingsHolder.showControllerHolder) {
+                settingsHolder.showControllerHolder = it
+                rebuildConfigAndRequestRendering()
+            }
 
         val showControllerButton = createToggleButton("Контроллера", settingsHolder.showController) {
             settingsHolder.showController = it
             rebuildConfigAndRequestRendering()
+        }
+
+        val debugButton = createToggleButton("Debug", showDebugInfo) {
+            showDebugInfo = it
+            if (!it) {
+                debugVisualizer.clearVisualization()
+                debugCommands.clear()
+            } else {
+                addDebugCommands()
+                updateDebugDisplay()
+            }
+            updateDebugNavigationState()
         }
 
         controlPanel.add(keysButton)
@@ -127,12 +159,16 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         controlPanel.add(trackballSensorCapButton)
         controlPanel.add(showControllerHolderButton)
         controlPanel.add(showControllerButton)
+        controlPanel.add(debugButton)
 
         val configButton = JButton("Конфигурации")
         configButton.addActionListener {
             showConfigDialog()
         }
         controlPanel?.add(configButton)
+
+        // Создаем панель навигации по debug командам
+        createDebugNavigationPanel()
 
         val glProfile = GLProfile.get(GLProfile.GL2)
         val glCapabilities = GLCapabilities(glProfile)
@@ -152,6 +188,7 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         animator!!.start()
         contentPane.add(glCanvas, BorderLayout.CENTER)
         contentPane.add(controlPanel, BorderLayout.NORTH)
+        contentPane.add(debugNavigationPanel, BorderLayout.SOUTH)
 
         // Обработка закрытия окна
         addWindowListener(object : WindowAdapter() {
@@ -165,9 +202,52 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         isVisible = true
     }
 
+    private fun createDebugNavigationPanel() {
+        debugNavigationPanel = JPanel()
+        debugNavigationPanel.layout = FlowLayout(FlowLayout.CENTER)
+        debugNavigationPanel.preferredSize = Dimension(1200, 40)
+
+        // Кнопка "Предыдущая"
+        prevDebugButton = JButton("◀ Пред.")
+        prevDebugButton.preferredSize = Dimension(80, 30)
+        prevDebugButton.addActionListener {
+            if (debugCommands.isNotEmpty()) {
+                currentDebugCommandIndex = (currentDebugCommandIndex - 1 + debugCommands.size) % debugCommands.size
+                updateDebugDisplay()
+            }
+        }
+
+        // Кнопка "Следующая"  
+        nextDebugButton = JButton("След. ▶")
+        nextDebugButton.preferredSize = Dimension(80, 30)
+        nextDebugButton.addActionListener {
+            if (debugCommands.isNotEmpty()) {
+                currentDebugCommandIndex = (currentDebugCommandIndex + 1) % debugCommands.size
+                updateDebugDisplay()
+            }
+        }
+
+        // Информационная метка
+        debugInfoLabel = JLabel("Debug: выключен")
+        debugInfoLabel.preferredSize = Dimension(350, 30)
+
+        // Подсказка о горячих клавишах
+        val helpLabel = JLabel("Горячие клавиши: R - вкл/выкл debug, Q/E - переключение команд")
+        helpLabel.preferredSize = Dimension(400, 30)
+
+        debugNavigationPanel.add(prevDebugButton)
+        debugNavigationPanel.add(debugInfoLabel)
+        debugNavigationPanel.add(nextDebugButton)
+        debugNavigationPanel.add(helpLabel)
+
+        // Изначально кнопки отключены
+        updateDebugNavigationState()
+    }
+
     private fun showConfigDialog() {
         // Создание и отображение редактора
-        val configDialog = ConfigEditor(settingsHolder.settings, onKeyboardSettingsChanged = {
+        val configDialog = ConfigEditor(
+            settingsHolder.settings, onKeyboardSettingsChanged = {
             settingsHolder.updateSettings(it)
             rebuildConfigAndRequestRendering()
         },
@@ -188,6 +268,67 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         sceneBuilder.requestBuffers()
     }
 
+    private fun addDebugExamples() {
+        debugVisualizer.clearVisualization()
+
+        // Примеры debug объектов
+        // Точка
+        debugVisualizer.drawDebugPoint(V3d(50.0, 50.0, 10.0), 3.0, Color.RED)
+
+        // Линия
+        debugVisualizer.drawDebugLine(
+            V3d(0.0, 0.0, 0.0), V3d(30.0, 30.0, 20.0), 2.0, Color.GREEN
+        )
+
+        // Полигон (треугольник)
+        val triangleVertices = listOf(
+            V3d(-20.0, -20.0, 5.0), V3d(20.0, -20.0, 5.0), V3d(0.0, 20.0, 5.0)
+        )
+        debugVisualizer.drawDebugPolygon(triangleVertices, 1.5, Color.BLUE, Color.YELLOW)
+
+        // Квадрат
+        val squareVertices = listOf(
+            V3d(-40.0, 40.0, 0.0), V3d(40.0, 40.0, 0.0), V3d(40.0, 80.0, 0.0), V3d(-40.0, 80.0, 0.0)
+        )
+        debugVisualizer.drawDebugPolygon(squareVertices, 2.0, Color.MAGENTA)
+    }
+
+    private fun addDebugCommands() {
+        debugCommands.clear()
+
+        // Добавляем реальные debug команды из SceneBuilder
+        debugCommands.addAll(debugRecorder.getCommands())
+
+        currentDebugCommandIndex = 0
+        updateDebugNavigationState()
+    }
+
+    private fun updateDebugNavigationState() {
+        val hasCommands = debugCommands.isNotEmpty() && showDebugInfo
+        prevDebugButton.isEnabled = hasCommands
+        nextDebugButton.isEnabled = hasCommands
+
+        if (showDebugInfo && debugCommands.isNotEmpty()) {
+            val currentCmd = debugCommands[currentDebugCommandIndex]
+            debugInfoLabel.text =
+                "Debug (${currentDebugCommandIndex + 1}/${debugCommands.size}): ${currentCmd.description}"
+        } else {
+            debugInfoLabel.text = "Debug: выключен"
+        }
+    }
+
+    private fun updateDebugDisplay() {
+        debugVisualizer.clearVisualization()
+
+        if (showDebugInfo && debugCommands.isNotEmpty()) {
+            // Рендерим только текущую debug команду
+            val currentCmd = debugCommands[currentDebugCommandIndex]
+            debugAdapter.applyDebugVisualization(currentCmd)
+        }
+
+        updateDebugNavigationState()
+    }
+
     private fun createToggleButton(text: String, initialState: Boolean, onChanged: (Boolean) -> Unit): JCheckBox {
         val button = JCheckBox(text, initialState)
         button.addActionListener { e: ActionEvent? -> onChanged(button.isSelected) }
@@ -200,6 +341,9 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         gl.glClear(GL2.GL_COLOR_BUFFER_BIT or GL2.GL_DEPTH_BUFFER_BIT)
         gl.glLoadIdentity()
 
+        // Устанавливаем GL контекст для debug визуализатора
+        debugVisualizer.setGL(gl)
+
         // Установка материала для куба
         val materialDiffuse = floatArrayOf(0.7f, 0.7f, 0.7f, 1.0f)
         gl.glMaterialfv(GL2.GL_FRONT, GLLightingFunc.GL_DIFFUSE, materialDiffuse, 0)
@@ -210,6 +354,8 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         gl.glRotatef(settingsHolder.rotateX, 1.0f, 0.0f, 0.0f)
         gl.glRotatef(settingsHolder.rotateY, 0.0f, 1.0f, 0.0f)
         gl.glRotatef(settingsHolder.rotateZ, 0.0f, 0.0f, 1.0f)
+
+        // Рендерим основные объекты
         for (vertexHolder in vertexHolderList) {
             gl.glBegin(GL2.GL_TRIANGLES)
             var normalArrayIndex = 0
@@ -233,7 +379,14 @@ class Main(title: String?) : JFrame(title), GLEventListener {
             }
             gl.glEnd()
         }
+
+        // Рендерим debug объекты если они включены (внутри той же трансформации)
+        if (showDebugInfo) {
+            debugVisualizer.renderDebugObjects()
+        }
+
         gl.glPopMatrix() // Возвращаемся к исходной матрице
+
         gl.glFlush()
     }
 
@@ -363,6 +516,35 @@ class Main(title: String?) : JFrame(title), GLEventListener {
                 KeyEvent.VK_D, KeyEvent.VK_RIGHT -> settingsHolder.translateX += TRANSLATE_STEP
                 KeyEvent.VK_W, KeyEvent.VK_UP -> settingsHolder.translateY += TRANSLATE_STEP
                 KeyEvent.VK_S, KeyEvent.VK_DOWN -> settingsHolder.translateY -= TRANSLATE_STEP
+
+                // Горячие клавиши для debug навигации
+                KeyEvent.VK_Q -> {
+                    if (showDebugInfo && debugCommands.isNotEmpty()) {
+                        currentDebugCommandIndex =
+                            (currentDebugCommandIndex - 1 + debugCommands.size) % debugCommands.size
+                        updateDebugDisplay()
+                    }
+                }
+
+                KeyEvent.VK_E -> {
+                    if (showDebugInfo && debugCommands.isNotEmpty()) {
+                        currentDebugCommandIndex = (currentDebugCommandIndex + 1) % debugCommands.size
+                        updateDebugDisplay()
+                    }
+                }
+
+                KeyEvent.VK_R -> {
+                    // Переключение debug режима
+                    showDebugInfo = !showDebugInfo
+                    if (!showDebugInfo) {
+                        debugVisualizer.clearVisualization()
+                        debugCommands.clear()
+                    } else {
+                        addDebugCommands()
+                        updateDebugDisplay()
+                    }
+                    updateDebugNavigationState()
+                }
             }
             //window.reparentWindow(); // Обновляем отображение
         }

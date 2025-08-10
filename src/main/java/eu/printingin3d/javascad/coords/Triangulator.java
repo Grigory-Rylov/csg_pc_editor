@@ -1,53 +1,26 @@
 package eu.printingin3d.javascad.coords;
 
-import java.util.ArrayList;
+import com.github.grishberg.cad3d.util.CrossEdgeValidator;
+import com.github.grishberg.cad3d.util.Earcut3D;
 import java.util.List;
 
 public class Triangulator {
 
     public static List<Triangle3d> triangulate(List<V3d> vertices) {
-        List<Triangle3d> result = new ArrayList<>();
-        if (vertices == null || vertices.size() < 3) {
-            return result;
-        }
+        return Earcut3D.triangulate(vertices);
+    }
 
-        int maxIterations = vertices.size() * 2;
-        boolean[] disallowedIndices = new boolean[vertices.size()];
+    private static boolean hasNoPointsBetween(List<V3d> vertices, int startPos, int modEnd) {
+        V3d startPoint = vertices.get(modEnd);
+        V3d endPoint = vertices.get(startPos);
 
-        int start = 0;
-        int end = start + 2;
-
-        while (end < maxIterations) {
-            int modEnd = end % vertices.size();
-
-            V3d a = vertices.get(start);
-            V3d b = vertices.get((start + 1) % vertices.size());
-            V3d c = vertices.get(modEnd);
-
-            if (disallowedIndices[modEnd] || !isValidTriangle(a, b, c)) {
-                end++;
-            } else {
-                for (int i = start; i < end - 1; i++) {
-                    a = vertices.get(i % vertices.size());
-                    b = vertices.get((i + 1) % vertices.size());
-
-                    if (isValidTriangle(a, b, c)) {
-                        result.add(new Triangle3d(a, b, c));
-                        disallowedIndices[(i + 1) % vertices.size()] = true;
-                    }
-                    if (result.size() == vertices.size() - 2) {
-                        return result;
-                    }
-                }
-                start = modEnd;
+        for (int i = modEnd + 1; i < vertices.size(); i++) {
+            V3d currentPoint = vertices.get(i);
+            if (CrossEdgeValidator.isPointBetween(currentPoint, startPoint, endPoint)) {
+                return false;
             }
-
-            if (result.size() == vertices.size() - 2) {
-                break;
-            }
-
         }
-        return result;
+        return true;
     }
 
     /**

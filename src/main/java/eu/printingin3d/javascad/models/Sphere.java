@@ -36,7 +36,6 @@ public class Sphere extends Atomic3dModel {
 	 * Creates the sphere with the given radius.
 	 * @param r the radius to be used
 	 * @throws IllegalValueException if the given radius is negative
-	 * @deprecated use the constructor with Radius parameter instead of double 
 	 */
 	public Sphere(double r) throws IllegalValueException {
 		this(Radius.fromRadius(r));

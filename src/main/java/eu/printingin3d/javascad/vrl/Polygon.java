@@ -42,14 +42,13 @@ import eu.printingin3d.javascad.utils.Color;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Stream;
+import java.util.Objects;
 
 /**
  * Represents a convex polygon. A polygon is represented by its points which should be on the
  * same plane
- * (not tested, but guaranteed by the used algorithms), its normal (calculated from the points), 
+ * (not tested, but guaranteed by the used algorithms), its normal (calculated from the points),
  * its color and its distance from the origin.
- *
  */
 public final class Polygon {
 
@@ -66,9 +65,9 @@ public final class Polygon {
      */
     private final double dist;
     /**
-     * The color of the polygon. 
+     * The color of the polygon.
      */
-    public final Color color;
+    private final Color color;
 
     private Polygon(List<V3d> vertices, V3d normal, double dist, Color color) {
         this.vertices = vertices;
@@ -78,16 +77,53 @@ public final class Polygon {
 
         for (V3d v : vertices) {
             VertexPosition position = calculateVertexPosition(v);
-            //AssertValue.isTrue(position==VertexPosition.COPLANAR,
-            //		"Every vertex in a polygon must be coplanar, but was "+position+"!");
+            AssertValue.isTrue(
+                position == VertexPosition.COPLANAR,
+                "Every vertex in a polygon must be coplanar, but was " + position + "!"
+            );
+        }
+    }
 
+    public static boolean isValid(List<V3d> vertices) {
+        if(vertices.size() <3) {
+            return false;
+        }
+        V3d a = vertices.get(0);
+        V3d b = vertices.get(1);
+        V3d c = vertices.get(2);
+        V3d n = b.add(a.inverse()).cross(c.add(a.inverse())).unit();
+        double dist = n.dot(vertices.get(0));
+
+        for (V3d v : vertices) {
+            VertexPosition position = calculateVertexPosition(v, n, dist);
             if (position != VertexPosition.COPLANAR) {
-//                Log.e(
-//                    "Polygon",
-//                    "Every vertex in a polygon must be coplanar, but was " + position + "!"
-//                );
+                return false;
             }
         }
+        return true;
+    }
+
+    public Polygon(List<V3d> vertices, V3d normal, Color color) {
+        this.vertices = vertices;
+        this.normal = normal;
+        this.dist = normal.dot(vertices.get(0));
+        this.color = color;
+
+        for (V3d v : vertices) {
+            VertexPosition position = calculateVertexPosition(v);
+            AssertValue.isTrue(
+                position == VertexPosition.COPLANAR,
+                "Every vertex in a polygon must be coplanar, but was " + position + "!"
+            );
+        }
+    }
+
+    public Color getColor() {
+        return color;
+    }
+
+    public V3d getNormal() {
+        return normal;
     }
 
     /**
@@ -123,14 +159,6 @@ public final class Polygon {
         return new Polygon(vertices, n, n.dot(a), color);
     }
 
-
-    public V3d getNormal() {
-        return normal;
-    }
-
-    public Color getColor() {
-        return color;
-    }
     /**
      * Flips this polygon.
      *
@@ -146,6 +174,7 @@ public final class Polygon {
 
     /**
      * Converts this polygon to triangles.
+     *
      * @return a list of triangles
      */
     public List<Facet> toFacets() {
@@ -163,50 +192,7 @@ public final class Polygon {
         }
         return facets;
     }
-    //-----------------------//
 
-
-    public List<Facet> toFacets2() {
-        List<Facet> triangles = new ArrayList<>();
-        if (vertices.size() < 3) {
-            throw new IllegalArgumentException("Polygon must have at least 3 points");
-        }
-
-        // Проверяем ориентацию полигона
-        boolean isClockwise = isClockwise(vertices, normal);
-
-        // Триангуляция методом "веера"
-        V3d firstPoint = vertices.get(0);
-        for (int i = 1; i < vertices.size() - 1; i++) {
-            V3d secondPoint = vertices.get(i);
-            V3d thirdPoint = vertices.get(i + 1);
-            Triangle3d triangle;
-            if (isClockwise) {
-                triangle = new Triangle3d(firstPoint, secondPoint, thirdPoint);
-            } else {
-                triangle = new Triangle3d(firstPoint, thirdPoint, secondPoint);
-            }
-            triangles.add(new Facet(triangle, normal, color));
-        }
-
-        return triangles;
-    }
-
-    private static boolean isClockwise(List<V3d> points, V3d normal) {
-        // Вычисляем площадь полигона
-        double area = 0;
-        for (int i = 0; i < points.size(); i++) {
-            V3d current = points.get(i);
-            V3d next = points.get((i + 1) % points.size());
-            area += (next.getX() - current.getX()) * (next.getY() + current.getY());
-        }
-
-        // Если площадь положительна и нормаль направлена вверх (или наоборот),
-        // то полигон ориентирован по часовой стрелке
-        return (area > 0) == (normal.getZ() > 0);
-    }
-
-    //----------------------//
     public List<V3d> getVertices() {
         return vertices;
     }
@@ -236,6 +222,11 @@ public final class Polygon {
 
     private VertexPosition calculateVertexPosition(V3d v) {
         double t = this.normal.dot(v) - this.dist;
+        return VertexPosition.fromSquareDistance(t);
+    }
+
+    private static VertexPosition calculateVertexPosition(V3d v, V3d normal, double dist) {
+        double t = normal.dot(v) - dist;
         return VertexPosition.fromSquareDistance(t);
     }
 
@@ -332,14 +323,15 @@ public final class Polygon {
 
     private void addVertexToList(List<V3d> list, V3d newVertex) {
 /*    	if (!list.isEmpty()) {
-    		Coords3d lastVertex = list.get(list.size()-1);
-    		
-    		Coords3d prev = vertices.get(vertices.size()-1);
-    		for (Coords3d c : vertices) {
-    			Coords3d cross = EdgeCrossSolver.findIntersection(prev, c, lastVertex, newVertex);
+    		V3d lastVertex = list.get(list.size()-1);
+
+    		V3d prev = vertices.get(vertices.size()-1);
+    		for (V3d c : vertices) {
+    			V3d cross = EdgeCrossSolver.findIntersection(prev, c, lastVertex, newVertex);
     			if (cross!=null && !cross.equals(newVertex) && !cross.equals(lastVertex)) {
     				System.out.println(
-    				"Added new vertex: "+cross+" between "+lastVertex+" and "+newVertex+" ("+prev+", "+c+")");
+    				"Added new vertex: "+cross+" between "+lastVertex+" and "+newVertex+"
+    				("+prev+", "+c+")");
     				list.add(cross);
     				break;
     			}
@@ -348,8 +340,30 @@ public final class Polygon {
         list.add(newVertex);
     }
 
-    /** Stream vertices for simple processing. */
-    public Stream<V3d> stream() {
-        return vertices.stream();
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        Polygon polygon = (Polygon) o;
+        // Используем Double.doubleToLongBits для сравнения double значений,
+        // чтобы корректно обрабатывать NaN и -0.0/+0.0
+        return Double.doubleToLongBits(dist) == Double.doubleToLongBits(polygon.dist) &&
+            Objects.equals(vertices, polygon.vertices) &&
+            Objects.equals(normal, polygon.normal) &&
+            Objects.equals(color, polygon.color);
+    }
+
+    @Override
+    public int hashCode() {
+        // Используем Objects.hash для комбинирования хэш-кодов полей
+        return Objects.hash(vertices, normal, dist, color);
+        // Альтернативно, можно явно использовать Double.hashCode() для dist:
+        // return Objects.hash(vertices, normal, Double.hashCode(dist), color);
+        // Или для максимальной совместимости с equals (используя doubleToLongBits):
+        // return Objects.hash(vertices, normal, Double.doubleToLongBits(dist), color);
     }
 }

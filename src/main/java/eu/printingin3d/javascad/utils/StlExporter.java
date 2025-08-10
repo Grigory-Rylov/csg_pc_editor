@@ -58,9 +58,19 @@ public class StlExporter {
             e.printStackTrace();
         }
     }
+    public static void writeBinaryStl(
+        List<Facet> facets,
+        String fileName
+    ){
+        try (FileChannel channel = new FileOutputStream(fileName).getChannel()) {
+            StlExporter.writeBinaryStl(facets, channel);
+            System.out.println("Export to " + fileName + " is done.");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
-
-    private static void writeBinaryStl(
+    public static void writeBinaryStl(
         List<Facet> facets,
         WritableByteChannel channel
     ) throws IOException {
