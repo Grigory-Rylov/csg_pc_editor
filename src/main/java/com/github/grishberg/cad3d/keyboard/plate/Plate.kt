@@ -16,7 +16,7 @@ class Plate(
     fun create(): ModelHolder {
         val model = createPlateModel()
         return ModelHolder(
-            model, VertexHolder.createVertexHolder(model.moveZ(-cfg.plateThickness / 2), Color.MAGENTA, 20)
+            model, VertexHolder.fromModel(model.moveZ(-cfg.plateThickness / 2), Color.MAGENTA, 20)
         )
     }
 

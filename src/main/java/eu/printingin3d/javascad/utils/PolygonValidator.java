@@ -1,6 +1,9 @@
-package com.github.grishberg.cad3d.util;
+package eu.printingin3d.javascad.utils;
 
+import eu.printingin3d.javascad.coords.Triangle3d;
+import eu.printingin3d.javascad.coords.Triangulator;
 import eu.printingin3d.javascad.coords.V3d;
+import eu.printingin3d.javascad.vrl.Facet;
 import eu.printingin3d.javascad.vrl.Polygon;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -27,7 +30,9 @@ public class PolygonValidator {
      * Исправляет проблемы в полигонах: коллинеарные точки, близкие вершины, naked edges
      */
     public static List<Polygon> fixPolygons(List<Polygon> polygons) {
+        System.out.println("fixPolygons started , src = " + polygons.size());
         Map<LineKey, List<PolygonEdge>> edges = PolygonValidator.getCommonPolygons(polygons);
+        System.out.println("Common edges = " + edges.size());
 
         Map<Polygon, Set<PointInsert>> mergedPoints = new HashMap<>();
 
@@ -50,22 +55,32 @@ public class PolygonValidator {
     public static Map<LineKey, List<PolygonEdge>> getCommonPolygons(List<Polygon> polygons) {
         Map<LineKey, List<PolygonEdge>> map = new HashMap<>();
 
+        int percent = 0;
+        float percentF = 0f;
+
+        int iter = 0;
         for (Polygon polygon : polygons) {
             List<V3d> vertices = polygon.getVertices();
             for (int i = 0; i < vertices.size(); i++) {
                 V3d a = vertices.get(i);
                 V3d b = vertices.get((i + 1) % vertices.size());
-                if (a.equals(b)) continue;
                 LineKey key = LineKey.fromSegment(a, b);
 
                 List<PolygonEdge> currentList = map.computeIfAbsent(key, k -> new ArrayList<>());
                 currentList.add(new PolygonEdge(polygon, a, b, i));
             }
+
+            percentF = ((float) iter / (float) polygons.size()) * 100f;
+            int newPercent = (int) percentF;
+            if (newPercent > percent) {
+                System.out.println("Common edges: validator status: " + newPercent);
+            }
+            percent = newPercent;
+            iter ++;
         }
 
         return map;
     }
-
 
     public static Map<Polygon, Set<PointInsert>> findNewPoints(List<PolygonEdge> polygons) {
         Map<Polygon, Set<PointInsert>> result = new HashMap<>();
@@ -74,6 +89,8 @@ public class PolygonValidator {
             result.put(polygons.get(0).polygon, Collections.emptySet());
             return result;
         }
+        int percent = 0;
+        float percentF = 0f;
         for (int i = 0; i < polygons.size() - 1; i++) {
             PolygonEdge currentPolygon = polygons.get(i);
             for (int j = i + 1; j < polygons.size(); j++) {
@@ -111,6 +128,12 @@ public class PolygonValidator {
                     otherPolygonToBeAdded.add(new PointInsert(b1, otherPolygon.firstPointIndex));
                 }
             }
+            percentF = ((float) i / (float) polygons.size()) * 100f;
+            int newPercent = (int) percentF;
+            if (newPercent > percent) {
+                System.out.println("Polygon validator findNewPoints status: " + newPercent);
+            }
+            percent = newPercent;
         }
         return result;
     }
@@ -141,14 +164,16 @@ public class PolygonValidator {
                     }
                 } else {
                     for (V3d pointToBeAdded : sortedPoints) {
-                        currentPolygonVertices.add(key, pointToBeAdded);
+                        currentPolygonVertices.add(key + 1, pointToBeAdded);
                     }
                 }
             }
-            //if(Polygon.isValid(currentPolygonVertices)) {
-                polygons.add(Polygon.fromPolygons(currentPolygonVertices, entry.getKey().getColor()));
-            //}
-
+            if (Polygon.isValid(currentPolygonVertices)) {
+                polygons.add(Polygon.fromPolygons(
+                    currentPolygonVertices,
+                    entry.getKey().getColor()
+                ));
+            }
         }
         return polygons;
     }
@@ -167,6 +192,194 @@ public class PolygonValidator {
         double dy = b.y - a.y;
         double dz = b.z - a.z;
         return dx * dx + dy * dy + dz * dz;
+    }
+
+    /**
+     * Исправляет naked edges путём конвертации в треугольники, исправления и обратной конвертации
+     */
+    private List<Polygon> fixNakedEdgesInPolygons(List<Polygon> polygons) {
+        System.out.println(
+            "PolygonValidator: конвертируем полигоны в треугольники для исправления naked edges");
+
+        // Конвертируем полигоны в треугольники
+        List<Facet> facets = new ArrayList<>();
+        for (Polygon polygon : polygons) {
+            try {
+                List<Triangle3d> triangles =
+                    Triangulator.triangulate(polygon.getVertices(), polygon.getNormal());
+                for (Triangle3d triangle : triangles) {
+                    facets.add(new Facet(triangle, polygon.getNormal(), polygon.getColor()));
+                }
+            } catch (Exception e) {
+                System.out.println(
+                    "PolygonValidator: не удалось триангулировать полигон: " + e.getMessage());
+            }
+        }
+
+        System.out.println("PolygonValidator: получили " + facets.size() + " треугольников");
+
+        // Исправляем naked edges через StlValidator
+        List<Facet> repairedFacets = StlValidator.validateAndRepair(facets);
+        System.out.println(
+            "PolygonValidator: после исправления: " + repairedFacets.size() + " треугольников");
+
+        // Конвертируем обратно в простые треугольные полигоны
+        return convertFacetsToSimplePolygons(repairedFacets);
+    }
+
+    /**
+     * Конвертирует треугольники в простые треугольные полигоны
+     */
+    private List<Polygon> convertFacetsToSimplePolygons(List<Facet> facets) {
+        List<Polygon> result = new ArrayList<>();
+
+        for (Facet facet : facets) {
+            try {
+                List<V3d> vertices = facet.getTriangle().getPoints();
+                if (vertices.size() == 3) {
+                    Polygon trianglePolygon =
+                        new Polygon(vertices, facet.getNormal(), facet.getColor());
+                    result.add(trianglePolygon);
+                }
+            } catch (Exception e) {
+                System.out.println(
+                    "PolygonValidator: не удалось создать треугольный полигон: " + e.getMessage());
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Детальный анализ висящих рёбер с возвратом структурированной информации
+     */
+    public List<PolygonNakedEdgeInfo> analyzeNakedEdges(List<Polygon> polygons) {
+        // Конвертируем полигоны в треугольники для анализа
+        List<Facet> facets = new ArrayList<>();
+        Map<Facet, Polygon> facetToPolygon = new HashMap<>();
+
+        for (Polygon polygon : polygons) {
+            try {
+                List<Triangle3d> triangles =
+                    Triangulator.triangulate(polygon.getVertices(), polygon.getNormal());
+                for (Triangle3d triangle : triangles) {
+                    Facet facet = new Facet(triangle, polygon.getNormal(), polygon.getColor());
+                    facets.add(facet);
+                    facetToPolygon.put(facet, polygon);
+                }
+            } catch (Exception e) {
+                System.out.println(
+                    "PolygonValidator: ошибка триангуляции при анализе: " + e.getMessage());
+            }
+        }
+
+        // Получаем информацию о naked edges
+        List<StlValidator.NakedEdgeInfo> nakedEdgesInfo = StlValidator.analyzeNakedEdges(facets);
+
+        // Преобразуем в информацию о полигонах
+        List<PolygonNakedEdgeInfo> result = new ArrayList<>();
+
+        for (StlValidator.NakedEdgeInfo edgeInfo : nakedEdgesInfo) {
+            Polygon polygon = facetToPolygon.get(edgeInfo.getFacet());
+            if (polygon != null) {
+                PolygonNakedEdgeInfo polygonInfo = new PolygonNakedEdgeInfo(
+                    polygon,
+                    edgeInfo.getPointA(),
+                    edgeInfo.getPointB(),
+                    edgeInfo.getFacet(),
+                    "Полигон с " + polygon.getVertices().size() + " вершинами имеет висящее ребро"
+                );
+                result.add(polygonInfo);
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Информация о висящем ребре в полигоне
+     */
+    public static class PolygonNakedEdgeInfo {
+
+        private final Polygon polygon;
+        private final V3d nakedEdgeA;
+        private final V3d nakedEdgeB;
+        private final Facet facet;
+        private final String description;
+
+        public PolygonNakedEdgeInfo(
+            Polygon polygon,
+            V3d nakedEdgeA,
+            V3d nakedEdgeB,
+            Facet facet,
+            String description
+        ) {
+            this.polygon = polygon;
+            this.nakedEdgeA = nakedEdgeA;
+            this.nakedEdgeB = nakedEdgeB;
+            this.facet = facet;
+            this.description = description;
+        }
+
+        public Polygon getPolygon() {
+            return polygon;
+        }
+
+        public V3d getNakedEdgeA() {
+            return nakedEdgeA;
+        }
+
+        public V3d getNakedEdgeB() {
+            return nakedEdgeB;
+        }
+
+        public Facet getFacet() {
+            return facet;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+
+        @Override
+        public String toString() {
+            return "PolygonNakedEdge[" + nakedEdgeA + " -> " + nakedEdgeB + "] в полигоне с " +
+                polygon.getVertices().size() + " вершинами: " + description;
+        }
+    }
+
+    /**
+     * Информация о ребре
+     */
+    public static class EdgeInfo {
+
+        private final Polygon polygon;
+        private final int startIndex;
+        private final V3d start;
+        private final V3d end;
+
+        public EdgeInfo(Polygon polygon, int startIndex, V3d start, V3d end) {
+            this.polygon = polygon;
+            this.startIndex = startIndex;
+            this.start = start;
+            this.end = end;
+        }
+
+        public Polygon getPolygon() {
+            return polygon;
+        }
+
+        public int getStartIndex() {
+            return startIndex;
+        }
+
+        public V3d getStart() {
+            return start;
+        }
+
+        public V3d getEnd() {
+            return end;
+        }
     }
 
     public static class LineKey {

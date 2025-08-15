@@ -337,10 +337,13 @@ class SceneBuilderKeyboard(
             try {
                 val context: FacetGenerationContext = ColorFacetGenerationContext(DEFAULT_COLOR)
                 context.setFn(cfg.stlFn)
+                println("Start stl exporting")
                 StlExporter.saveStl(
                     model.toCSG(context).polygons, File(outDir, name).absolutePath
                 )
+                println("End stl exporting")
             } catch (e: IOException) {
+                println("Error while stl exporting" + e.message)
                 throw RuntimeException(e)
             }
         }.start()
@@ -552,7 +555,7 @@ class SceneBuilderKeyboard(
     }
 
     private fun createVertexHolder(model: IModel, color: Color): VertexHolder {
-        return VertexHolder.createVertexHolder(model, color, cfg.fn)
+        return VertexHolder.fromModel(model, color, cfg.fn)
     }
 
     companion object {

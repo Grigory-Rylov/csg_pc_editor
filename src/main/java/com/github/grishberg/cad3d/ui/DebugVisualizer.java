@@ -1,12 +1,11 @@
 package com.github.grishberg.cad3d.ui;
 
 import com.github.grishberg.cad3d.common.DebugCmd;
-import com.github.grishberg.cad3d.util.BuffersContainer;
-
-import java.util.List;
-
 import eu.printingin3d.javascad.coords.V3d;
 import eu.printingin3d.javascad.utils.Color;
+import eu.printingin3d.javascad.vrl.Facet;
+import eu.printingin3d.javascad.vrl.Polygon;
+import java.util.List;
 
 /**
  * Интерфейс для визуализации отладочных состояний
@@ -17,25 +16,32 @@ public interface DebugVisualizer {
      * @param cmd отладочная команда
      */
     void applyDebugVisualization(DebugCmd cmd);
-    
+
     /**
      * Очищает все визуальные эффекты
      */
     void clearVisualization();
-    
+
     /**
      * Рисует отладочный полигон
      * @param vertices список вершин полигона
      * @param lineColor цвет полигона
      */
-    void drawDebugPolygon(List<V3d> vertices, double thickness, Color lineColor);
+    void drawDebugPolygon(List<V3d> vertices, double lineThickness, Color lineColor);
     /**
      * Рисует отладочный полигон
      * @param vertices список вершин полигона
      * @param lineColor цвет полигона
      * @param vertexColor цвет вершины
      */
-    void drawDebugPolygon(List<V3d> vertices, double thickness, Color lineColor,  Color vertexColor);
+    void drawDebugPolygon(List<V3d> vertices, double lineThickness,
+                          double pointThickness, Color lineColor, Color vertexColor);
+
+    void drawDebugPolygon(Polygon polygon, double lineThickness,
+                          double pointThickness, Color lineColor, Color vertexColor);
+
+    void drawDebugFacet(Facet facet, double lineThickness,
+                        double pointThickness, Color lineColor, Color vertexColor);
 
     /**
      * Рисует отладочную линию
@@ -44,7 +50,7 @@ public interface DebugVisualizer {
      * @param color цвет линии
      */
     void drawDebugLine(V3d p0, V3d p1, double thickness, Color color);
-    
+
     /**
      * Рисует отладочную точку (куб размером 1)
      * @param p позиция точки
@@ -52,9 +58,4 @@ public interface DebugVisualizer {
      */
     void drawDebugPoint(V3d p, double thickness, Color color);
 
-    /**
-     * Возвращает список буферов для отрисовки отладочных примитивов
-     * @return список буферов
-     */
-    List<BuffersContainer> getDebugBuffers();
 }

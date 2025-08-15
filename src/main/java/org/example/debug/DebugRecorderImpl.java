@@ -12,9 +12,9 @@ import com.github.grishberg.cad3d.common.cmd.EdgeSpanningCmd;
 import com.github.grishberg.cad3d.common.cmd.EndCmd;
 import com.github.grishberg.cad3d.common.cmd.EndFacetsCmd;
 import com.github.grishberg.cad3d.common.cmd.LogCmd;
-import com.github.grishberg.cad3d.common.cmd.SplitPoltgonCompletedCmd;
+import com.github.grishberg.cad3d.common.cmd.SplitPolygonCompletedCmd;
 import com.github.grishberg.cad3d.common.cmd.SplitStartedCmd;
-import com.github.grishberg.cad3d.util.PolygonValidator;
+import eu.printingin3d.javascad.utils.PolygonValidator;
 import eu.printingin3d.javascad.coords.V3d;
 import eu.printingin3d.javascad.vrl.Facet;
 import eu.printingin3d.javascad.vrl.Polygon;
@@ -108,7 +108,7 @@ public class DebugRecorderImpl implements DebugRecorder {
 
     @Override
     public void onSplitPolygonCompleted(List<V3d> front, List<V3d> back) {
-        commands.add(new SplitPoltgonCompletedCmd(front, back, splitStartedCmd));
+        commands.add(new SplitPolygonCompletedCmd(front, back, splitStartedCmd));
     }
 
     @Override

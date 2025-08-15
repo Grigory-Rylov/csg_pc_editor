@@ -1,12 +1,10 @@
 package eu.printingin3d.javascad.utils;
 
-import com.github.grishberg.cad3d.util.PolygonValidator;
 import eu.printingin3d.javascad.coords.Triangle3d;
 import eu.printingin3d.javascad.coords.Triangulator;
 import eu.printingin3d.javascad.coords.V3d;
 import eu.printingin3d.javascad.vrl.Facet;
 import eu.printingin3d.javascad.vrl.Polygon;
-import eu.printingin3d.javascad.vrl.VertexHolder;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -25,12 +23,15 @@ public class StlExporter {
 
 
     public static void saveStl(List<Polygon> polygons, String fileName) {
+        System.out.println("saveStl: Start generationg polygons from: " + polygons.size());
 
         List<Polygon> fixPolygons = new PolygonValidator().fixPolygons(polygons);
 
+        System.out.println("saveStl: Generated polygons: " + fixPolygons.size());
+
         List<Facet> facetsFromPolygons = new ArrayList<>();
         for (Polygon p : fixPolygons) {
-            List<Triangle3d> triangles = Triangulator.triangulate(p.getVertices());
+            List<Triangle3d> triangles = Triangulator.triangulate(p.getVertices(), p.getNormal());
             for (Triangle3d t : triangles) {
                 facetsFromPolygons.add(new Facet(t, p.getNormal(), p.getColor()));
             }
@@ -44,24 +45,10 @@ public class StlExporter {
         }
     }
 
-    public static void saveStl0(VertexHolder holder, String fileName, boolean needCheck) {
-        List<Facet> originalFacets = holder.getFacets(); // Ваши исходные грани
-
-        if (needCheck) {
-            List<Facet> fixedFacets = StlValidator.validateAndRepair(originalFacets);
-        }
-
-        try (FileChannel channel = new FileOutputStream(fileName).getChannel()) {
-            StlExporter.writeBinaryStl(originalFacets, channel);
-            System.out.println("Export to " + fileName + " is done.");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
     public static void writeBinaryStl(
         List<Facet> facets,
         String fileName
-    ){
+    ) {
         try (FileChannel channel = new FileOutputStream(fileName).getChannel()) {
             StlExporter.writeBinaryStl(facets, channel);
             System.out.println("Export to " + fileName + " is done.");

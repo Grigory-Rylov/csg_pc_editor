@@ -3,11 +3,13 @@ package com.github.grishberg.cad3d.common.cmd;
 
 import com.github.grishberg.cad3d.common.DebugCmd;
 import com.github.grishberg.cad3d.ui.DebugVisualizer;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import eu.printingin3d.javascad.coords.V3d;
 import eu.printingin3d.javascad.utils.Color;
 import eu.printingin3d.javascad.vrl.Polygon;
-import java.util.ArrayList;
-import java.util.List;
 
 public class EndCmd implements DebugCmd {
 
@@ -38,12 +40,16 @@ public class EndCmd implements DebugCmd {
     }
 
     public void render(DebugVisualizer debugVisualizer) {
-
         // Рисуем полигоны с циклической сменой цветов
         for (int i = 0; i < polygons.size(); i++) {
             Polygon p = polygons.get(i);
-            Color color = Colors.COLORS[i % Colors.COLORS.length]; // Циклический выбор цвета
-            debugVisualizer.drawDebugPolygon(p.getVertices(), 0.3, color, Color.BLUE);
+            Color color = DbgConfig.COLORS[i % DbgConfig.COLORS.length]; // Циклический выбор цвета
+            debugVisualizer.drawDebugPolygon(
+                p.getVertices(),
+                DbgConfig.LINE_THICKNESS,
+                DbgConfig.POINT_THICKNESS,
+                color, Color.BLUE
+            );
         }
     }
 }

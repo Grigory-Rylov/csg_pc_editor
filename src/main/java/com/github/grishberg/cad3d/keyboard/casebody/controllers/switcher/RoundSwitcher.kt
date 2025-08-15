@@ -14,7 +14,7 @@ class RoundSwitcher : Switcher {
 
     override fun createSwitcher(): ModelHolder {
         val cylinder = Cylinder(5.0, Radius.fromDiameter(holeDiameter)).rotate(Angles3d.xOnly(90.0))
-        return ModelHolder(cylinder, VertexHolder.createVertexHolder(cylinder, Color.PINK, 20))
+        return ModelHolder(cylinder, VertexHolder.fromModel(cylinder, Color.PINK, 20))
     }
 
     override fun createSwitcherHole(): Abstract3dModel {

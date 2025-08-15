@@ -2,6 +2,7 @@ package com.github.grishberg.cad3d.common.cmd;
 
 import com.github.grishberg.cad3d.common.DebugCmd;
 import com.github.grishberg.cad3d.ui.DebugVisualizer;
+
 import eu.printingin3d.javascad.coords.V3d;
 import eu.printingin3d.javascad.utils.Color;
 import eu.printingin3d.javascad.vrl.Polygon;
@@ -32,19 +33,19 @@ public class SplitStartedCmd implements DebugCmd {
     @Override
     public void render(DebugVisualizer debugVisualizer) {
         // Рисуем оригинальный полигон
-        debugVisualizer.drawDebugPolygon(originalPolygon.getVertices(), 0.7, Color.PINK);
+        debugVisualizer.drawDebugPolygon(originalPolygon.getVertices(), DbgConfig.LINE_THICKNESS, Color.PINK);
 
         // Рисуем разделенный полигон
-        debugVisualizer.drawDebugPolygon(splitPolygon.getVertices(), 0.7, Color.CYAN);
+        debugVisualizer.drawDebugPolygon(splitPolygon.getVertices(), DbgConfig.LINE_THICKNESS, Color.CYAN);
 
         // Рисуем точки вершин оригинального полигона
         for (V3d vertex : originalPolygon.getVertices()) {
-            debugVisualizer.drawDebugPoint(vertex, 0.5, Color.RED);
+            debugVisualizer.drawDebugPoint(vertex, DbgConfig.POINT_THICKNESS, Color.RED);
         }
 
         // Рисуем точки вершин разделенного полигона
         for (V3d vertex : splitPolygon.getVertices()) {
-            debugVisualizer.drawDebugPoint(vertex, 1.5, Color.BLUE);
+            debugVisualizer.drawDebugPoint(vertex, DbgConfig.POINT_THICKNESS_1, Color.BLUE);
         }
     }
 }

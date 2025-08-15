@@ -28,8 +28,8 @@ class SuperMiniNRF52840(
 
         return ModelHolder(
             model.addModel(usbPort),
-            VertexHolder.createVertexHolder(place(model), Color.CYAN, cfg.fn),
-            VertexHolder.createVertexHolder(place(usbPort), Color.YELLOW, cfg.fn),
+            VertexHolder.fromModel(place(model), Color.CYAN, cfg.fn),
+            VertexHolder.fromModel(place(usbPort), Color.YELLOW, cfg.fn),
         )
     }
 

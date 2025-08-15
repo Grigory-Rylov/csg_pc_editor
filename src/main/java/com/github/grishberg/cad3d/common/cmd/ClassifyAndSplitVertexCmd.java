@@ -2,6 +2,7 @@ package com.github.grishberg.cad3d.common.cmd;
 
 import com.github.grishberg.cad3d.common.DebugCmd;
 import com.github.grishberg.cad3d.ui.DebugVisualizer;
+
 import eu.printingin3d.javascad.coords.V3d;
 import eu.printingin3d.javascad.utils.Color;
 import eu.printingin3d.javascad.vrl.VertexPosition;
@@ -26,20 +27,10 @@ public class ClassifyAndSplitVertexCmd implements DebugCmd {
 
     @Override
     public String getDescription() {
-        return "Classify and split vertex - Current: (" +
-            String.format(
-                "%.1f, %.1f, %.1f",
-                currentVertex.getX(),
-                currentVertex.getY(),
-                currentVertex.getZ()
-            ) +
-            "), Next: (" +
-            String.format(
-                "%.1f, %.1f, %.1f",
-                nextVertex.getX(),
-                nextVertex.getY(),
-                nextVertex.getZ()
-            ) + "), position = " + position;
+        return "Classify and split vertex - Current: " +
+            currentVertex +
+            ", Next: " +
+            nextVertex + ", position = " + position;
     }
 
     @Override
@@ -49,12 +40,12 @@ public class ClassifyAndSplitVertexCmd implements DebugCmd {
         }
 
         // Рисуем текущую вершину желтым цветом
-        debugVisualizer.drawDebugPoint(currentVertex, 1.5, Color.YELLOW);
+        debugVisualizer.drawDebugPoint(currentVertex, DbgConfig.POINT_THICKNESS_1, Color.YELLOW);
 
         // Рисуем следующую вершину зеленым цветом
-        debugVisualizer.drawDebugPoint(nextVertex, 1.5, Color.GREEN);
+        debugVisualizer.drawDebugPoint(nextVertex, DbgConfig.POINT_THICKNESS_1, Color.GREEN);
 
         // Рисуем линию между вершинами желтым цветом
-        debugVisualizer.drawDebugLine(currentVertex, nextVertex, 1.0, Color.YELLOW);
+        debugVisualizer.drawDebugLine(currentVertex, nextVertex, DbgConfig.LINE_THICKNESS_1, Color.YELLOW);
     }
 } 

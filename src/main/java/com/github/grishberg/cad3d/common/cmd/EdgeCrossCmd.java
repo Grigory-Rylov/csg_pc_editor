@@ -45,23 +45,23 @@ public class EdgeCrossCmd implements DebugCmd {
             splitStartedCmd.render(debugVisualizer);
         }
         // Рисуем текущую вершину оранжевым цветом
-        debugVisualizer.drawDebugPoint(currentVertex, 1.5, Color.ORANGE);
+        debugVisualizer.drawDebugPoint(currentVertex, DbgConfig.POINT_THICKNESS_1, Color.ORANGE);
 
         // Рисуем следующую вершину фиолетовым цветом
-        debugVisualizer.drawDebugPoint(newVertex, 1.5, Color.MAGENTA);
+        debugVisualizer.drawDebugPoint(newVertex, DbgConfig.POINT_THICKNESS_1, Color.MAGENTA);
 
         // Рисуем spanning вершину голубым цветом
-        debugVisualizer.drawDebugPoint(spanningVertex, 2.0, Color.CYAN);
+        debugVisualizer.drawDebugPoint(spanningVertex, DbgConfig.POINT_THICKNESS_2, Color.CYAN);
 
         // Рисуем линию между текущей и следующей вершиной оранжевым цветом
-        debugVisualizer.drawDebugLine(currentVertex, newVertex, 1.0, Color.GREEN);
+        debugVisualizer.drawDebugLine(currentVertex, newVertex, DbgConfig.LINE_THICKNESS_1, Color.GREEN);
 
         // Рисуем линии от spanning вершины к остальным вершинам голубым цветом
-        debugVisualizer.drawDebugLine(spanningVertex, currentVertex, 1.0, Color.CYAN);
-        debugVisualizer.drawDebugLine(spanningVertex, newVertex, 1.0, Color.CYAN);
+        debugVisualizer.drawDebugLine(spanningVertex, currentVertex, DbgConfig.LINE_THICKNESS_1, Color.CYAN);
+        debugVisualizer.drawDebugLine(spanningVertex, newVertex, DbgConfig.LINE_THICKNESS_1, Color.CYAN);
 		
 		for(V3d p : list){
-			debugVisualizer.drawDebugPoint(p, 2.2, Color.WHITE);
+            debugVisualizer.drawDebugPoint(p, DbgConfig.POINT_THICKNESS_2, Color.WHITE);
 		}
     }
 } 

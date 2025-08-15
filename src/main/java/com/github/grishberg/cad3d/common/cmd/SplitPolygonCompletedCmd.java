@@ -8,27 +8,26 @@ import eu.printingin3d.javascad.utils.Color;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SplitPoltgonCompletedCmd implements DebugCmd {
+public class SplitPolygonCompletedCmd implements DebugCmd {
 
     private final SplitStartedCmd splitStartedCmd;
     private final List<V3d> front;
     private final List<V3d> back;
 
-    public SplitPoltgonCompletedCmd(
+    public SplitPolygonCompletedCmd(
         List<V3d> front,
         List<V3d> back,
-
         SplitStartedCmd splitStartedCmd
     ) {
-
         this.splitStartedCmd = splitStartedCmd;
-        this.front = new ArrayList<>(front);
+        this.front = new ArrayList<V3d>(front);
         this.back = new ArrayList<>(back);
     }
 
     @Override
     public String getDescription() {
-        return "Split completef - front: " + front.size() + ", back = " + back.size();
+        return "Split completed - front: " + front.size() + " - " + EndCmd.verticesToString(front) +
+            ", back = " + back.size() + " - " + EndCmd.verticesToString(back);
     }
 
     @Override

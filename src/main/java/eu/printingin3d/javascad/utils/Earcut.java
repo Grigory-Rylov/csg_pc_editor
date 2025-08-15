@@ -1,4 +1,4 @@
-package com.github.grishberg.cad3d.util;
+package eu.printingin3d.javascad.utils;
 
 import java.util.ArrayList;
 import java.util.Comparator;

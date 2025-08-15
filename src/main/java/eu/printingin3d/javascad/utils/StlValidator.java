@@ -1,8 +1,5 @@
 package eu.printingin3d.javascad.utils;
 
-import eu.printingin3d.javascad.coords.Triangle3d;
-import eu.printingin3d.javascad.coords.V3d;
-import eu.printingin3d.javascad.vrl.Facet;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -11,6 +8,12 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import eu.printingin3d.javascad.coords.Triangle3d;
+import eu.printingin3d.javascad.coords.Triangulator;
+import eu.printingin3d.javascad.coords.V3d;
+import eu.printingin3d.javascad.vrl.Facet;
+import eu.printingin3d.javascad.vrl.Polygon;
 
 public class StlValidator {
 
@@ -21,8 +24,42 @@ public class StlValidator {
         List<ProcessedFacet> processed = preprocessFacets(facets);
 
         // Новая проверка
-        validateNakedEdges(facets);
-        //processed = fixNakedEdges(processed);
+        int initialNakedCount = validateNakedEdges(facets);
+
+        // Если есть naked edges, попробуем их исправить итеративно
+        if (initialNakedCount > 0) {
+            int currentNakedCount = initialNakedCount;
+            int iterations = 0;
+            int maxIterations = 5; // Ограничиваем количество итераций
+
+            while (currentNakedCount > 0 && iterations < maxIterations) {
+                processed = fixNakedEdges(processed);
+
+                // Проверяем результат
+                List<Facet> rebuilt = rebuildFacets(processed);
+                int newNakedCount = validateNakedEdges(rebuilt);
+
+                System.out.println("Итерация " + (iterations + 1) + ": naked edges=" + newNakedCount);
+
+                // Если улучшения нет, прекращаем
+                if (newNakedCount >= currentNakedCount) {
+                    break;
+                }
+
+                currentNakedCount = newNakedCount;
+                iterations++;
+
+                // Обновляем processed для следующей итерации
+                processed = preprocessFacets(rebuilt);
+            }
+
+            System.out.println("Naked edges: до исправления=" + initialNakedCount +
+                ", после исправления=" + currentNakedCount +
+                " (итераций: " + iterations + ")");
+        }
+
+        // Проверка порядка точек граней относительно нормали
+        validateFacePointOrder(rebuildFacets(processed));
 
         // Основные шаги
         //processed = fixNormals(processed);
@@ -33,33 +70,61 @@ public class StlValidator {
         return rebuildFacets(processed);
     }
 
-    private static List<ProcessedFacet> fixNakedEdges(List<ProcessedFacet> facets) {
+    public static List<ProcessedFacet> fixNakedEdges(List<ProcessedFacet> facets) {
         Map<Edge, List<ProcessedFacet>> nakedEdges = findNakedEdges(facets);
         List<ProcessedFacet> repaired = new ArrayList<>(facets);
         double scale = calculateModelScale(facets);
-        double searchRadius = scale * 0.1; // 10% от размера модели
+        double searchRadius = scale * 0.2; // Увеличиваем радиус поиска до 20%
+
+        System.out.println("Исправляем " + nakedEdges.size() + " naked edges");
 
         for (Map.Entry<Edge, List<ProcessedFacet>> entry : nakedEdges.entrySet()) {
             Edge edge = entry.getKey();
             V3d v1 = edge.a;
             V3d v2 = edge.b;
 
-            // Ищем ближайшую вершину для закрытия дыры
-            V3d v3 = findClosestVertex(v1, v2, facets, searchRadius);
-            if (v3 == null) continue;
+            // Ищем несколько ближайших вершин для закрытия дыры
+            List<V3d> candidateVertices = findClosestVertices(v1, v2, facets, searchRadius, 3);
 
-            // Создаем новый треугольник
-            ProcessedFacet newFacet = createProcessedFacet(
-                v1, v2, v3,
-                computeFaceNormal(Arrays.asList(v1, v2, v3)),
-                entry.getValue().get(0).original,
-                scale
-            );
+            boolean addedTriangle = false;
+            for (V3d v3 : candidateVertices) {
+                // Создаем новый треугольник
+                ProcessedFacet newFacet = createProcessedFacet(
+                    v1, v2, v3,
+                    computeFaceNormal(Arrays.asList(v1, v2, v3)),
+                    entry.getValue().get(0).original,
+                    scale
+                );
 
-            if (newFacet != null) {
-                repaired.add(newFacet);
-                System.out.println("Добавлен треугольник для закрытия дыры: "
-                    + v1 + " - " + v2 + " - " + v3);
+                if (newFacet != null) {
+                    repaired.add(newFacet);
+                    System.out.println("Добавлен треугольник для закрытия дыры: "
+                        + v1 + " - " + v2 + " - " + v3);
+                    addedTriangle = true;
+                    break; // Используем только первую подходящую вершину
+                }
+            }
+
+            // Если не нашли подходящую вершину, создаем новую
+            if (!addedTriangle) {
+                V3d edgeCenter = V3d.midPoint(v1, v2);
+                V3d facetNormal = entry.getValue().get(0).normal;
+
+                // Создаем новую вершину на небольшом расстоянии от ребра
+                V3d newVertex = edgeCenter.add(facetNormal.scale(scale * 0.01));
+
+                ProcessedFacet newFacet = createProcessedFacet(
+                    v1, v2, newVertex,
+                    computeFaceNormal(Arrays.asList(v1, v2, newVertex)),
+                    entry.getValue().get(0).original,
+                    scale
+                );
+
+                if (newFacet != null) {
+                    repaired.add(newFacet);
+                    System.out.println("Создан новый треугольник с новой вершиной: "
+                        + v1 + " - " + v2 + " - " + newVertex);
+                }
             }
         }
 
@@ -88,7 +153,41 @@ public class StlValidator {
         return closest;
     }
 
-    public static void validateNakedEdges(List<Facet> facets) {
+    private static List<V3d> findClosestVertices(V3d v1, V3d v2, List<ProcessedFacet> facets, double searchRadius, int maxCount) {
+        V3d edgeCenter = V3d.midPoint(v1, v2);
+        List<VertexDistance> candidates = new ArrayList<>();
+
+        for (ProcessedFacet facet : facets) {
+            for (V3d candidate : facet.vertices) {
+                // Исключаем вершины самого ребра
+                if (candidate.equals(v1) || candidate.equals(v2)) continue;
+
+                double dist = edgeCenter.distance(candidate);
+                if (dist < searchRadius) {
+                    candidates.add(new VertexDistance(candidate, dist));
+                }
+            }
+        }
+
+        // Сортируем по расстоянию и возвращаем ближайшие
+        return candidates.stream()
+            .sorted((a, b) -> Double.compare(a.distance, b.distance))
+            .limit(maxCount)
+            .map(vd -> vd.vertex)
+            .collect(Collectors.toList());
+    }
+
+    private static class VertexDistance {
+        final V3d vertex;
+        final double distance;
+
+        VertexDistance(V3d vertex, double distance) {
+            this.vertex = vertex;
+            this.distance = distance;
+        }
+    }
+
+    public static int validateNakedEdges(List<Facet> facets) {
         List<ProcessedFacet> processed = preprocessFacets(facets);
         Map<Edge, List<ProcessedFacet>> nakedEdges = findNakedEdges(processed);
 
@@ -101,13 +200,94 @@ public class StlValidator {
         } else {
             System.out.println("Naked edges не обнаружены.");
         }
+        return nakedEdges.size();
     }
+
+    /**
+     * Проверяет порядок точек граней относительно нормали.
+     * В STL формате вершины треугольника должны быть ориентированы против часовой стрелки
+     * при взгляде снаружи объекта, чтобы нормаль указывала наружу.
+     *
+     * @param facets список граней для проверки
+     * @return количество граней с неправильным порядком точек
+     */
+    public static int validateFacePointOrder(List<Facet> facets) {
+        int invalidCount = 0;
+        double angleThreshold = Math.cos(Math.toRadians(90)); // 90 градусов
+
+        for (Facet facet : facets) {
+            V3d storedNormal = facet.getNormal();
+            List<V3d> vertices = facet.getTriangle().getPoints();
+
+            // Вычисляем нормаль из порядка точек (правило правой руки)
+            V3d computedNormal = computeFaceNormal(vertices);
+
+            if (computedNormal == null) {
+                System.err.println("Не удалось вычислить нормаль для вырожденной грани: " + vertices);
+                // Для вырожденных треугольников не считаем это ошибкой порядка точек
+                continue;
+            }
+
+            // Проверяем соответствие направления нормали порядку точек
+            double dotProduct = storedNormal.dot(computedNormal);
+
+            if (dotProduct < angleThreshold) {
+                invalidCount++;
+                System.err.println("Неправильный порядок точек грани:");
+                System.err.println("  Вершины: " + vertices);
+                System.err.println("  Хранимая нормаль: " + storedNormal);
+                System.err.println("  Вычисленная нормаль: " + computedNormal);
+                System.err.println("  Косинус угла: " + dotProduct);
+
+                // Предлагаем исправление
+                if (dotProduct < -angleThreshold) {
+                    System.err.println("  Рекомендация: изменить порядок вершин на обратный");
+                } else {
+                    System.err.println("  Рекомендация: проверить правильность нормали или геометрию грани");
+                }
+            }
+        }
+
+        if (invalidCount == 0) {
+            System.out.println("Порядок точек всех граней соответствует нормалям.");
+        } else {
+            System.err.println("Найдено граней с неправильным порядком точек: " + invalidCount + " из " + facets.size());
+        }
+
+        return invalidCount;
+    }
+
     private static Map<Edge, List<ProcessedFacet>> findNakedEdges(List<ProcessedFacet> facets) {
+        double scale = calculateModelScale(facets);
+        double tolerance = scale * 1e-6; // Адаптивная толерантность
+
         Map<Edge, List<ProcessedFacet>> edgeMap = new HashMap<>();
+        List<EdgeFacetPair> allEdges = new ArrayList<>();
 
         // Собираем все рёбра и связанные с ними треугольники
         for (ProcessedFacet facet : facets) {
             for (Edge edge : getEdges(facet.vertices)) {
+                allEdges.add(new EdgeFacetPair(edge, facet));
+            }
+        }
+
+        // Группируем рёбра с учетом толерантности
+        for (EdgeFacetPair pair : allEdges) {
+            Edge edge = pair.edge;
+            ProcessedFacet facet = pair.facet;
+
+            // Ищем существующее совпадающее ребро в карте
+            Edge matchingKey = null;
+            for (Edge existingEdge : edgeMap.keySet()) {
+                if (edge.equals(existingEdge) || edge.nearlyEquals(existingEdge, tolerance)) {
+                    matchingKey = existingEdge;
+                    break;
+                }
+            }
+
+            if (matchingKey != null) {
+                edgeMap.get(matchingKey).add(facet);
+            } else {
                 edgeMap.computeIfAbsent(edge, k -> new ArrayList<>()).add(facet);
             }
         }
@@ -116,6 +296,16 @@ public class StlValidator {
         return edgeMap.entrySet().stream()
             .filter(entry -> entry.getValue().size() == 1)
             .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    }
+
+    private static class EdgeFacetPair {
+        final Edge edge;
+        final ProcessedFacet facet;
+
+        EdgeFacetPair(Edge edge, ProcessedFacet facet) {
+            this.edge = edge;
+            this.facet = facet;
+        }
     }
 
     private static List<ProcessedFacet> removeSelfIntersecting(List<ProcessedFacet> facets) {
@@ -329,6 +519,12 @@ public class StlValidator {
         public int hashCode() {
             return a.hashCode() ^ b.hashCode();
         }
+
+        // Толерантное сравнение рёбер для поиска "почти совпадающих"
+        public boolean nearlyEquals(Edge other, double tolerance) {
+            return (a.distance(other.a) < tolerance && b.distance(other.b) < tolerance) ||
+                (a.distance(other.b) < tolerance && b.distance(other.a) < tolerance);
+        }
     }
 
     private static List<Edge> getEdges(List<V3d> vertices) {
@@ -403,5 +599,88 @@ public class StlValidator {
                 p.normal,
                 p.original.getColor()
             )).collect(Collectors.toList());
+    }
+
+    /**
+     * Информация о висящей грани (naked edge)
+     */
+    public static class NakedEdgeInfo {
+        private final V3d pointA;
+        private final V3d pointB;
+        private final Facet facet;
+        private final String description;
+
+        public NakedEdgeInfo(V3d pointA, V3d pointB, Facet facet, String description) {
+            this.pointA = pointA;
+            this.pointB = pointB;
+            this.facet = facet;
+            this.description = description;
+        }
+
+        public V3d getPointA() { return pointA; }
+        public V3d getPointB() { return pointB; }
+        public Facet getFacet() { return facet; }
+        public String getDescription() { return description; }
+
+        @Override
+        public String toString() {
+            return String.format("NakedEdge[%s -> %s] in facet %s: %s",
+                pointA, pointB, facet.getTriangle().getPoints(), description);
+        }
+    }
+
+    /**
+     * Детальный анализ naked edges с возвратом структурированной информации
+     */
+    public static List<NakedEdgeInfo> analyzeNakedEdges(List<Facet> facets) {
+        List<ProcessedFacet> processed = preprocessFacets(facets);
+        Map<Edge, List<ProcessedFacet>> nakedEdges = findNakedEdges(processed);
+        List<NakedEdgeInfo> result = new ArrayList<>();
+
+        for (Map.Entry<Edge, List<ProcessedFacet>> entry : nakedEdges.entrySet()) {
+            Edge edge = entry.getKey();
+            ProcessedFacet facet = entry.getValue().get(0);
+
+            String description = String.format("Ребро принадлежит только одному треугольнику из %d вершин",
+                facet.vertices.size());
+
+            NakedEdgeInfo info = new NakedEdgeInfo(
+                edge.a,
+                edge.b,
+                facet.original,
+                description
+            );
+
+            result.add(info);
+        }
+
+        return result;
+    }
+
+    /**
+     * Конвертирует полигоны в facets для анализа
+     */
+    public static List<Facet> convertPolygonsToFacets(List<Polygon> polygons) {
+        List<Facet> facets = new ArrayList<>();
+        for (Polygon polygon : polygons) {
+            try {
+                List<Triangle3d> triangles = Triangulator.triangulate(polygon.getVertices(), polygon.getNormal());
+                for (Triangle3d triangle : triangles) {
+                    facets.add(new Facet(triangle, polygon.getNormal(), polygon.getColor()));
+                }
+            } catch (Exception e) {
+                System.out.println("StlValidator: ошибка триангуляции: " + e.getMessage());
+            }
+        }
+        return facets;
+    }
+
+    /**
+     * Подсчитывает количество naked edges
+     */
+    public static int countNakedEdges(List<Facet> facets) {
+        List<ProcessedFacet> processed = preprocessFacets(facets);
+        Map<Edge, List<ProcessedFacet>> nakedEdges = findNakedEdges(processed);
+        return nakedEdges.size();
     }
 }

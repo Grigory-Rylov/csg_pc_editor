@@ -1,13 +1,45 @@
 package eu.printingin3d.javascad.coords;
 
-import com.github.grishberg.cad3d.util.CrossEdgeValidator;
-import com.github.grishberg.cad3d.util.Earcut3D;
+import eu.printingin3d.javascad.utils.CrossEdgeValidator;
+import eu.printingin3d.javascad.utils.Earcut3D;
+
+import java.util.ArrayList;
 import java.util.List;
+
+import eu.printingin3d.javascad.vrl.Facet;
+import eu.printingin3d.javascad.vrl.Polygon;
 
 public class Triangulator {
 
-    public static List<Triangle3d> triangulate(List<V3d> vertices) {
-        return Earcut3D.triangulate(vertices);
+    public static List<Triangle3d> triangulate(List<V3d> vertices, V3d normal) {
+        return Earcut3D.triangulate(vertices, normal);
+    }
+
+    public static List<Facet> triangulate(Polygon polygon) {
+        List<Facet> facets = new ArrayList<>();
+        List<Triangle3d> triangle3ds = Earcut3D.triangulate(polygon.getVertices(), polygon.getNormal());
+        for (Triangle3d triangle : triangle3ds) {
+            facets.add(new Facet(triangle, polygon.getNormal(), polygon.getColor()));
+        }
+
+        return facets;
+    }
+
+    public static List<Facet> triangulate(List<Polygon> polygons) {
+        List<Facet> facetsFromPolygons = new ArrayList<>();
+
+        for (Polygon p : polygons) {
+            List<Triangle3d> currentPolygonTriangles = Triangulator.triangulate(p.getVertices(), p.getNormal());
+
+            List<Facet> localFacet = new ArrayList<>();
+            for (Triangle3d t : currentPolygonTriangles) {
+                facetsFromPolygons.add(new Facet(t, p.getNormal(), p.getColor()));
+                localFacet.add(new Facet(t, p.getNormal(), p.getColor()));
+            }
+
+        }
+
+        return facetsFromPolygons;
     }
 
     private static boolean hasNoPointsBetween(List<V3d> vertices, int startPos, int modEnd) {

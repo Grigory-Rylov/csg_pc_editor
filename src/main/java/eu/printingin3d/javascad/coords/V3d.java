@@ -1,7 +1,9 @@
 package eu.printingin3d.javascad.coords;
 
-import eu.printingin3d.javascad.basic.Angle;
 import java.nio.ByteBuffer;
+import java.util.Locale;
+
+import eu.printingin3d.javascad.basic.Angle;
 
 /**
  * Immutable representation of a 3D coordinate with useful helper methods.
@@ -196,8 +198,78 @@ public class V3d extends Basic3dFunc<V3d> {
     public V3d projectionZ(double newZ) {
         return new V3d(x, y, newZ);
     }
+
     // Метод для вычисления скалярного произведения
     public V3d scale(double scale) {
         return new V3d(x * scale, y * scale, z * scale);
+    }
+
+    @Override
+    public String toString() {
+        return String.format(Locale.US, "V3d(%.4f, %.4f, %.4f)", x, y, z);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+
+        V3d v3d = (V3d) obj;
+        final double EPSILON = 1e-10; // Для сравнения чисел с плавающей точкой
+
+        return Math.abs(x - v3d.x) < EPSILON &&
+            Math.abs(y - v3d.y) < EPSILON &&
+            Math.abs(z - v3d.z) < EPSILON;
+    }
+
+    @Override
+    public int hashCode() {
+        int xHash = hashCodeWithEpsilon(x);
+        int yHash = hashCodeWithEpsilon(y);
+        int zHash = hashCodeWithEpsilon(z);
+
+        return (xHash ^ (xHash >>> 32) ^
+            yHash ^ (yHash >>> 32) ^
+            zHash ^ (zHash >>> 32));
+    }
+
+
+    /**
+     * Вычисляет hashCode для double с учетом точности EPSILON.
+     * Близкие значения (разница <= EPSILON) будут иметь одинаковый хэш.
+     *
+     * @param value Значение double.
+     * @return Хэш-код, совместимый с equals, использующим EPSILON.
+     */
+    public static int hashCodeWithEpsilon(double value) {
+        final double EPSILON = 1e-10;
+        // Обработка специальных случаев
+        if (Double.isNaN(value)) {
+            // Используем стандартный хэш для NaN
+            return Double.hashCode(value);
+        }
+        if (Double.isInfinite(value)) {
+            // Используем стандартный хэш для бесконечностей
+            return Double.hashCode(value);
+        }
+
+        // "Округляем" значение до ближайшего кратного EPSILON
+        // Это делает близкие значения идентичными для хэширования
+        long rounded = Math.round(value / EPSILON);
+
+        // Используем часть битов long для получения int хэш-кода
+        // XOR с правым сдвигом - стандартный способ сжатия long в int
+        return (int) (rounded ^ (rounded >>> 32));
+    }
+
+    public String toJson() {
+        return "{\"x\":" + x +
+            ",\"y\":" + y +
+            ",\"z\":" + z +
+            "}";
     }
 }

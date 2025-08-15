@@ -83,6 +83,31 @@ public class Triangle3d {
 		this.point3 = point3;
 	}
 
+	public Triangle3d(V3d point1, V3d point2, V3d point3, V3d normal) throws IllegalValueException {
+		AssertValue.isNotNull(point1, "point1 should not be null");
+		AssertValue.isNotNull(point2, "point2 should not be null");
+		AssertValue.isNotNull(point3, "point3 should not be null");
+		AssertValue.isNotNull(normal, "normal should not be null");
+
+		// Вычисляем нормаль треугольника по текущему порядку точек
+		V3d edge1 = point2.subtract(point1);
+		V3d edge2 = point3.subtract(point1);
+		V3d computedNormal = edge1.cross(edge2).unit();
+
+		// Сравниваем вычисленную нормаль с переданной
+		if (computedNormal.dot(normal) < 0) {
+			// Если направление не совпадает, меняем порядок двух точек
+			this.point1 = point1;
+			this.point2 = point3;
+			this.point3 = point2;
+		} else {
+			// Иначе оставляем как есть
+			this.point1 = point1;
+			this.point2 = point2;
+			this.point3 = point3;
+		}
+	}
+	
 	/**
 	 * Returns with the corners of the triangle as a list. It always contains three points 
 	 * in an order as it was given in the constructor.
@@ -123,4 +148,22 @@ public class Triangle3d {
 
 	}
 
+	@Override
+	public String toString() {
+		return "Triangle3d " + toJson();
+	}
+
+	public String toJson() {
+		StringBuilder sb = new StringBuilder();
+		sb.append("{\"vertices\":{");
+
+		sb.append("\"a\":");
+		sb.append(point1.toJson());
+		sb.append(",\"b\":");
+		sb.append(point2.toJson());
+		sb.append(",\"c\":");
+		sb.append(point3.toJson());
+		sb.append("}");
+		return sb.toString();
+	}
 }

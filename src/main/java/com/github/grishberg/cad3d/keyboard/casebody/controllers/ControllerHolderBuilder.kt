@@ -32,7 +32,7 @@ class ControllerHolderBuilder(
         var model = createControllerModel()
 
         val vertexHolders = mutableListOf(
-            VertexHolder.createVertexHolder(
+            VertexHolder.fromModel(
                 model, Color.ORANGE, 20
             )
         )
@@ -41,14 +41,14 @@ class ControllerHolderBuilder(
             val batteryHolder = placeBatteryHolder(battery.create())
             model = model.addModel(batteryHolder)
             vertexHolders.add(
-                VertexHolder.createVertexHolder(
+                VertexHolder.fromModel(
                     model, Color.YELLOW, 20
                 )
             )
 
             if (showPreview) {
                 vertexHolders.add(
-                    VertexHolder.createVertexHolder(
+                    VertexHolder.fromModel(
                         placeBatteryHolder(battery.createBatteryPreview()), Color.RED, 20
                     )
                 )

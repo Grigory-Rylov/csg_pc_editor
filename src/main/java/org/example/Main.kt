@@ -1,9 +1,11 @@
 package org.example
 
 import com.github.grishberg.cad3d.common.DebugCmd
+import com.github.grishberg.cad3d.common.DebugRecorderStub
 import com.github.grishberg.cad3d.keyboard.ControlPointsController
 import com.github.grishberg.cad3d.keyboard.cfg.SettingsHolder
 import com.github.grishberg.cad3d.util.SceneBuilder
+import com.github.grishberg.cad3d.util.SceneBuilderKeyboard
 import com.github.grishberg.cad3d.util.SceneBuilderTest
 import com.jogamp.opengl.GL2
 import com.jogamp.opengl.GLAutoDrawable
@@ -14,8 +16,6 @@ import com.jogamp.opengl.awt.GLCanvas
 import com.jogamp.opengl.fixedfunc.GLLightingFunc
 import com.jogamp.opengl.glu.GLU
 import com.jogamp.opengl.util.Animator
-import eu.printingin3d.javascad.coords.V3d
-import eu.printingin3d.javascad.utils.Color
 import eu.printingin3d.javascad.vrl.VertexHolder
 import java.awt.BorderLayout
 import java.awt.Dimension
@@ -37,7 +37,6 @@ import javax.swing.JFrame
 import javax.swing.JLabel
 import javax.swing.JPanel
 import org.example.debug.DebugRecorderImpl
-import org.example.debug.DebugVisualizerAdapter
 import org.example.debug.DebugVisualizerImpl
 import org.example.dialog.ConfigEditor
 
@@ -59,9 +58,7 @@ class Main(title: String?) : JFrame(title), GLEventListener {
     private var glCanvas: GLCanvas? = null
     private val sceneBuilder: SceneBuilder
     private val debugVisualizer = DebugVisualizerImpl()
-    private val debugAdapter = DebugVisualizerAdapter(debugVisualizer)
     private val debugCommands = mutableListOf<DebugCmd>()
-    private lateinit var debugRecorder: DebugRecorderImpl
 
     private var requestRenderingTime = 0L
     private var showDebugInfo = false
@@ -74,11 +71,13 @@ class Main(title: String?) : JFrame(title), GLEventListener {
     init {
         settingsHolder.loadSettings()
         //sceneBuilder = SceneBuilderKeyboard(settingsHolder.settings.getKeyboardConfig(), pointsController)
-        debugRecorder = DebugRecorderImpl()
+        val debugRecorder = DebugRecorderImpl()
         sceneBuilder = SceneBuilderTest(debugRecorder)
         sceneBuilder.setListener { buffers: List<VertexHolder>? ->
             val timeDelta = System.currentTimeMillis() - requestRenderingTime
             println("Rendering time = $timeDelta ms")
+            debugCommands.clear()
+            debugCommands.addAll(debugRecorder.commands)
             vertexHolderList.clear()
             vertexHolderList.addAll(buffers!!)
         }
@@ -141,7 +140,7 @@ class Main(title: String?) : JFrame(title), GLEventListener {
             showDebugInfo = it
             if (!it) {
                 debugVisualizer.clearVisualization()
-                debugCommands.clear()
+                //debugCommands.clear()
             } else {
                 addDebugCommands()
                 updateDebugDisplay()
@@ -268,45 +267,15 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         sceneBuilder.requestBuffers()
     }
 
-    private fun addDebugExamples() {
-        debugVisualizer.clearVisualization()
-
-        // Примеры debug объектов
-        // Точка
-        debugVisualizer.drawDebugPoint(V3d(50.0, 50.0, 10.0), 3.0, Color.RED)
-
-        // Линия
-        debugVisualizer.drawDebugLine(
-            V3d(0.0, 0.0, 0.0), V3d(30.0, 30.0, 20.0), 2.0, Color.GREEN
-        )
-
-        // Полигон (треугольник)
-        val triangleVertices = listOf(
-            V3d(-20.0, -20.0, 5.0), V3d(20.0, -20.0, 5.0), V3d(0.0, 20.0, 5.0)
-        )
-        debugVisualizer.drawDebugPolygon(triangleVertices, 1.5, Color.BLUE, Color.YELLOW)
-
-        // Квадрат
-        val squareVertices = listOf(
-            V3d(-40.0, 40.0, 0.0), V3d(40.0, 40.0, 0.0), V3d(40.0, 80.0, 0.0), V3d(-40.0, 80.0, 0.0)
-        )
-        debugVisualizer.drawDebugPolygon(squareVertices, 2.0, Color.MAGENTA)
-    }
-
     private fun addDebugCommands() {
-        debugCommands.clear()
-
-        // Добавляем реальные debug команды из SceneBuilder
-        debugCommands.addAll(debugRecorder.getCommands())
-
+//        debugCommands.clear()
         currentDebugCommandIndex = 0
         updateDebugNavigationState()
     }
 
     private fun updateDebugNavigationState() {
-        val hasCommands = debugCommands.isNotEmpty() && showDebugInfo
-        prevDebugButton.isEnabled = hasCommands
-        nextDebugButton.isEnabled = hasCommands
+        prevDebugButton.isEnabled = showDebugInfo
+        nextDebugButton.isEnabled = showDebugInfo
 
         if (showDebugInfo && debugCommands.isNotEmpty()) {
             val currentCmd = debugCommands[currentDebugCommandIndex]
@@ -321,9 +290,11 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         debugVisualizer.clearVisualization()
 
         if (showDebugInfo && debugCommands.isNotEmpty()) {
+            // Рендерим статические debug объекты
+
             // Рендерим только текущую debug команду
             val currentCmd = debugCommands[currentDebugCommandIndex]
-            debugAdapter.applyDebugVisualization(currentCmd)
+            debugVisualizer.applyDebugVisualization(currentCmd)
         }
 
         updateDebugNavigationState()
@@ -354,8 +325,6 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         gl.glRotatef(settingsHolder.rotateX, 1.0f, 0.0f, 0.0f)
         gl.glRotatef(settingsHolder.rotateY, 0.0f, 1.0f, 0.0f)
         gl.glRotatef(settingsHolder.rotateZ, 0.0f, 0.0f, 1.0f)
-
-        // Рендерим основные объекты
         for (vertexHolder in vertexHolderList) {
             gl.glBegin(GL2.GL_TRIANGLES)
             var normalArrayIndex = 0
@@ -379,13 +348,12 @@ class Main(title: String?) : JFrame(title), GLEventListener {
             }
             gl.glEnd()
         }
+        gl.glPopMatrix() // Возвращаемся к исходной матрице
 
-        // Рендерим debug объекты если они включены (внутри той же трансформации)
+        // Рендерим debug объекты если они включены
         if (showDebugInfo) {
             debugVisualizer.renderDebugObjects()
         }
-
-        gl.glPopMatrix() // Возвращаемся к исходной матрице
 
         gl.glFlush()
     }
@@ -538,7 +506,7 @@ class Main(title: String?) : JFrame(title), GLEventListener {
                     showDebugInfo = !showDebugInfo
                     if (!showDebugInfo) {
                         debugVisualizer.clearVisualization()
-                        debugCommands.clear()
+                        //debugCommands.clear()
                     } else {
                         addDebugCommands()
                         updateDebugDisplay()

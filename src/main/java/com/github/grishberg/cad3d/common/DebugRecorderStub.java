@@ -1,6 +1,6 @@
 package com.github.grishberg.cad3d.common;
 
-import com.github.grishberg.cad3d.util.PolygonValidator;
+import eu.printingin3d.javascad.utils.PolygonValidator;
 import eu.printingin3d.javascad.coords.V3d;
 import eu.printingin3d.javascad.vrl.Facet;
 import eu.printingin3d.javascad.vrl.Polygon;

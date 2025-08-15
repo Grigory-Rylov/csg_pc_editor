@@ -44,23 +44,23 @@ public class AddVertexNextPoint implements DebugCmd {
             splitStartedCmd.render(debugVisualizer);
         }
         // Рисуем текущую вершину оранжевым цветом
-        debugVisualizer.drawDebugPoint(lastVertex, 2.1, Color.ORANGE);
+        debugVisualizer.drawDebugPoint(lastVertex, DbgConfig.POINT_THICKNESS_1, Color.ORANGE);
 
         // Рисуем следующую вершину фиолетовым цветом
-        debugVisualizer.drawDebugPoint(newVertex, 2.1, Color.MAGENTA);
+        debugVisualizer.drawDebugPoint(newVertex, DbgConfig.POINT_THICKNESS_2, Color.MAGENTA);
 
         // Рисуем spanning вершину голубым цветом
-        debugVisualizer.drawDebugPoint(prev, 2.0, Color.CYAN);
-		debugVisualizer.drawDebugPoint(curr, 2.0, Color.YELLOW);
+        debugVisualizer.drawDebugPoint(prev, DbgConfig.POINT_THICKNESS_1, Color.CYAN);
+        debugVisualizer.drawDebugPoint(curr, DbgConfig.POINT_THICKNESS_1, Color.YELLOW);
 
 		
 
         // Рисуем линию между текущей и следующей вершиной оранжевым цветом
-        debugVisualizer.drawDebugLine(lastVertex, newVertex, 2.2, Color.GREEN);
-		debugVisualizer.drawDebugLine(prev, curr, 2.2, Color.RED);
+        debugVisualizer.drawDebugLine(lastVertex, newVertex, DbgConfig.LINE_THICKNESS_1, Color.GREEN);
+        debugVisualizer.drawDebugLine(prev, curr, DbgConfig.LINE_THICKNESS_1, Color.RED);
 
         for (V3d p : newPolygonVertex) {
-            debugVisualizer.drawDebugPoint(p, 2.3, Color.WHITE);
+            debugVisualizer.drawDebugPoint(p, DbgConfig.POINT_THICKNESS_2, Color.WHITE);
 		}
     }
 } 

@@ -76,8 +76,7 @@ public final class EdgeCrossSolver {
 		
 		if (doubleEquals(c1.getY(), c2.getY())) {
 			if (doubleEquals(c3.getY(), c4.getY())) {
-				return doubleEquals(c1.getY(), c3.getY()) ? 
-						new IntersectionResult(true, 0.0, c1.getY()) : null;
+				return  null;
 			}
 			y = c1.getY();
 			double a2 = (c4.getX()-c3.getX()) / (c4.getY()-c3.getY());

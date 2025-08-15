@@ -304,7 +304,7 @@ public class CSG {
             }
         }
 
-        return new VertexHolder(facets, verticesArray, normalsArray, verticesCount);
+        return new VertexHolder(/*facets, */verticesArray, normalsArray, verticesCount);
     }
 
 	public float[] getVerticesWithColors() {

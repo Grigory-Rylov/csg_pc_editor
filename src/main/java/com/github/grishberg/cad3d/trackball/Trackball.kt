@@ -40,12 +40,12 @@ class Trackball(private val cfg: KeyboardConfig, private val keyPlace: KeyPlace)
 
         val model = createTrackballModel()
 
-        val vertex = mutableListOf(VertexHolder.createVertexHolder(moveTrackball(model), Color.LIGHT_GRAY, fn = cfg.fn))
+        val vertex = mutableListOf(VertexHolder.fromModel(moveTrackball(model), Color.LIGHT_GRAY, cfg.fn))
 
         if (withBall) {
             vertex.add(
-                VertexHolder.createVertexHolder(
-                    moveTrackball(Sphere(Radius.fromDiameter(cfg.trackball.ballDiameter))), Color.ORANGE, fn = cfg.fn
+                VertexHolder.fromModel(
+                    moveTrackball(Sphere(Radius.fromDiameter(cfg.trackball.ballDiameter))), Color.ORANGE,  cfg.fn
                 )
             )
         }
@@ -62,7 +62,7 @@ class Trackball(private val cfg: KeyboardConfig, private val keyPlace: KeyPlace)
 
         return ModelHolder(
             moveTrackball(model),
-            VertexHolder.createVertexHolder(moveTrackball(model), Color.GREEN, fn = cfg.fn),
+            VertexHolder.fromModel(moveTrackball(model), Color.GREEN, cfg.fn),
         )
     }
 
@@ -215,7 +215,7 @@ class Trackball(private val cfg: KeyboardConfig, private val keyPlace: KeyPlace)
 
         return ModelHolder(
             moveTrackball(trackballSensor),
-            VertexHolder.createVertexHolder(moveTrackball(trackballSensor), Color.ORANGE, fn = 20),
+            VertexHolder.fromModel(moveTrackball(trackballSensor), Color.ORANGE, 20),
         )
     }
 
@@ -224,7 +224,7 @@ class Trackball(private val cfg: KeyboardConfig, private val keyPlace: KeyPlace)
 
         return ModelHolder(
             moveTrackball(model),
-            VertexHolder.createVertexHolder(moveTrackball(model), Color.BLUE, fn = cfg.fn),
+            VertexHolder.fromModel(moveTrackball(model), Color.BLUE, cfg.fn),
         )
     }
 

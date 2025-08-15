@@ -10,6 +10,7 @@ import eu.printingin3d.javascad.models.Cube;
 import eu.printingin3d.javascad.models.IModel;
 import eu.printingin3d.javascad.models.Sphere;
 import eu.printingin3d.javascad.utils.Color;
+import eu.printingin3d.javascad.utils.PolygonValidator;
 import eu.printingin3d.javascad.vrl.CSG;
 import eu.printingin3d.javascad.vrl.ColorFacetGenerationContext;
 import eu.printingin3d.javascad.vrl.Facet;
@@ -156,7 +157,7 @@ public class SceneBuilderTest implements SceneBuilder {
 
     private static List<Facet> triangulatePolygon(Polygon p) {
         List<Facet> facetsFromPolygons = new ArrayList<>();
-        List<Triangle3d> triangles = Triangulator.triangulate(p.getVertices());
+        List<Triangle3d> triangles = Triangulator.triangulate(p.getVertices(), p.getNormal());
         List<Facet> localFacet = new ArrayList<>();
         for (Triangle3d t : triangles) {
             facetsFromPolygons.add(new Facet(t, p.getNormal(), p.getColor()));
@@ -187,7 +188,7 @@ public class SceneBuilderTest implements SceneBuilder {
     }
 
     private VertexHolder createAndAdd(List<Polygon> polygons, Color color) {
-        VertexHolder vertex = VertexHolder.Companion.createVertexHolder(polygons, color);
+        VertexHolder vertex = VertexHolder.fromPolygons(polygons, color);
         buffers.add(vertex);
         return vertex;
     }

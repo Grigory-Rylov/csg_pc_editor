@@ -1,10 +1,12 @@
 package org.example.debug;
 
 import com.github.grishberg.cad3d.common.DebugCmd;
+import com.github.grishberg.cad3d.ui.DebugVisualizer;
 import com.jogamp.opengl.GL2;
 import eu.printingin3d.javascad.coords.V3d;
 import eu.printingin3d.javascad.utils.Color;
-
+import eu.printingin3d.javascad.vrl.Facet;
+import eu.printingin3d.javascad.vrl.Polygon;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -13,12 +15,7 @@ import java.util.List;
  * Реализация DebugVisualizer для работы с JOGL GL2
  */
 public class DebugVisualizerImpl implements DebugVisualizer {
-    private final Color[] colors = {
-        Color.CYAN,
-        Color.GREEN,
-        Color.YELLOW,
-        Color.MAGENTA
-    };
+
 
     private final List<DebugObject> debugObjects = new ArrayList<>();
     private GL2 gl;
@@ -35,7 +32,8 @@ public class DebugVisualizerImpl implements DebugVisualizer {
 
     @Override
     public void applyDebugVisualization(DebugCmd cmd) {
-        // Метод не используется напрямую, так как у нас есть адаптер
+        cmd.render(this);
+        System.out.println(cmd.getDescription());
     }
 
     @Override
@@ -46,28 +44,55 @@ public class DebugVisualizerImpl implements DebugVisualizer {
     @Override
     public void drawDebugPolygon(List<V3d> vertices, double thickness, Color color) {
         if (vertices.size() < 2) return;
-        debugObjects.add(new DebugObject(DebugObject.Type.POLYGON, vertices, thickness, color));
+        debugObjects.add(new DebugObject(DebugObject.Type.POLYGON, vertices, thickness, thickness, color));
     }
 
     @Override
-    public void drawDebugPolygon(List<V3d> vertices, double thickness, Color lineColor, Color vertexColor) {
+    public void drawDebugPolygon(
+        List<V3d> vertices,
+        double lineThickness,
+        double pointThickness,
+        Color lineColor,
+        Color vertexColor
+    ) {
         if (vertices.size() < 2) return;
-        debugObjects.add(new DebugObject(DebugObject.Type.POLYGON, vertices, thickness, lineColor, vertexColor));
+        debugObjects.add(new DebugObject(DebugObject.Type.POLYGON, vertices, lineThickness, pointThickness, lineColor, vertexColor));
+    }
+
+    @Override
+    public void drawDebugPolygon(
+        Polygon polygon,
+        double lineThickness,
+        double pointThickness,
+        Color lineColor,
+        Color vertexColor
+    ) {
+        drawDebugPolygon(polygon.getVertices(), lineThickness, pointThickness, lineColor, vertexColor);
+    }
+
+    @Override
+    public void drawDebugFacet(
+        Facet facet,
+        double lineThickness,
+        double pointThickness,
+        Color lineColor,
+        Color vertexColor
+    ) {
+        drawDebugPolygon(facet.getTriangle().getPoints(), lineThickness, pointThickness, lineColor, vertexColor);
     }
 
     @Override
     public void drawDebugLine(V3d p0, V3d p1, double thickness, Color color) {
         List<V3d> vertices = Arrays.asList(p0, p1);
-        debugObjects.add(new DebugObject(DebugObject.Type.LINE, vertices, thickness, color));
+        debugObjects.add(new DebugObject(DebugObject.Type.LINE, vertices, thickness, thickness, color));
     }
 
     @Override
     public void drawDebugPoint(V3d p, double thickness, Color color) {
         List<V3d> vertices = Arrays.asList(p);
-        debugObjects.add(new DebugObject(DebugObject.Type.POINT, vertices, thickness, color));
+        debugObjects.add(new DebugObject(DebugObject.Type.POINT, vertices, thickness, thickness, color));
     }
 
-    @Override
     public void renderDebugObjects() {
         if (gl == null) return;
         
@@ -112,7 +137,7 @@ public class DebugVisualizerImpl implements DebugVisualizer {
         
         V3d point = obj.getVertices().get(0);
         Color color = obj.getColor();
-        double size = obj.getThickness();
+        double size = obj.getLineThickness();
         
         setColor(color);
         renderCube(point, size);
@@ -124,7 +149,7 @@ public class DebugVisualizerImpl implements DebugVisualizer {
         V3d p0 = obj.getVertices().get(0);
         V3d p1 = obj.getVertices().get(1);
         Color color = obj.getColor();
-        double thickness = obj.getThickness();
+        double thickness = obj.getLineThickness();
         
         setColor(color);
         
@@ -138,7 +163,7 @@ public class DebugVisualizerImpl implements DebugVisualizer {
         
         Color lineColor = obj.getColor();
         Color vertexColor = obj.getVertexColor();
-        double thickness = obj.getThickness();
+        double thickness = obj.getLineThickness();
         
         // Рисуем линии полигона
         for (int i = 0; i < vertices.size(); i++) {

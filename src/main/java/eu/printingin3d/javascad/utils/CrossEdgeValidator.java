@@ -1,4 +1,4 @@
-package com.github.grishberg.cad3d.util;
+package eu.printingin3d.javascad.utils;
 
 import eu.printingin3d.javascad.coords.V3d;
 

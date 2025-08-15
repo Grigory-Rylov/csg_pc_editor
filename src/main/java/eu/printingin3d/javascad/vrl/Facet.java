@@ -1,10 +1,11 @@
 package eu.printingin3d.javascad.vrl;
 
-import eu.printingin3d.javascad.coords.V3d;
-import eu.printingin3d.javascad.coords.Triangle3d;
-import eu.printingin3d.javascad.utils.Color;
 import java.util.ArrayList;
 import java.util.List;
+
+import eu.printingin3d.javascad.coords.Triangle3d;
+import eu.printingin3d.javascad.coords.V3d;
+import eu.printingin3d.javascad.utils.Color;
 
 /**
  * <p>Immutable representation of one triangle in the mesh with a normal pointing outward from
@@ -68,4 +69,17 @@ public class Facet {
     public Color getColor() {
         return color;
     }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("{\"triangle\":");
+        sb.append(triangle.toJson());
+
+        sb.append(",\"normal\":");
+        sb.append(normal.toJson());
+        sb.append("}");
+        return sb.toString();
+    }
+
 }
