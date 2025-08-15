@@ -268,7 +268,6 @@ class Main(title: String?) : JFrame(title), GLEventListener {
     }
 
     private fun addDebugCommands() {
-//        debugCommands.clear()
         currentDebugCommandIndex = 0
         updateDebugNavigationState()
     }
@@ -348,12 +347,13 @@ class Main(title: String?) : JFrame(title), GLEventListener {
             }
             gl.glEnd()
         }
-        gl.glPopMatrix() // Возвращаемся к исходной матрице
 
-        // Рендерим debug объекты если они включены
+        // Рендерим debug объекты если они включены (ВНУТРИ трансформаций)
         if (showDebugInfo) {
             debugVisualizer.renderDebugObjects()
         }
+
+        gl.glPopMatrix() // Возвращаемся к исходной матрице
 
         gl.glFlush()
     }
