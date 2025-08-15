@@ -1,9 +1,9 @@
 package org.example
 
 import com.github.grishberg.cad3d.common.DebugCmd
-import com.github.grishberg.cad3d.common.DebugRecorderStub
 import com.github.grishberg.cad3d.keyboard.ControlPointsController
 import com.github.grishberg.cad3d.keyboard.cfg.SettingsHolder
+import com.github.grishberg.cad3d.ui.DebugRecorderImpl
 import com.github.grishberg.cad3d.util.SceneBuilder
 import com.github.grishberg.cad3d.util.SceneBuilderKeyboard
 import com.github.grishberg.cad3d.util.SceneBuilderTest
@@ -36,7 +36,6 @@ import javax.swing.JCheckBox
 import javax.swing.JFrame
 import javax.swing.JLabel
 import javax.swing.JPanel
-import org.example.debug.DebugRecorderImpl
 import org.example.debug.DebugVisualizerImpl
 import org.example.dialog.ConfigEditor
 

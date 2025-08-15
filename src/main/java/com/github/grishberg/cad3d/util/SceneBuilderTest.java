@@ -11,6 +11,7 @@ import eu.printingin3d.javascad.models.IModel;
 import eu.printingin3d.javascad.models.Sphere;
 import eu.printingin3d.javascad.utils.Color;
 import eu.printingin3d.javascad.utils.PolygonValidator;
+import eu.printingin3d.javascad.utils.StlValidator;
 import eu.printingin3d.javascad.vrl.CSG;
 import eu.printingin3d.javascad.vrl.ColorFacetGenerationContext;
 import eu.printingin3d.javascad.vrl.Facet;
@@ -71,56 +72,58 @@ public class SceneBuilderTest implements SceneBuilder {
 
         List<Polygon> polygons = result.getPolygons();
         List<Polygon> fixedPolygons = PolygonValidator.fixPolygons(polygons);
-
         createAndAdd(fixedPolygons);
 
         List<Polygon> topPolygons = filterTopPolygons(fixedPolygons, 25);
         debugRecorder.onEnd(fixedPolygons);
 
-        List<Facet> facetsFromPolygons = triangulate(fixedPolygons);
+        List<Facet> facetsFromPolygons = Triangulator.triangulate(fixedPolygons);
         debugRecorder.onEndFacets(facetsFromPolygons);
 
         for (Polygon p : fixedPolygons) {
-            List<Facet> trianglesOfPolygon = triangulatePolygon(p);
-            debugRecorder.onDebugPolygonTriangulation(p, trianglesOfPolygon);
+            List<Facet> facetsOfPolygon = Triangulator.triangulate(p);
+            debugRecorder.onDebugPolygonTriangulation(p, facetsOfPolygon);
         }
 
-        for (Facet f : facetsFromPolygons) {
-            List<Facet> fl = new ArrayList<>();
-            fl.add(f);
-            //debugRecorder.onEndFacets(fl);
-        }
-/*
         // validation
+
         List<PolygonValidator.PolygonNakedEdgeInfo> info =
             new PolygonValidator().analyzeNakedEdges(topPolygons);
 
         for (PolygonValidator.PolygonNakedEdgeInfo infoItem : info) {
-            debugRecorder.onDebugNakedEdge(
+            /*
+            debugRecorder.onDebugNakedEdgeWithFacets(
                 infoItem.getPolygon(), infoItem.getNakedEdgeA(),
-                infoItem.getNakedEdgeB(), infoItem.getFacet()
+                infoItem.getNakedEdgeB(), infoItem.getFacet(),
+                facetsFromPolygons
             );
+             */
         }
- */
 
-        /*
+        // debug polygon grouping
+        Map<PolygonValidator.LineKey, List<PolygonValidator.PolygonEdge>> nearbyPolygons =
+            PolygonValidator.getCommonPolygons(topPolygons);
+
         List<StlValidator.NakedEdgeInfo> nakedEdges =
             StlValidator.analyzeNakedEdges(facetsFromPolygons);
         for (StlValidator.NakedEdgeInfo nakedEdge : nakedEdges) {
-            debugRecorder.onDebugNakedEdge(
+            PolygonValidator.LineKey lineKey = PolygonValidator.LineKey.fromSegment(
+                nakedEdge.getPointA(),
+                nakedEdge.getPointB()
+            );
+            List<PolygonValidator.PolygonEdge> nearby = nearbyPolygons.get(lineKey);
+
+            debugRecorder.onDebugNakedEdgeWithNearbyFacets(
                 null,
                 nakedEdge.getPointA(),
                 nakedEdge.getPointB(),
-                nakedEdge.getFacet()
+                nakedEdge.getFacet(),
+                nearby
             );
         }
-*/
 
-        // debug polygon grouping
-        Map<PolygonValidator.LineKey, List<PolygonValidator.PolygonEdge>> commonPolygons =
-            PolygonValidator.getCommonPolygons(topPolygons);
         for (Map.Entry<PolygonValidator.LineKey, List<PolygonValidator.PolygonEdge>> entry :
-            commonPolygons.entrySet()) {
+            nearbyPolygons.entrySet()) {
             debugRecorder.onGroupedEdge(entry.getKey(), entry.getValue());
         }
 
