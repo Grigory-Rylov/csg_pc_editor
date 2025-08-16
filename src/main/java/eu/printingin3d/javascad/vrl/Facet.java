@@ -82,4 +82,57 @@ public class Facet {
         return sb.toString();
     }
 
+    public String toJson() {
+        return toString();
+    }
+
+    /**
+     * Creates a Facet instance from JSON string.
+     * Expected format: {"triangle":{"vertices":{...}},"normal":{"x":...}}
+     * @param json the JSON string
+     * @return the Facet instance
+     */
+    public static Facet fromJson(String json) {
+        // Simple JSON parsing for the expected format
+        json = json.trim();
+        if (!json.startsWith("{") || !json.endsWith("}")) {
+            throw new IllegalArgumentException("Invalid JSON format for Facet: " + json);
+        }
+        
+        // Extract triangle JSON
+        String triangleJson = extractJsonValue(json, "\"triangle\":");
+        Triangle3d triangle = Triangle3d.fromJson(triangleJson);
+        
+        // Extract normal JSON
+        String normalJson = extractJsonValue(json, "\"normal\":");
+        V3d normal = V3d.fromJson(normalJson);
+        
+        // Default color (Facet doesn't store color in JSON)
+        Color color = Color.BLACK;
+        
+        return new Facet(triangle, normal, color);
+    }
+    
+    private static String extractJsonValue(String json, String key) {
+        int start = json.indexOf(key) + key.length();
+        int braceCount = 0;
+        int end = start;
+        boolean inObject = false;
+        
+        for (int i = start; i < json.length(); i++) {
+            char ch = json.charAt(i);
+            if (ch == '{') {
+                if (!inObject) inObject = true;
+                braceCount++;
+            } else if (ch == '}') {
+                braceCount--;
+                if (braceCount == 0 && inObject) {
+                    end = i + 1;
+                    break;
+                }
+            }
+        }
+        
+        return json.substring(start, end);
+    }
 }

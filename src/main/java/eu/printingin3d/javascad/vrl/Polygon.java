@@ -372,4 +372,59 @@ public final class Polygon {
 		return sb.toString();
 
 	}
+
+	/**
+	 * Creates a Polygon instance from JSON string.
+	 * Expected format: {"vertices":[{"x":...,"y":...,"z":...},{"x":...,"y":...,"z":...},...]}
+	 * @param json the JSON string
+	 * @param color the color for the polygon
+	 * @return the Polygon instance
+	 */
+	public static Polygon fromJson(String json, Color color) {
+		// Simple JSON parsing for the expected format
+		json = json.trim();
+		if (!json.startsWith("{") || !json.endsWith("}")) {
+			throw new IllegalArgumentException("Invalid JSON format for Polygon: " + json);
+		}
+		
+		// Find vertices array
+		int verticesStart = json.indexOf("\"vertices\":[") + 12;
+		int verticesEnd = json.lastIndexOf("]");
+		String verticesJson = json.substring(verticesStart, verticesEnd);
+		
+		List<V3d> vertices = new ArrayList<>();
+		
+		if (verticesJson.trim().isEmpty()) {
+			return fromPolygons(vertices, color);
+		}
+		
+		// Split by vertices (find each {...} block)
+		int braceCount = 0;
+		int start = 0;
+		
+		for (int i = 0; i < verticesJson.length(); i++) {
+			char ch = verticesJson.charAt(i);
+			if (ch == '{') {
+				if (braceCount == 0) start = i;
+				braceCount++;
+			} else if (ch == '}') {
+				braceCount--;
+				if (braceCount == 0) {
+					String vertexJson = verticesJson.substring(start, i + 1);
+					vertices.add(V3d.fromJson(vertexJson));
+				}
+			}
+		}
+		
+		return fromPolygons(vertices, color);
+	}
+
+	/**
+	 * Creates a Polygon instance from JSON string with default color.
+	 * @param json the JSON string
+	 * @return the Polygon instance
+	 */
+	public static Polygon fromJson(String json) {
+		return fromJson(json, Color.BLACK);
+	}
 }

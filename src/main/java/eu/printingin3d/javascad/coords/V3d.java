@@ -272,4 +272,39 @@ public class V3d extends Basic3dFunc<V3d> {
             ",\"z\":" + z +
             "}";
     }
+
+    /**
+     * Creates a V3d instance from JSON string.
+     * Expected format: {"x":1.0,"y":2.0,"z":3.0}
+     * @param json the JSON string
+     * @return the V3d instance
+     */
+    public static V3d fromJson(String json) {
+        // Simple JSON parsing for the expected format
+        json = json.trim();
+        if (!json.startsWith("{") || !json.endsWith("}")) {
+            throw new IllegalArgumentException("Invalid JSON format for V3d: " + json);
+        }
+        
+        String content = json.substring(1, json.length() - 1);
+        String[] parts = content.split(",");
+        
+        double x = 0.0, y = 0.0, z = 0.0;
+        
+        for (String part : parts) {
+            String[] keyValue = part.split(":");
+            if (keyValue.length != 2) continue;
+            
+            String key = keyValue[0].trim().replace("\"", "");
+            double value = Double.parseDouble(keyValue[1].trim());
+            
+            switch (key) {
+                case "x": x = value; break;
+                case "y": y = value; break;
+                case "z": z = value; break;
+            }
+        }
+        
+        return new V3d(x, y, z);
+    }
 }

@@ -166,4 +166,54 @@ public class Triangle3d {
 		sb.append("}");
 		return sb.toString();
 	}
+
+	/**
+	 * Creates a Triangle3d instance from JSON string.
+	 * Expected format: {"vertices":{"a":{"x":...},"b":{"x":...},"c":{"x":...}}}
+	 * @param json the JSON string
+	 * @return the Triangle3d instance
+	 */
+	public static Triangle3d fromJson(String json) {
+		// Simple JSON parsing for the expected format
+		json = json.trim();
+		if (!json.startsWith("{") || !json.endsWith("}")) {
+			throw new IllegalArgumentException("Invalid JSON format for Triangle3d: " + json);
+		}
+		
+		// Find vertices object
+		int verticesStart = json.indexOf("\"vertices\":{") + 12;
+		int verticesEnd = json.lastIndexOf("}");
+		String verticesJson = json.substring(verticesStart, verticesEnd);
+		
+		// Extract individual vertex JSON strings
+		String aJson = extractVertexJson(verticesJson, "\"a\":");
+		String bJson = extractVertexJson(verticesJson, "\"b\":");
+		String cJson = extractVertexJson(verticesJson, "\"c\":");
+		
+		V3d a = V3d.fromJson(aJson);
+		V3d b = V3d.fromJson(bJson);
+		V3d c = V3d.fromJson(cJson);
+		
+		return new Triangle3d(a, b, c);
+	}
+	
+	private static String extractVertexJson(String verticesJson, String key) {
+		int start = verticesJson.indexOf(key) + key.length();
+		int braceCount = 0;
+		int end = start;
+		
+		for (int i = start; i < verticesJson.length(); i++) {
+			char ch = verticesJson.charAt(i);
+			if (ch == '{') braceCount++;
+			else if (ch == '}') {
+				braceCount--;
+				if (braceCount == 0) {
+					end = i + 1;
+					break;
+				}
+			}
+		}
+		
+		return verticesJson.substring(start, end);
+	}
 }
