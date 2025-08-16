@@ -25,19 +25,9 @@ import org.jetbrains.annotations.NotNull;
 
 public class SceneBuilderTest implements SceneBuilder {
 
-    private static final double LOW_PROFILE_KEYCAP_HEIGHT = 4.5;
-    private static final double STANDART_KEYCAP_HEIGHT = 12.7;
-    /**
-     * How many bytes per float.
-     */
-    private final int mBytesPerFloat = 4;
-
-    private static final Color DEFAULT_COLOR = Color.GRAY;
-
+    private static final boolean SHOW_GROUPED_EDGES = false;
+    private static final boolean SHOW_TRIANGULATION = true;
     public final List<VertexHolder> buffers;
-    private final int rowsCount = 3;
-    private final int colsCount = 5;
-
     private final DebugRecorder debugRecorder;
 
     public SceneBuilderTest(DebugRecorder debugRecorder) {
@@ -118,13 +108,23 @@ public class SceneBuilderTest implements SceneBuilder {
                 nakedEdge.getPointA(),
                 nakedEdge.getPointB(),
                 nakedEdge.getFacet(),
-                nearby
+                nearby,
+                facetsFromPolygons
             );
         }
 
-        for (Map.Entry<PolygonValidator.LineKey, List<PolygonValidator.PolygonEdge>> entry :
-            nearbyPolygons.entrySet()) {
-            debugRecorder.onGroupedEdge(entry.getKey(), entry.getValue());
+        if (SHOW_GROUPED_EDGES) {
+            for (Map.Entry<PolygonValidator.LineKey, List<PolygonValidator.PolygonEdge>> entry :
+                nearbyPolygons.entrySet()) {
+                debugRecorder.onGroupedEdge(entry.getKey(), entry.getValue());
+            }
+        }
+
+        if (SHOW_TRIANGULATION) {
+            for (Polygon p : fixedPolygons) {
+                List<Facet> facets = Triangulator.triangulate(p);
+                debugRecorder.onDebugPolygonTriangulation(p, facets);
+            }
         }
 
         if (listener != null) {

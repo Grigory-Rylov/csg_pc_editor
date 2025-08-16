@@ -14,20 +14,20 @@ import com.github.grishberg.cad3d.common.cmd.EndFacetsCmd;
 import com.github.grishberg.cad3d.common.cmd.LogCmd;
 import com.github.grishberg.cad3d.common.cmd.SplitPolygonCompletedCmd;
 import com.github.grishberg.cad3d.common.cmd.SplitStartedCmd;
-import eu.printingin3d.javascad.utils.PolygonValidator;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import eu.printingin3d.javascad.coords.V3d;
+import eu.printingin3d.javascad.utils.PolygonValidator;
 import eu.printingin3d.javascad.vrl.Facet;
 import eu.printingin3d.javascad.vrl.Polygon;
 import eu.printingin3d.javascad.vrl.VertexPosition;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Реализация DebugRecorder для записи отладочных команд
  */
 public class DebugRecorderImpl implements DebugRecorder {
+
     private final List<DebugCmd> commands = new ArrayList<>();
     volatile
     private SplitStartedCmd splitStartedCmd = null;
@@ -46,7 +46,7 @@ public class DebugRecorderImpl implements DebugRecorder {
     public int getCommandCount() {
         return commands.size();
     }
-    
+
     @Override
     public DebugCmd getCommand(int index) {
         if (index >= 0 && index < commands.size()) {
@@ -56,15 +56,24 @@ public class DebugRecorderImpl implements DebugRecorder {
     }
 
     @Override
-    public void onSplitPolygonStarted(Polygon polygon, Polygon polygon1, VertexPosition polygonType) {
+    public void onSplitPolygonStarted(
+        Polygon polygon,
+        Polygon polygon1,
+        VertexPosition polygonType
+    ) {
         SplitStartedCmd cmd = new SplitStartedCmd(polygon, polygon1, polygonType);
         splitStartedCmd = cmd;
         commands.add(cmd);
     }
 
     @Override
-    public void onClassifyAndSplitVertex(V3d currentVertex, V3d nextVertex, VertexPosition position) {
-        ClassifyAndSplitVertexCmd cmd = new ClassifyAndSplitVertexCmd(currentVertex, nextVertex, position, splitStartedCmd);
+    public void onClassifyAndSplitVertex(
+        V3d currentVertex,
+        V3d nextVertex,
+        VertexPosition position
+    ) {
+        ClassifyAndSplitVertexCmd cmd =
+            new ClassifyAndSplitVertexCmd(currentVertex, nextVertex, position, splitStartedCmd);
         commands.add(cmd);
     }
 
@@ -74,29 +83,40 @@ public class DebugRecorderImpl implements DebugRecorder {
         commands.add(cmd);
     }
 
-	@Override
-    public void onEdgeCross(List<V3d> list, V3d currentVertex, V3d newVertex, V3d cross, VertexPosition vp) {
-        EdgeCrossCmd cmd = new EdgeCrossCmd(list, currentVertex, newVertex, cross, vp, splitStartedCmd);
+    @Override
+    public void onEdgeCross(
+        List<V3d> list,
+        V3d currentVertex,
+        V3d newVertex,
+        V3d cross,
+        VertexPosition vp
+    ) {
+        EdgeCrossCmd cmd =
+            new EdgeCrossCmd(list, currentVertex, newVertex, cross, vp, splitStartedCmd);
         commands.add(cmd);
-	}
+    }
 
-	@Override
-    public void onAddVertexNextPoint(List<V3d> list, V3d lastVertex, V3d newVertex, V3d prev, V3d curr,
-                                     VertexPosition vp) {
-        AddVertexNextPoint cmd = new AddVertexNextPoint(list, lastVertex, newVertex, prev, curr, vp,
-            splitStartedCmd);
+    @Override
+    public void onAddVertexNextPoint(
+        List<V3d> list, V3d lastVertex, V3d newVertex, V3d prev, V3d curr,
+        VertexPosition vp
+    ) {
+        AddVertexNextPoint cmd = new AddVertexNextPoint(
+            list, lastVertex, newVertex, prev, curr, vp,
+            splitStartedCmd
+        );
         commands.add(cmd);
-	}
+    }
 
-	@Override
-	public void onSplitPolygonCompleted(List<V3d> front, List<V3d> back) {
+    @Override
+    public void onSplitPolygonCompleted(List<V3d> front, List<V3d> back) {
         commands.add(new SplitPolygonCompletedCmd(front, back, splitStartedCmd));
-	}
+    }
 
-	@Override
-	public void onEnd(List<Polygon> polygons) {
-		commands.add(new EndCmd(polygons));
-	}
+    @Override
+    public void onEnd(List<Polygon> polygons) {
+        commands.add(new EndCmd(polygons));
+    }
 
     @Override
     public void onEnd(Polygon polygon) {
@@ -124,14 +144,50 @@ public class DebugRecorderImpl implements DebugRecorder {
     }
 
     @Override
-    public void onDebugNakedEdgeWithFacets(Polygon polygon, V3d nakedEdgeA, V3d nakedEdgeB, Facet facet,
-                                           List<Facet> allFacets) {
-        commands.add(DebugNakedEdgeCmd.withAllFacets(polygon, nakedEdgeA, nakedEdgeB, facet, allFacets));
+    public void onDebugNakedEdgeWithFacets(
+        Polygon polygon, V3d nakedEdgeA, V3d nakedEdgeB, Facet facet,
+        List<Facet> allFacets
+    ) {
+        commands.add(DebugNakedEdgeCmd.withAllFacets(
+            polygon,
+            nakedEdgeA,
+            nakedEdgeB,
+            facet,
+            allFacets
+        ));
     }
 
     @Override
-    public void onDebugNakedEdgeWithNearbyFacets(Polygon polygon, V3d nakedEdgeA, V3d nakedEdgeB, Facet facet, List<PolygonValidator.PolygonEdge> nearby) {
-        commands.add(DebugNakedEdgeCmd.withAllNearbyFacets(polygon, nakedEdgeA, nakedEdgeB, facet, nearby));
+    public void onDebugNakedEdgeWithNearbyFacets(
+        Polygon polygon,
+        V3d pointA,
+        V3d pointB,
+        Facet facet,
+        List<PolygonValidator.PolygonEdge> nearby,
+        List<Facet> facets
+    ) {
+        commands.add(DebugNakedEdgeCmd.withAllNearbyFacets(
+            polygon,
+            pointA,
+            pointB,
+            facet,
+            nearby,
+            facets
+        ));
+    }
+
+    @Override
+    public void onDebugNakedEdgeWithNearbyFacets(
+        Polygon polygon,
+        V3d nakedEdgeA,
+        V3d nakedEdgeB,
+        Facet facet,
+        List<PolygonValidator.PolygonEdge> nearby
+    ) {
+        onDebugNakedEdgeWithNearbyFacets(
+            polygon, nakedEdgeA, nakedEdgeB, facet, nearby,
+            Collections.EMPTY_LIST
+        );
     }
 
     @Override
@@ -140,7 +196,10 @@ public class DebugRecorderImpl implements DebugRecorder {
     }
 
     @Override
-    public void onGroupedEdge(PolygonValidator.LineKey key, List<PolygonValidator.PolygonEdge> polygons) {
+    public void onGroupedEdge(
+        PolygonValidator.LineKey key,
+        List<PolygonValidator.PolygonEdge> polygons
+    ) {
         commands.add(new DebugGroupedEdgeCmd(key, polygons));
     }
 }

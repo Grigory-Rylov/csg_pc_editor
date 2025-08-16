@@ -3,6 +3,7 @@ package com.github.grishberg.cad3d.common.cmd;
 import eu.printingin3d.javascad.utils.Color;
 
 public class DbgConfig {
+
     public static Color[] COLORS = {
         new Color(255, 175, 175), // pink (ваш пример)
         new Color(255, 0, 0),     // red
@@ -26,11 +27,13 @@ public class DbgConfig {
         new Color(0, 191, 255)    // deep sky blue
     };
 
-    public static double LINE_THICKNESS = 0.1;
-    public static double LINE_THICKNESS_1 = 0.2;
-    public static double LINE_THICKNESS_2 = 0.3;
+    private static double SCALE = 1.0;
 
-    public static double POINT_THICKNESS = 0.5;
-    public static double POINT_THICKNESS_1 = 0.6;
-    public static double POINT_THICKNESS_2 = 0.7;
+    public static double LINE_THICKNESS = 0.1 * SCALE;
+    public static double LINE_THICKNESS_1 = 0.2 * SCALE;
+    public static double LINE_THICKNESS_2 = 0.3 * SCALE;
+
+    public static double POINT_THICKNESS = 0.5 * SCALE;
+    public static double POINT_THICKNESS_1 = 0.6 * SCALE;
+    public static double POINT_THICKNESS_2 = 0.7 * SCALE;
 }
