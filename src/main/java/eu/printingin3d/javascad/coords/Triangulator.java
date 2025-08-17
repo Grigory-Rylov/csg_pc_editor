@@ -1,23 +1,57 @@
 package eu.printingin3d.javascad.coords;
 
 import eu.printingin3d.javascad.utils.CrossEdgeValidator;
-import eu.printingin3d.javascad.utils.Earcut3D;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import eu.printingin3d.javascad.vrl.Facet;
 import eu.printingin3d.javascad.vrl.Polygon;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Triangulator {
 
     public static List<Triangle3d> triangulate(List<V3d> vertices, V3d normal) {
-        return Earcut3D.triangulate(vertices, normal);
+        return EarClippingMod.triangulate(vertices, normal);
+    }
+
+    public static List<Triangle3d> triangulate0(List<V3d> vertices, V3d normal) {
+        List<Triangle3d> result = new ArrayList<>();
+
+        if (vertices.size() == 3) {
+            result.add(new Triangle3d(vertices.get(0), vertices.get(1), vertices.get(2), normal));
+            return result;
+        }
+        ArrayList<V3d> work = new ArrayList<>(vertices);
+
+        int i = 1;
+
+        while (work.size() >= 3) {
+            int size = work.size();
+            int prevIndex = (i - 1) % size;
+            int currentIndex = i % size;
+            int nextIndex = (i + 1) % size;
+            int check1 = (i + 2) % size;
+            int check2 = (i + 3) % size;
+
+            V3d a = work.get(prevIndex);
+            V3d b = work.get(currentIndex);
+            V3d c = work.get(nextIndex);
+            V3d d = work.get(check1);
+            V3d e = work.get(check2);
+
+            if (isValidTriangle(a, b, c) && !CrossEdgeValidator.isPointBetween(d, e, c)) {
+                result.add(new Triangle3d(a, b, c, normal));
+                work.remove(currentIndex);
+                continue;
+            }
+            i++;
+        }
+
+        return result;
     }
 
     public static List<Facet> triangulate(Polygon polygon) {
         List<Facet> facets = new ArrayList<>();
-        List<Triangle3d> triangle3ds = Earcut3D.triangulate(polygon.getVertices(), polygon.getNormal());
+        List<Triangle3d> triangle3ds =
+            EarClippingMod.triangulate(polygon.getVertices(), polygon.getNormal());
         for (Triangle3d triangle : triangle3ds) {
             facets.add(new Facet(triangle, polygon.getNormal(), polygon.getColor()));
         }
@@ -29,7 +63,8 @@ public class Triangulator {
         List<Facet> facetsFromPolygons = new ArrayList<>();
 
         for (Polygon p : polygons) {
-            List<Triangle3d> currentPolygonTriangles = Triangulator.triangulate(p.getVertices(), p.getNormal());
+            List<Triangle3d> currentPolygonTriangles =
+                Triangulator.triangulate(p.getVertices(), p.getNormal());
 
             List<Facet> localFacet = new ArrayList<>();
             for (Triangle3d t : currentPolygonTriangles) {

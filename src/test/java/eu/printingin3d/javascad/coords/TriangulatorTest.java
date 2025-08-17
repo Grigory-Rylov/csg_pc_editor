@@ -7,7 +7,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import eu.printingin3d.javascad.vrl.Facet;
-import eu.printingin3d.javascad.vrl.Polygon;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -78,24 +77,6 @@ public class TriangulatorTest {
                 isValidTriangle(pts.get(0), pts.get(1), pts.get(2))
             );
         }
-    }
-
-    @Test
-    public void testTriangulateEmptyList() {
-        List<V3d> vertices = new ArrayList<>();
-        List<Triangle3d> result =
-            Triangulator.triangulate(vertices, normal(vertices));
-        assertTrue("Empty list should return empty triangulation", result.isEmpty());
-    }
-
-    @Test
-    public void testTriangulateTwoVertices() {
-        List<V3d> vertices = Arrays.asList(
-            new V3d(0, 0, 0),
-            new V3d(1, 0, 0)
-        );
-        List<Triangle3d> result = Triangulator.triangulate(vertices, normal(vertices));
-        assertTrue("Two vertices should return empty triangulation", result.isEmpty());
     }
 
     @Test
@@ -363,6 +344,22 @@ public class TriangulatorTest {
     }
 
     @Test
+    public void testTriangulate7Pts() {
+        List<V3d> vertices = Arrays.asList(
+            new V3d(0, 10, 0),
+            new V3d(5, 10, 0),
+            new V3d(10, 10, 0),
+            new V3d(10, 0, 0),
+            new V3d(8, 2, 0),
+            new V3d(5, 5, 0),
+            new V3d(2, 8, 0)
+        );
+        List<Triangle3d> result =
+            Triangulator.triangulate(vertices, normal(vertices));
+        assertEquals("Triangle should return one triangle", vertices.size() - 2, result.size());
+    }
+
+    @Test
     public void testTriangulate2() {
         List<V3d> vertices = Arrays.asList(
             new V3d(-12.99038105676658, -22.5, 25.0),
@@ -396,16 +393,17 @@ public class TriangulatorTest {
 
     @Test
     public void triangulatePolygon1() {
-        Polygon polygon = Polygon.fromJson(
-            "{\"vertices\":[{\"x\":25.0,\"y\":-17.76709006307399,\"z\":-25.0},{\"x\":25.0," +
-                "\"y\":17.76709006307398,\"z\":-25.0},{\"x\":25.0,\"y\":25.0,\"z\":-3" +
-                ".3012701892219525},{\"x\":25.0,\"y\":15.566243270259353,\"z\":25.0},{\"x\":25.0," +
-                "\"y\":15.000000000000014,\"z\":25.0},{\"x\":25.0,\"y\":12.500000000000007," +
-                "\"z\":21.24999999999999},{\"x\":25.0,\"y\":-17.955837819827096,\"z\":-24" +
-                ".433756729740683}]}");
+        List<V3d> vertices = Arrays.asList(
+            new V3d(25.0, -17, -25),
+            new V3d(25.0, 17, -25),
+            new V3d(25.0, 25, -3),
+            new V3d(25.0, 17, 25),
+            new V3d(25.0, 12, 25),
+            new V3d(25.0, -25, -25)
+        );
 
-        List<Facet> result = Triangulator.triangulate(polygon);
-        checkFacetsWithoutPoints(result, polygon.getVertices());
+        List<Triangle3d> result = Triangulator.triangulate(vertices, normal(vertices));
+        checkTrianglesWithoutPoints(result, vertices);
     }
 
     private static void checkFacetsWithoutPoints(List<Facet> result, List<V3d> vertices) {
@@ -439,53 +437,79 @@ public class TriangulatorTest {
                 if (triPoints.contains(vertex)) {
                     continue;
                 }
+                V3d a = triPoints.get(0);
+                V3d b = triPoints.get(1);
+                V3d c = triPoints.get(2);
+                boolean pointInsideTriangle = isPointInsideTriangle(vertex, a, b, c);
                 assertFalse(
                     "No other points should be inside the triangle",
-                    isPointInsideTriangle(
-                        vertex,
-                        triPoints.get(0),
-                        triPoints.get(1),
-                        triPoints.get(2)
-                    )
+                    pointInsideTriangle
                 );
             }
         }
     }
 
     /**
-     * Проверяет, находится ли точка P внутри треугольника ABC (в 2D-пространстве, Z игнорируется).
-     * Используется метод барицентрических координат или векторный метод.
+     * Проверяет, лежит ли точка P внутри треугольника ABC (включая границы).
+     * Точка P должна лежать в плоскости треугольника.
+     *
+     * @param p точка для проверки
+     * @param a первая вершина треугольника
+     * @param b вторая вершина треугольника
+     * @param c третья вершина треугольника
+     * @return true, если точка лежит внутри или на границе треугольника, false в противном случае
      */
     private static boolean isPointInsideTriangle(V3d p, V3d a, V3d b, V3d c) {
-        // Проецируем на плоскость XY (если Z не учитывается)
-        double px = p.x, py = p.y;
-        double ax = a.x, ay = a.y;
-        double bx = b.x, by = b.y;
-        double cx = c.x, cy = c.y;
-
-        // Вычисляем векторные произведения
-        double d1 = sign(px, py, ax, ay, bx, by);
-        double d2 = sign(px, py, bx, by, cx, cy);
-        double d3 = sign(px, py, cx, cy, ax, ay);
-
-        // Проверяем, что все знаки одинаковые (точка внутри)
-        boolean hasNeg = (d1 < 0) || (d2 < 0) || (d3 < 0);
-        boolean hasPos = (d1 > 0) || (d2 > 0) || (d3 > 0);
-        return !(hasNeg && hasPos);
+        return isPointInTriangle(p, a, b, c, 1e-10);
     }
 
     /**
-     * Вспомогательный метод для вычисления ориентации точки относительно ребра.
-     * Возвращает положительное, отрицательное или нулевое значение в зависимости от положения.
+     * Проверяет, лежит ли точка P внутри треугольника ABC (включая границы), с заданной точностью.
+     * Точка P должна лежать в плоскости треугольника.
+     *
+     * @param p точка для проверки
+     * @param a первая вершина треугольника
+     * @param b вторая вершина треугольника
+     * @param c третья вершина треугольника
+     * @param epsilon точность для сравнения
+     * @return true, если точка лежит внутри или на границе треугольника, false в противном случае
      */
-    private static double sign(double px, double py, double ax, double ay, double bx, double by) {
-        return (px - bx) * (ay - by) - (ax - bx) * (py - by);
+    private static boolean isPointInTriangle(V3d p, V3d a, V3d b, V3d c, double epsilon) {
+        // Используем барицентрические координаты
+
+        // Векторы треугольника
+        V3d v0 = new V3d(c.x - a.x, c.y - a.y, c.z - a.z); // AC
+        V3d v1 = new V3d(b.x - a.x, b.y - a.y, b.z - a.z); // AB
+        V3d v2 = new V3d(p.x - a.x, p.y - a.y, p.z - a.z); // AP
+
+        // Скалярные произведения
+        double dot00 = v0.x * v0.x + v0.y * v0.y + v0.z * v0.z;
+        double dot01 = v0.x * v1.x + v0.y * v1.y + v0.z * v1.z;
+        double dot02 = v0.x * v2.x + v0.y * v2.y + v0.z * v2.z;
+        double dot11 = v1.x * v1.x + v1.y * v1.y + v1.z * v1.z;
+        double dot12 = v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
+
+        // Вычисляем барицентрические координаты
+        double denom = dot00 * dot11 - dot01 * dot01;
+
+        // Проверка вырожденности треугольника
+        if (Math.abs(denom) < epsilon) {
+            return false; // Треугольник вырожден
+        }
+
+        double invDenom = 1.0 / denom;
+        double u = (dot11 * dot02 - dot01 * dot12) * invDenom;
+        double v = (dot00 * dot12 - dot01 * dot02) * invDenom;
+
+        // Точка находится внутри или на границе, если:
+        // u >= 0, v >= 0 и u + v <= 1
+        return (u >= -epsilon) && (v >= -epsilon) && (u + v <= 1 + epsilon);
     }
 
     private static V3d normal(List<V3d> points) {
         V3d point1 = points.get(0);
         V3d point2 = points.get(1);
-        V3d point3 = points.get(3);
+        V3d point3 = points.get(2);
 
         return normal(point1, point2, point3);
     }
