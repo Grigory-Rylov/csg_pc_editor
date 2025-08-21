@@ -26,7 +26,8 @@ import org.jetbrains.annotations.NotNull;
 public class SceneBuilderTest implements SceneBuilder {
 
     private static final boolean SHOW_GROUPED_EDGES = false;
-    private static final boolean SHOW_TRIANGULATION = true;
+    private static final boolean SHOW_TRIANGULATION = false;
+    private static final boolean SHOW_NAKED_EDGES = false;
     public final List<VertexHolder> buffers;
     private final DebugRecorder debugRecorder;
 
@@ -70,10 +71,9 @@ public class SceneBuilderTest implements SceneBuilder {
         List<Facet> facetsFromPolygons = Triangulator.triangulate(fixedPolygons);
         debugRecorder.onEndFacets(facetsFromPolygons);
 
-        for (Polygon p : fixedPolygons) {
-            List<Facet> facetsOfPolygon = Triangulator.triangulate(p);
-            debugRecorder.onDebugPolygonTriangulation(p, facetsOfPolygon);
-        }
+
+//        List<Polygon> referencePolygons = new STLParser().parseBinarySTL("reference.stl");
+//        debugRecorder.onEnd(referencePolygons);
 
         // validation
 
@@ -96,21 +96,24 @@ public class SceneBuilderTest implements SceneBuilder {
 
         List<StlValidator.NakedEdgeInfo> nakedEdges =
             StlValidator.analyzeNakedEdges(facetsFromPolygons);
-        for (StlValidator.NakedEdgeInfo nakedEdge : nakedEdges) {
-            PolygonValidator.LineKey lineKey = PolygonValidator.LineKey.fromSegment(
-                nakedEdge.getPointA(),
-                nakedEdge.getPointB()
-            );
-            List<PolygonValidator.PolygonEdge> nearby = nearbyPolygons.get(lineKey);
+        System.out.println("Neked edges: " + nakedEdges.size());
+        if (SHOW_NAKED_EDGES) {
+            for (StlValidator.NakedEdgeInfo nakedEdge : nakedEdges) {
+                PolygonValidator.LineKey lineKey = PolygonValidator.LineKey.fromSegment(
+                    nakedEdge.getPointA(),
+                    nakedEdge.getPointB()
+                );
+                List<PolygonValidator.PolygonEdge> nearby = nearbyPolygons.get(lineKey);
 
-            debugRecorder.onDebugNakedEdgeWithNearbyFacets(
-                null,
-                nakedEdge.getPointA(),
-                nakedEdge.getPointB(),
-                nakedEdge.getFacet(),
-                nearby,
-                facetsFromPolygons
-            );
+                debugRecorder.onDebugNakedEdgeWithNearbyFacets(
+                    null,
+                    nakedEdge.getPointA(),
+                    nakedEdge.getPointB(),
+                    nakedEdge.getFacet(),
+                    nearby,
+                    facetsFromPolygons
+                );
+            }
         }
 
         if (SHOW_GROUPED_EDGES) {

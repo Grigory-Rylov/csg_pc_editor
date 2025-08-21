@@ -15,7 +15,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.TreeSet;
 
 /**
  * Утилита для исправления проблем в полигонах
@@ -30,9 +29,7 @@ public class PolygonValidator {
      * Исправляет проблемы в полигонах: коллинеарные точки, близкие вершины, naked edges
      */
     public static List<Polygon> fixPolygons(List<Polygon> polygons) {
-        System.out.println("fixPolygons started , src = " + polygons.size());
         Map<LineKey, List<PolygonEdge>> edges = PolygonValidator.getCommonPolygons(polygons);
-        System.out.println("Common edges = " + edges.size());
 
         Map<Polygon, Set<PointInsert>> mergedPoints = new HashMap<>();
 
@@ -103,7 +100,7 @@ public class PolygonValidator {
 
                 // should insert points into current
                 Set<PointInsert> currentPolygonToBeAdded =
-                    result.computeIfAbsent(currentPolygon.polygon, k -> new TreeSet<>());
+                    result.computeIfAbsent(currentPolygon.polygon, k -> new HashSet<>());
 
                 if (CrossEdgeValidator.isPointBetween(a2, a1, b1)) {
                     currentPolygonToBeAdded.add(new PointInsert(
@@ -120,7 +117,7 @@ public class PolygonValidator {
 
                 // should insert points into other
                 Set<PointInsert> otherPolygonToBeAdded =
-                    result.computeIfAbsent(otherPolygon.polygon, k -> new TreeSet<>());
+                    result.computeIfAbsent(otherPolygon.polygon, k -> new HashSet<>());
                 if (CrossEdgeValidator.isPointBetween(a1, a2, b2)) {
                     otherPolygonToBeAdded.add(new PointInsert(a1, otherPolygon.firstPointIndex));
                 }
@@ -173,6 +170,8 @@ public class PolygonValidator {
                     currentPolygonVertices,
                     entry.getKey().getColor()
                 ));
+            } else  {
+                System.out.println("Invalid triangle");
             }
         }
         return polygons;

@@ -69,9 +69,9 @@ class Main(title: String?) : JFrame(title), GLEventListener {
 
     init {
         settingsHolder.loadSettings()
-        //sceneBuilder = SceneBuilderKeyboard(settingsHolder.settings.getKeyboardConfig(), pointsController)
+        sceneBuilder = SceneBuilderKeyboard(settingsHolder.settings.getKeyboardConfig(), pointsController)
         val debugRecorder = DebugRecorderImpl()
-        sceneBuilder = SceneBuilderTest(debugRecorder)
+        //sceneBuilder = SceneBuilderTest(debugRecorder)
         sceneBuilder.setListener { buffers: List<VertexHolder>? ->
             val timeDelta = System.currentTimeMillis() - requestRenderingTime
             println("Rendering time = $timeDelta ms")

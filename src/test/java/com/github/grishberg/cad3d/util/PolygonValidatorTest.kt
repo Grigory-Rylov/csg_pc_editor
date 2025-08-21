@@ -19,6 +19,7 @@ class PolygonValidatorTest {
         StlExporter.saveStl(fixed, "sample_fixed.stl")
     }
 
+
     private fun createModel(): CSG {
         val cube: Abstract3dModel = Cube(50.0)
         val sphere = Sphere(25.0).move(0, 0, 40.0)

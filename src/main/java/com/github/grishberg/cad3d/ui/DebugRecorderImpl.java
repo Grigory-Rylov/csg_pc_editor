@@ -124,6 +124,11 @@ public class DebugRecorderImpl implements DebugRecorder {
     }
 
     @Override
+    public void onEnd(Polygon polygon, List<Polygon> allPolygons) {
+        commands.add(new EndCmd(polygon, allPolygons));
+    }
+
+    @Override
     public void onEndFacets(List<Facet> facets) {
         commands.add(new EndFacetsCmd(facets));
     }

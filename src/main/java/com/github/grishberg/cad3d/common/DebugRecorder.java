@@ -65,6 +65,7 @@ public interface DebugRecorder {
     void onEnd(List<Polygon> polygons);
 
     void onEnd(Polygon polygon);
+    void onEnd(Polygon polygon, List<Polygon> allPolygons);
 
     void onEndFacets(List<Facet> facets);
 
