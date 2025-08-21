@@ -4,7 +4,8 @@ import eu.printingin3d.javascad.coords.Triangulator
 import eu.printingin3d.javascad.coords.V3d
 import eu.printingin3d.javascad.utils.PolygonValidator.PointInsert
 import eu.printingin3d.javascad.vrl.Polygon
-import kotlin.test.assertEquals
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class PolygonValidatorTest {
@@ -149,4 +150,77 @@ class PolygonValidatorTest {
 
         assertEquals(key1, key2)
     }
+
+    @Test
+    fun test() {
+        val p = V3d(
+            76.45451605516418,
+            -51.73123034352204,
+            23.72222358968054
+        )
+
+        val a = V3d(76.51101271115557, -51.79415715919706, 23.72429834360106)
+        val b = V3d(76.44699811096302, -51.72285674546214, 23.721947504593167)
+        val c = V3d(76.44586067774136, -51.723946108246864, 23.72266600210672)
+        val d = V3d(76.51052392142027, -51.79536350256047, 23.72484529487683)
+        val polygon = Polygon.fromPolygons(
+            listOf(a, b, c, d), Color.GRAY
+        )
+
+        val polygon2 = Polygon.fromPolygons(
+            listOf(a, p, b, c, d), polygon.normal, Color.GRAY
+        )
+
+        assertTrue(CrossEdgeValidator.isPointBetween(p, a, b))
+
+    }
+
+    @Test
+    fun test4() {
+        val p0 = V3d(
+            85.68772822900522,
+            -9.912880642267941,
+            24.017398885379336
+        )
+
+        val p1 = V3d(
+            85.687063799896,
+            -9.91814747838063,
+            24.037663803889966
+
+        )
+
+        val p2 = V3d(
+            85.68662376880474,
+            -9.921635542961209,
+            24.051084640037672
+
+        )
+
+        val p3 = V3d(
+            85.71404857634208,
+            -9.704242950256665,
+            24.04993026978045
+
+        )
+
+        val a = V3d(85.68625432486834,-9.924564073091435, 24.06235258594964)
+        val b = V3d(85.69057646476155,-9.890303077963765,23.93052842064428)
+        val c = V3d(85.74171703302851,-9.484918985010747,24.037564176122657)
+        val polygon = Polygon.fromPolygons(
+            listOf(a, b, c,), Color.GRAY
+        )
+
+        val vertices = listOf(a, p0, p1, p2, b, c, p3)
+        val polygon2 = Polygon.fromPolygons(
+            vertices, polygon.normal, Color.GRAY
+        )
+
+        assertTrue(CrossEdgeValidator.isPointBetween(p0, a, b))
+        assertTrue(CrossEdgeValidator.isPointBetween(p1, a, b))
+        assertTrue(CrossEdgeValidator.isPointBetween(p2, a, b))
+        assertTrue(CrossEdgeValidator.isPointBetween(p3, a, c))
+
+    }
+
 }

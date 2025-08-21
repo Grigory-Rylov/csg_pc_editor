@@ -2,12 +2,14 @@ package eu.printingin3d.javascad.models.surfaces.bicubic;
 
 import eu.printingin3d.javascad.coords.V3d;
 
+import static eu.printingin3d.javascad.vrl.Const.EPSILON;
+
 class CommonMath {
 
     /**
      * Threshold for zero.
      */
-    static final double EPSILON = 1.0e-5;
+
 
     /**
      * One third.

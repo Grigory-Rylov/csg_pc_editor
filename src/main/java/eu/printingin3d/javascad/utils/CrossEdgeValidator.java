@@ -2,8 +2,9 @@ package eu.printingin3d.javascad.utils;
 
 import eu.printingin3d.javascad.coords.V3d;
 
+import static eu.printingin3d.javascad.vrl.Const.EPSILON;
+
 public class CrossEdgeValidator {
-    private static final double EPSILON = 1e-12;
 
     public static boolean isPointBetween(V3d point, V3d start, V3d end) {
 

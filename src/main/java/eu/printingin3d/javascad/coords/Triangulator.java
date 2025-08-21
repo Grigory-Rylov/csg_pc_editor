@@ -1,5 +1,7 @@
 package eu.printingin3d.javascad.coords;
 
+import static eu.printingin3d.javascad.vrl.Const.EPSILON;
+
 import eu.printingin3d.javascad.utils.CrossEdgeValidator;
 import eu.printingin3d.javascad.vrl.Facet;
 import eu.printingin3d.javascad.vrl.Polygon;
@@ -145,7 +147,7 @@ public class Triangulator {
         double crossZ = abX * acY - abY * acX;
 
         // Если векторное произведение близко к нулю, точки коллинеарны
-        final double EPSILON = 1e-10;
+
         return Math.abs(crossX) < EPSILON &&
             Math.abs(crossY) < EPSILON &&
             Math.abs(crossZ) < EPSILON;

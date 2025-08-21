@@ -160,7 +160,7 @@ class STLParser {
 
         val attributes = buffer.short
 
-        return Polygon.fromPolygons(vertices, Color.red)
+        return Polygon.fromPolygons(vertices, normal, Color.red)
     }
 
     private fun readVector3DFromBuffer(buffer: ByteBuffer): V3d {

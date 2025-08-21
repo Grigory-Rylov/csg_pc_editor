@@ -1,12 +1,14 @@
 package eu.printingin3d.javascad.utils;
 
+import static eu.printingin3d.javascad.vrl.Const.EPSILON;
+
 /**
  * Miscellaneous helper methods regarding doubles.
  *
  * @author ivivan <ivivan@printingin3d.eu>
  */
 public final class DoubleUtils {
-	private static final double EPSILON = 0.0001;
+
 	private static final double ZERO_EPSILON = 0.000001;
 	
 	private DoubleUtils() {

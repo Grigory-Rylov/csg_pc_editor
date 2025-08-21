@@ -5,6 +5,8 @@ import java.util.Locale;
 
 import eu.printingin3d.javascad.basic.Angle;
 
+import static eu.printingin3d.javascad.vrl.Const.EPSILON;
+
 /**
  * Immutable representation of a 3D coordinate with useful helper methods.
  *
@@ -219,7 +221,6 @@ public class V3d extends Basic3dFunc<V3d> {
         }
 
         V3d v3d = (V3d) obj;
-        final double EPSILON = 1e-10; // Для сравнения чисел с плавающей точкой
 
         return Math.abs(x - v3d.x) < EPSILON &&
             Math.abs(y - v3d.y) < EPSILON &&
@@ -246,7 +247,7 @@ public class V3d extends Basic3dFunc<V3d> {
      * @return Хэш-код, совместимый с equals, использующим EPSILON.
      */
     public static int hashCodeWithEpsilon(double value) {
-        final double EPSILON = 1e-10;
+
         // Обработка специальных случаев
         if (Double.isNaN(value)) {
             // Используем стандартный хэш для NaN

@@ -1,5 +1,7 @@
 package eu.printingin3d.javascad.utils;
 
+import static eu.printingin3d.javascad.vrl.Const.EPSILON;
+
 import eu.printingin3d.javascad.coords.Triangle3d;
 import eu.printingin3d.javascad.coords.Triangulator;
 import eu.printingin3d.javascad.coords.V3d;
@@ -20,10 +22,6 @@ import java.util.TreeMap;
  * Утилита для исправления проблем в полигонах
  */
 public class PolygonValidator {
-
-    private static final double COLLINEAR_TOLERANCE = 1e-9;
-    private static final double EPSILON = 1e-12;
-    private static final double NEARBY_VERTICES_TOLERANCE = 1e-6;
 
     /**
      * Исправляет проблемы в полигонах: коллинеарные точки, близкие вершины, naked edges
@@ -62,9 +60,12 @@ public class PolygonValidator {
                 V3d a = vertices.get(i);
                 V3d b = vertices.get((i + 1) % vertices.size());
                 LineKey key = LineKey.fromSegment(a, b);
-
-                List<PolygonEdge> currentList = map.computeIfAbsent(key, k -> new ArrayList<>());
-                currentList.add(new PolygonEdge(polygon, a, b, i));
+                if (key != null) {
+                    List<PolygonEdge> currentList = map.computeIfAbsent(key, k -> new ArrayList<>());
+                    currentList.add(new PolygonEdge(polygon, a, b, i));
+                } else {
+                    System.out.println("Found closes points " + a + " - " + b);
+                }
             }
 
             percentF = ((float) iter / (float) polygons.size()) * 100f;
@@ -73,7 +74,7 @@ public class PolygonValidator {
                 System.out.println("Common edges: validator status: " + newPercent);
             }
             percent = newPercent;
-            iter ++;
+            iter++;
         }
 
         return map;
@@ -138,7 +139,8 @@ public class PolygonValidator {
     public static List<Polygon> addPolygonNewVertices(Map<Polygon, Set<PointInsert>> newVerticesInfo) {
         ArrayList<Polygon> polygons = new ArrayList<>();
         for (Map.Entry<Polygon, Set<PointInsert>> entry : newVerticesInfo.entrySet()) {
-            ArrayList<V3d> currentPolygonVertices = new ArrayList<>(entry.getKey().getVertices());
+            Polygon currentPolygon = entry.getKey();
+            ArrayList<V3d> currentPolygonVertices = new ArrayList<>(currentPolygon.getVertices());
 
             TreeMap<Integer, Set<V3d>> groupedPoints = new TreeMap<>(Collections.reverseOrder());
 
@@ -165,12 +167,15 @@ public class PolygonValidator {
                     }
                 }
             }
-            if (Polygon.isValid(currentPolygonVertices)) {
-                polygons.add(Polygon.fromPolygons(
-                    currentPolygonVertices,
-                    entry.getKey().getColor()
-                ));
-            } else  {
+            if (Polygon.isValid(currentPolygonVertices, currentPolygon.getNormal(), currentPolygon.getDist())) {
+                polygons.add(
+                    Polygon.fromPolygons(
+                        currentPolygonVertices,
+                        currentPolygon.getNormal(),
+                        currentPolygon.getColor()
+                    )
+                );
+            } else {
                 System.out.println("Invalid triangle");
             }
         }
@@ -401,9 +406,7 @@ public class PolygonValidator {
          */
         public static LineKey fromSegment(V3d p0, V3d p1) {
             if (p0.equals(p1)) {
-                throw new IllegalArgumentException(
-                    "Точки p0 и p1 не могут совпадать, так как не определяют прямую. " + p0 +
-                        " - " + p1);
+                return null;
             }
 
             // Вычисляем направляющий вектор

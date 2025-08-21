@@ -1,7 +1,11 @@
 package eu.printingin3d.javascad.coords;
 
+import eu.printingin3d.javascad.vrl.Const;
+
 import java.util.ArrayList;
 import java.util.List;
+
+import static eu.printingin3d.javascad.vrl.Const.EPSILON;
 
 public class EarClippingMod {
 
@@ -38,7 +42,6 @@ public class EarClippingMod {
             indices.add(i);
         }
 
-        final double EPSILON = 1e-10;
         int iterations = 0;
         final int MAX_ITERATIONS = n * n; // Предотвращение зацикливания
 

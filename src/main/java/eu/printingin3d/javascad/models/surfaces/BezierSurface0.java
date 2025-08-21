@@ -5,6 +5,8 @@ import eu.printingin3d.javascad.coords.V3d;
 import java.util.ArrayList;
 import java.util.List;
 
+import static eu.printingin3d.javascad.vrl.Const.EPSILON;
+
 public class BezierSurface0 {
 
     static class Segment {
@@ -30,7 +32,7 @@ public class BezierSurface0 {
         }
     }
 
-    private static final double EPSILON = 1.0e-5;
+
     private final V3d[][] controlPoints;
 
     public BezierSurface0(V3d[][] points) {

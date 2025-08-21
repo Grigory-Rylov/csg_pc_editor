@@ -12,12 +12,12 @@ import java.util.stream.Stream;
 import eu.printingin3d.javascad.coords.Triangle3d;
 import eu.printingin3d.javascad.coords.Triangulator;
 import eu.printingin3d.javascad.coords.V3d;
+import eu.printingin3d.javascad.vrl.Const;
 import eu.printingin3d.javascad.vrl.Facet;
 import eu.printingin3d.javascad.vrl.Polygon;
 
 public class StlValidator {
 
-    private static final double EPSILON = 1e-6;
     private static final int PRECISION = 6;
 
     public static List<Facet> validateAndRepair(List<Facet> facets) {
@@ -374,7 +374,7 @@ public class StlValidator {
 
     // Проверка на вырожденность с учетом масштаба
     private static boolean isDegenerate(List<V3d> vertices, double scale) {
-        double epsilon = scale * 1e-6; // Адаптивный порог
+        double epsilon = scale * Const.EPSILON; // Адаптивный порог
         V3d edge1 = vertices.get(1).subtract(vertices.get(0));
         V3d edge2 = vertices.get(2).subtract(vertices.get(0));
         return edge1.cross(edge2).magnitude() < epsilon;
