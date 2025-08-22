@@ -41,7 +41,8 @@ class Connections(private val cfg: KeyboardConfig, private val keyPlace: KeyPlac
         for (column in 0 until cfg.columnsCount) {
             for (row in 0 until cfg.rowsCount - 1) {
                 addHull(
-                    keyPlace.place(column, row, placeHolderBottom()), keyPlace.place(column, row + 1, placeHolderTop())
+                    keyPlace.place(column, row, placeHolderBottom()),
+                    keyPlace.place(column, row + 1, placeHolderTop())
                 )
             }
         }

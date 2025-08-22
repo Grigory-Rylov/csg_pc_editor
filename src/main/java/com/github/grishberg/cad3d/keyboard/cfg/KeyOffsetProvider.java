@@ -3,7 +3,7 @@ package com.github.grishberg.cad3d.keyboard.cfg;
 import eu.printingin3d.javascad.coords.V3d;
 
 public class KeyOffsetProvider {
-   private static final double OFFSET = 1.7;
+   private static final double OFFSET = 2;
    public V3d getOffset(int column) {
       switch (column) {
          case 0:

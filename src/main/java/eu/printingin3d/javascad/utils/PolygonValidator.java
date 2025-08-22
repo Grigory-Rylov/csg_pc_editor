@@ -27,6 +27,7 @@ public class PolygonValidator {
      * Исправляет проблемы в полигонах: коллинеарные точки, близкие вершины, naked edges
      */
     public static List<Polygon> fixPolygons(List<Polygon> polygons) {
+        long startTime = System.currentTimeMillis();
         Map<LineKey, List<PolygonEdge>> edges = PolygonValidator.getCommonPolygons(polygons);
 
         Map<Polygon, Set<PointInsert>> mergedPoints = new HashMap<>();
@@ -44,7 +45,10 @@ public class PolygonValidator {
             }
         }
 
-        return addPolygonNewVertices(mergedPoints);
+        List<Polygon> result = addPolygonNewVertices(mergedPoints);
+        System.out.println(
+            "Polygon validator duration = " + (System.currentTimeMillis() - startTime) + " ms");
+        return result;
     }
 
     public static Map<LineKey, List<PolygonEdge>> getCommonPolygons(List<Polygon> polygons) {
@@ -61,7 +65,8 @@ public class PolygonValidator {
                 V3d b = vertices.get((i + 1) % vertices.size());
                 LineKey key = LineKey.fromSegment(a, b);
                 if (key != null) {
-                    List<PolygonEdge> currentList = map.computeIfAbsent(key, k -> new ArrayList<>());
+                    List<PolygonEdge> currentList =
+                        map.computeIfAbsent(key, k -> new ArrayList<>());
                     currentList.add(new PolygonEdge(polygon, a, b, i));
                 } else {
                     System.out.println("Found closes points " + a + " - " + b);
@@ -167,7 +172,11 @@ public class PolygonValidator {
                     }
                 }
             }
-            if (Polygon.isValid(currentPolygonVertices, currentPolygon.getNormal(), currentPolygon.getDist())) {
+            if (Polygon.isValid(
+                currentPolygonVertices,
+                currentPolygon.getNormal(),
+                currentPolygon.getDist()
+            )) {
                 polygons.add(
                     Polygon.fromPolygons(
                         currentPolygonVertices,

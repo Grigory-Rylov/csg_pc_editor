@@ -36,6 +36,7 @@ data class KeyboardConfig(
     val trackball: TrackballConfig,
     val wallsSettings: WallsSettings,
     val controllerPlateHeight: Double = 1.5,
+    val keyPlaceholderType: KeyPlaceholderType,
 ) {
 
     val lastCol: Int

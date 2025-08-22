@@ -25,6 +25,7 @@ data class AssemblySettings(
     val showTrackbalSensorCap: Boolean = false,
     val showTrackbalBall: Boolean = false,
     val showControllerHolder: Boolean = false,
+    val showAmoeba: Boolean = false,
 )
 
 @Serializable
@@ -36,7 +37,7 @@ data class ThumbClusterSettings(
     val rotateZ: Double = 10.0,
     val arcRadiusZ: Double = 0.0,
     val arcRadiusY: Double = 0.0,
-    val spaceBetweenKey:Double = 5.3,
+    val spaceBetweenKey:Double = 6.5,
     val type: ThumbClusterMode = ThumbClusterMode.SingleColumn3Buttons,
 )
 
@@ -81,8 +82,8 @@ data class SettingsContainer(
         rowCurvature = keyboardSettings.rowCurvature,
         tentingAngle = keyboardSettings.tentingAngle,
         columnCurvature = keyboardSettings.columnCurvature,
-        keyswitchHeight = 14.2,
-        keyswitchWidth = 14.2,
+        keyswitchHeight = 18.0,
+        keyswitchWidth = 18.0,
         extraWidth = 2.5,
         extraHeight = 1.0,
         keyPlaceHolderWidth = 15.7,
@@ -107,6 +108,7 @@ data class SettingsContainer(
         screwHolderWallhickness = keyboardSettings.screwHolderWallhickness,
         isSkeletonMode = keyboardSettings.isSkeletonMode,
         trackball = trackballSettings,
-        wallsSettings = WallsSettings()
+        wallsSettings = WallsSettings(),
+        keyPlaceholderType = keyboardSettings.keyPlaceholderType,
     )
 }

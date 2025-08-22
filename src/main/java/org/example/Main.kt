@@ -72,9 +72,11 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         sceneBuilder = SceneBuilderKeyboard(settingsHolder.settings.getKeyboardConfig(), pointsController)
         val debugRecorder = DebugRecorderImpl()
         //sceneBuilder = SceneBuilderTest(debugRecorder)
-        sceneBuilder.setListener { buffers: List<VertexHolder>? ->
-            val timeDelta = System.currentTimeMillis() - requestRenderingTime
-            println("Rendering time = $timeDelta ms")
+        sceneBuilder.setListener { buffers: List<VertexHolder>?, isReady: Boolean  ->
+            if (isReady) {
+                val timeDelta = System.currentTimeMillis() - requestRenderingTime
+                println("Rendering time = $timeDelta ms")
+            }
             debugCommands.clear()
             debugCommands.addAll(debugRecorder.commands)
             vertexHolderList.clear()
@@ -135,6 +137,11 @@ class Main(title: String?) : JFrame(title), GLEventListener {
             rebuildConfigAndRequestRendering()
         }
 
+        val showAmoebaButton = createToggleButton("Амебы", settingsHolder.showAmoeba) {
+            settingsHolder.showAmoeba = it
+            rebuildConfigAndRequestRendering()
+        }
+
         val debugButton = createToggleButton("Debug", showDebugInfo) {
             showDebugInfo = it
             if (!it) {
@@ -157,6 +164,7 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         controlPanel.add(trackballSensorCapButton)
         controlPanel.add(showControllerHolderButton)
         controlPanel.add(showControllerButton)
+        controlPanel.add(showAmoebaButton)
         controlPanel.add(debugButton)
 
         val configButton = JButton("Конфигурации")

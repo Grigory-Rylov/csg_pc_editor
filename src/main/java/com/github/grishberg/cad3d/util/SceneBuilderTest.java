@@ -131,7 +131,7 @@ public class SceneBuilderTest implements SceneBuilder {
         }
 
         if (listener != null) {
-            listener.onReady(buffers);
+            listener.onReady(buffers, true);
         }
     }
 
