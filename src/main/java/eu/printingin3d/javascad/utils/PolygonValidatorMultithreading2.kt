@@ -6,16 +6,24 @@ import eu.printingin3d.javascad.vrl.Polygon
 import java.util.Collections
 import java.util.Objects
 import java.util.TreeMap
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ForkJoinPool
 import java.util.function.ToDoubleFunction
+import java.util.stream.Collectors
+import kotlin.Pair
 import kotlin.math.abs
 import kotlin.math.sqrt
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
 
 /**
- * Утилита для исправления проблем в полигонах
+ * Утилита для исправления проблем в полигонах с поддержкой многопоточности
  */
-class PolygonValidatorMultithreading {
+class PolygonValidatorMultithreading2(
+    private val parallelismThreshold: Int = 50,
+    private val threadPoolSize: Int = Runtime.getRuntime().availableProcessors()
+) {
+
+    // Пользовательский ForkJoinPool для контроля количества потоков
+    private val customPool = ForkJoinPool(threadPoolSize)
 
     /**
      * Исправляет проблемы в полигонах: коллинеарные точки, близкие вершины, naked edges
@@ -24,41 +32,30 @@ class PolygonValidatorMultithreading {
     fun fixPolygons(
         polygons: List<Polygon>, progressObserver: ProgressObserver = ProgressObserver.STUB
     ): List<Polygon> {
-
-        val processor: EdgesFinder = CommonPolygonFinderMultitrading(progressObserver)//CommonPolygonFinder(progressObserver)
         val startTime = System.currentTimeMillis()
-        val edges = runBlocking(Dispatchers.Default) {
-            // Вызываем suspend функцию
-            processor.getCommonPolygons(polygons)
-        }
+        val edges = getCommonPolygonsParallel(polygons, progressObserver)
 
-        val mergedPoints = HashMap<Polygon, MutableSet<PointInsert>>()
+        val mergedPoints = ConcurrentHashMap<Polygon, MutableSet<PointInsert>>()
 
-        var iter = 0
-        var percent = 0
-        var percentF: Float
+        // Параллельная обработка групп рёбер с использованием настраиваемого пула потоков
+        val edgesList = edges.entries.toList()
 
-        for (entry in edges.entries) {
-            val newPoints = findNewPoints(entry.value)
+        customPool.submit {
+            edgesList.parallelStream().forEach { entry ->
+                val newPoints = findNewPoints(entry.value)
 
-            // Объединяем новые точки с общим результатом
-            for (newEntry in newPoints.entries) {
-                val polygon = newEntry.key
-                val points = newEntry.value
-
-                val dst = mergedPoints.computeIfAbsent(polygon) { k: Polygon -> HashSet() }
-                dst.addAll(points)
+                // Объединяем новые точки с общим результатом
+                newPoints.forEach { (polygon, points) ->
+                    mergedPoints.computeIfAbsent(polygon) { ConcurrentHashMap.newKeySet() }.addAll(points)
+                }
             }
+        }.get()
 
-            percentF = ((iter++).toFloat() / polygons.size.toFloat()) * 50f
-            val newPercent = percentF.toInt()
-            if (newPercent > percent) {
-                progressObserver.onProgress(newPercent + 50)
-            }
-            percent = newPercent
-        }
+        progressObserver.onProgress(75)
 
-        val result = addPolygonNewVertices(mergedPoints)
+        val result = addPolygonNewVerticesParallel(mergedPoints)
+        progressObserver.onProgress(100)
+
         println(
             "Polygon validator duration = " + (System.currentTimeMillis() - startTime) + " ms"
         )
@@ -100,54 +97,139 @@ class PolygonValidatorMultithreading {
         return map
     }
 
+    private fun getCommonPolygonsParallel(
+        polygons: List<Polygon>, progressObserver: ProgressObserver
+    ): Map<LineKey, List<PolygonEdge>> {
+        val map = ConcurrentHashMap<LineKey, MutableList<PolygonEdge>>()
+
+        // Параллельная обработка полигонов с использованием настраиваемого пула потоков
+        customPool.submit {
+            polygons.parallelStream().forEach { polygon ->
+                val vertices = polygon.getVertices()
+                for (i in vertices.indices) {
+                    val a = vertices[i]
+                    val b = vertices[(i + 1) % vertices.size]
+                    val key: LineKey? = LineKey.fromSegment(a, b)
+                    if (key != null) {
+                        val currentList = map.computeIfAbsent(key) {
+                            Collections.synchronizedList(ArrayList<PolygonEdge>())
+                        }
+                        currentList.add(PolygonEdge(polygon, a, b, i))
+                    } else {
+                        println("Found closes points $a - $b")
+                    }
+                }
+            }
+        }.get()
+
+        progressObserver.onProgress(50)
+        return map
+    }
+
     private fun findNewPoints(polygons: List<PolygonEdge>): Map<Polygon, Set<PointInsert>> {
+        if (polygons.size < 2) {
+            return mapOf(polygons[0].polygon to emptySet())
+        }
+
+        // Для небольших групп используем последовательный алгоритм
+        if (polygons.size < parallelismThreshold) {
+            return findNewPointsSequential(polygons)
+        }
+
+        // Для больших групп используем параллельный алгоритм
+        return findNewPointsParallel(polygons)
+    }
+
+    private fun findNewPointsSequential(polygons: List<PolygonEdge>): Map<Polygon, Set<PointInsert>> {
         val result = HashMap<Polygon, MutableSet<PointInsert>>()
 
-        if (polygons.size < 2) {
-            result.put(polygons[0].polygon, mutableSetOf())
-            return result
-        }
         for (i in 0..<polygons.size - 1) {
             val currentPolygon = polygons[i]
             for (j in i + 1..<polygons.size) {
                 val otherPolygon = polygons[j]
-                val a1 = currentPolygon.p0
-                val b1 = currentPolygon.p1
-
-                val a2 = otherPolygon.p0
-                val b2 = otherPolygon.p1
-
-                // should insert points into current
-                val currentPolygonToBeAdded =
-                    result.computeIfAbsent(currentPolygon.polygon) { k: Polygon -> HashSet<PointInsert>() }
-
-                if (CrossEdgeValidator.isPointBetween(a2, a1, b1)) {
-                    currentPolygonToBeAdded.add(
-                        PointInsert(
-                            a2, currentPolygon.firstPointIndex
-                        )
-                    )
-                }
-                if (CrossEdgeValidator.isPointBetween(b2, a1, b1)) {
-                    currentPolygonToBeAdded.add(
-                        PointInsert(
-                            b2, currentPolygon.firstPointIndex
-                        )
-                    )
-                }
-
-                // should insert points into other
-                val otherPolygonToBeAdded =
-                    result.computeIfAbsent(otherPolygon.polygon) { k: Polygon -> HashSet<PointInsert>() }
-                if (CrossEdgeValidator.isPointBetween(a1, a2, b2)) {
-                    otherPolygonToBeAdded.add(PointInsert(a1, otherPolygon.firstPointIndex))
-                }
-                if (CrossEdgeValidator.isPointBetween(b1, a2, b2)) {
-                    otherPolygonToBeAdded.add(PointInsert(b1, otherPolygon.firstPointIndex))
-                }
+                processPolygonPair(currentPolygon, otherPolygon, result)
             }
         }
         return result
+    }
+
+    private fun findNewPointsParallel(polygons: List<PolygonEdge>): Map<Polygon, Set<PointInsert>> {
+        val result = ConcurrentHashMap<Polygon, MutableSet<PointInsert>>()
+
+        // Создаём список пар для параллельной обработки
+        val pairs = mutableListOf<Pair<PolygonEdge, PolygonEdge>>()
+        for (i in 0..<polygons.size - 1) {
+            for (j in i + 1..<polygons.size) {
+                pairs.add(Pair(polygons[i], polygons[j]))
+            }
+        }
+
+        // Параллельно обрабатываем все пары с использованием настраиваемого пула потоков
+        customPool.submit {
+            pairs.parallelStream().forEach { (current, other) ->
+                processPolygonPairConcurrent(current, other, result)
+            }
+        }.get()
+
+        return result
+    }
+
+    private fun processPolygonPair(
+        currentPolygon: PolygonEdge, otherPolygon: PolygonEdge, result: MutableMap<Polygon, MutableSet<PointInsert>>
+    ) {
+        val a1 = currentPolygon.p0
+        val b1 = currentPolygon.p1
+        val a2 = otherPolygon.p0
+        val b2 = otherPolygon.p1
+
+        // should insert points into current
+        val currentPolygonToBeAdded = result.computeIfAbsent(currentPolygon.polygon) { HashSet<PointInsert>() }
+
+        if (CrossEdgeValidator.isPointBetween(a2, a1, b1)) {
+            currentPolygonToBeAdded.add(PointInsert(a2, currentPolygon.firstPointIndex))
+        }
+        if (CrossEdgeValidator.isPointBetween(b2, a1, b1)) {
+            currentPolygonToBeAdded.add(PointInsert(b2, currentPolygon.firstPointIndex))
+        }
+
+        // should insert points into other
+        val otherPolygonToBeAdded = result.computeIfAbsent(otherPolygon.polygon) { HashSet<PointInsert>() }
+        if (CrossEdgeValidator.isPointBetween(a1, a2, b2)) {
+            otherPolygonToBeAdded.add(PointInsert(a1, otherPolygon.firstPointIndex))
+        }
+        if (CrossEdgeValidator.isPointBetween(b1, a2, b2)) {
+            otherPolygonToBeAdded.add(PointInsert(b1, otherPolygon.firstPointIndex))
+        }
+    }
+
+    private fun processPolygonPairConcurrent(
+        currentPolygon: PolygonEdge,
+        otherPolygon: PolygonEdge,
+        result: ConcurrentHashMap<Polygon, MutableSet<PointInsert>>
+    ) {
+        val a1 = currentPolygon.p0
+        val b1 = currentPolygon.p1
+        val a2 = otherPolygon.p0
+        val b2 = otherPolygon.p1
+
+        // should insert points into current
+        val currentPolygonToBeAdded = result.computeIfAbsent(currentPolygon.polygon) { ConcurrentHashMap.newKeySet() }
+
+        if (CrossEdgeValidator.isPointBetween(a2, a1, b1)) {
+            currentPolygonToBeAdded.add(PointInsert(a2, currentPolygon.firstPointIndex))
+        }
+        if (CrossEdgeValidator.isPointBetween(b2, a1, b1)) {
+            currentPolygonToBeAdded.add(PointInsert(b2, currentPolygon.firstPointIndex))
+        }
+
+        // should insert points into other
+        val otherPolygonToBeAdded = result.computeIfAbsent(otherPolygon.polygon) { ConcurrentHashMap.newKeySet() }
+        if (CrossEdgeValidator.isPointBetween(a1, a2, b2)) {
+            otherPolygonToBeAdded.add(PointInsert(a1, otherPolygon.firstPointIndex))
+        }
+        if (CrossEdgeValidator.isPointBetween(b1, a2, b2)) {
+            otherPolygonToBeAdded.add(PointInsert(b1, otherPolygon.firstPointIndex))
+        }
     }
 
     private fun addPolygonNewVertices(newVerticesInfo: Map<Polygon, Set<PointInsert>>): List<Polygon> {
@@ -194,6 +276,54 @@ class PolygonValidatorMultithreading {
             }
         }
         return polygons
+    }
+
+    private fun addPolygonNewVerticesParallel(newVerticesInfo: Map<Polygon, Set<PointInsert>>): List<Polygon> {
+        return customPool.submit<List<Polygon>> {
+            newVerticesInfo.entries.parallelStream().map { entry ->
+                    processPolygonVertices(entry.key, entry.value)
+                }.filter { it != null }.collect(Collectors.toList()) as List<Polygon>
+        }.get()
+    }
+
+    private fun processPolygonVertices(currentPolygon: Polygon, pointInserts: Set<PointInsert>): Polygon? {
+        val currentPolygonVertices = ArrayList<V3d>(currentPolygon.getVertices())
+        val groupedPoints = TreeMap<Int, MutableSet<V3d>>(Collections.reverseOrder<Int>())
+
+        // Группируем вершины
+        for (pointInsert in pointInserts) {
+            val pointsOfGroup = groupedPoints.computeIfAbsent(pointInsert.position) { HashSet<V3d>() }
+            pointsOfGroup.add(pointInsert.point)
+        }
+
+        // Итерация от большего ключа к меньшему
+        for (verticesEntry in groupedPoints.entries) {
+            val key: Int = verticesEntry.key
+            val points = verticesEntry.value
+            val sortedPoints = sortedPoints(currentPolygonVertices[key], points)
+
+            if (key == currentPolygonVertices.size - 1) {
+                for (i in sortedPoints.indices.reversed()) {
+                    currentPolygonVertices.add(sortedPoints[i])
+                }
+            } else {
+                for (pointToBeAdded in sortedPoints) {
+                    currentPolygonVertices.add(key + 1, pointToBeAdded)
+                }
+            }
+        }
+
+        return if (Polygon.isValid(
+                currentPolygonVertices, currentPolygon.getNormal(), currentPolygon.getDist()
+            )
+        ) {
+            Polygon.fromPolygons(
+                currentPolygonVertices, currentPolygon.getNormal(), currentPolygon.getColor()
+            )
+        } else {
+            println("Invalid triangle")
+            null
+        }
     }
 
     private fun sortedPoints(startPoint: V3d, newPoints: Set<V3d>): List<V3d> {
@@ -340,7 +470,33 @@ class PolygonValidatorMultithreading {
         }
     }
 
+    /**
+     * Закрывает пул потоков. Вызывайте после завершения работы с валидатором.
+     */
+    fun shutdown() {
+        customPool.shutdown()
+    }
+
+    /**
+     * Принудительно закрывает пул потоков.
+     */
+    fun shutdownNow() {
+        customPool.shutdownNow()
+    }
+
     companion object {
+
+        /**
+         * Создаёт валидатор с оптимальными настройками для текущей системы
+         */
+        fun createOptimized(): PolygonValidatorMultithreading2 {
+            val cores = Runtime.getRuntime().availableProcessors()
+            // Используем немного больше потоков для IO-bound операций
+            val threadCount = (cores * 1.5).toInt().coerceAtLeast(cores)
+            return PolygonValidatorMultithreading2(
+                parallelismThreshold = 100, threadPoolSize = threadCount
+            )
+        }
 
         /**
          * Вычисляет квадрат расстояния между двумя точками (для избежания вычисления sqrt).

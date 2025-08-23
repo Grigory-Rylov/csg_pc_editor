@@ -2,6 +2,12 @@ package eu.printingin3d.javascad.utils
 
 import eu.printingin3d.javascad.coords.Triangulator
 import eu.printingin3d.javascad.coords.V3d
+import eu.printingin3d.javascad.models.Abstract3dModel
+import eu.printingin3d.javascad.models.Cube
+import eu.printingin3d.javascad.models.Sphere
+import eu.printingin3d.javascad.vrl.CSG
+import eu.printingin3d.javascad.vrl.ColorFacetGenerationContext
+import eu.printingin3d.javascad.vrl.FacetGenerationContext
 import eu.printingin3d.javascad.vrl.Polygon
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -85,5 +91,25 @@ class PolygonValidatorMultithreadingTest {
 
         val vertices = newPolygons.first { it.vertices.first() == firtstVertex}.vertices
         assertEquals(6, vertices.size)
+    }
+
+
+
+    @Test
+    fun performanceTest() {
+        val aContext = ColorFacetGenerationContext(Color.GRAY)
+        aContext.setFn(100)
+
+        val model = createModel(aContext)
+        val startTime = System.currentTimeMillis()
+        val newPolygons = underTest.fixPolygons(model.polygons)
+        println("Duration = ${System.currentTimeMillis() - startTime}")
+    }
+
+    private fun createModel(aContext: FacetGenerationContext): CSG {
+        val cube: Abstract3dModel = Cube(50.0)
+        val sphere = Sphere(25.0).move(0, 0, 40.0)
+        val model = cube.addModel(sphere)
+        return model.toCSG(aContext)
     }
 }

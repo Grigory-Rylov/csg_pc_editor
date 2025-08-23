@@ -29,7 +29,7 @@ public class StlExporter {
         File file = new File(fileName);
         List<Polygon> fixPolygons = PolygonValidator.fixPolygons(
             polygons,
-            new PolygonValidator.ProgressObserver() {
+            new ProgressObserver() {
                 @Override
                 public void onProgress(int progress) {
                     System.out.println(file.getName() + " : progress = " + progress);

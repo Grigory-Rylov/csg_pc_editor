@@ -27,10 +27,17 @@ public class PolygonValidator {
         return fixPolygons(polygons, ProgressObserver.STUB);
     }
 
+    public static List<Polygon> fixPolygons(
+        List<Polygon> polygons,
+        ProgressObserver progressObserver
+    ){
+        return new PolygonValidatorMultithreading().fixPolygons(polygons, progressObserver);
+    }
+
     /**
      * Исправляет проблемы в полигонах: коллинеарные точки, близкие вершины, naked edges
      */
-    public static List<Polygon> fixPolygons(
+    public static List<Polygon> fixPolygons1(
         List<Polygon> polygons,
         ProgressObserver progressObserver
     ) {
@@ -603,17 +610,5 @@ public class PolygonValidator {
         public int hashCode() {
             return Objects.hash(polygon, p0, p1, firstPointIndex);
         }
-    }
-
-    public interface ProgressObserver {
-
-        void onProgress(int progress);
-
-        ProgressObserver STUB = new ProgressObserver() {
-            @Override
-            public void onProgress(int progress) {
-                // no op
-            }
-        };
     }
 }
