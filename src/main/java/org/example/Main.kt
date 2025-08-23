@@ -6,7 +6,6 @@ import com.github.grishberg.cad3d.keyboard.cfg.SettingsHolder
 import com.github.grishberg.cad3d.ui.DebugRecorderImpl
 import com.github.grishberg.cad3d.util.SceneBuilder
 import com.github.grishberg.cad3d.util.SceneBuilderKeyboard
-import com.github.grishberg.cad3d.util.SceneBuilderTest
 import com.jogamp.opengl.GL2
 import com.jogamp.opengl.GLAutoDrawable
 import com.jogamp.opengl.GLCapabilities
@@ -72,7 +71,7 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         sceneBuilder = SceneBuilderKeyboard(settingsHolder.settings.getKeyboardConfig(), pointsController)
         val debugRecorder = DebugRecorderImpl()
         //sceneBuilder = SceneBuilderTest(debugRecorder)
-        sceneBuilder.setListener { buffers: List<VertexHolder>?, isReady: Boolean  ->
+        sceneBuilder.setListener { buffers: List<VertexHolder>?, isReady: Boolean ->
             if (isReady) {
                 val timeDelta = System.currentTimeMillis() - requestRenderingTime
                 println("Rendering time = $timeDelta ms")
@@ -165,13 +164,13 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         controlPanel.add(showControllerHolderButton)
         controlPanel.add(showControllerButton)
         controlPanel.add(showAmoebaButton)
-        controlPanel.add(debugButton)
 
         val configButton = JButton("Конфигурации")
         configButton.addActionListener {
             showConfigDialog()
         }
-        controlPanel?.add(configButton)
+        controlPanel.add(configButton)
+        controlPanel.add(debugButton)
 
         // Создаем панель навигации по debug командам
         createDebugNavigationPanel()

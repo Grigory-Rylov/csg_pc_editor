@@ -62,8 +62,8 @@ class Walls(
         val bottomEdgePatcher = CircleBottomEdgePatcher(
             thickness = 1.5,
             objectHeight = bottomBorderHeight,
-            radiusX = 100.0,
-            radiusY = 80.0,
+            radiusX = 115.0,
+            radiusY = 84.5,
             centerY = -35.0,
         )
         val controllerHolderWall = ControllerHolderWall(cfg.wallsSettings, keyPlace)

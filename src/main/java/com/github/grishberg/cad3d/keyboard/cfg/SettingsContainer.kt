@@ -32,7 +32,7 @@ data class AssemblySettings(
 data class ThumbClusterSettings(
     val xOffset: Double = -10.0,
     val yOffset: Double = -50.0,
-    val zOffset: Double = 40.0,
+    val zOffset: Double = 37.0,
     val rotateY: Double = -30.0,
     val rotateZ: Double = 10.0,
     val arcRadiusZ: Double = 0.0,

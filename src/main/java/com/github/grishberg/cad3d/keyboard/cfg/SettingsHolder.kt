@@ -109,7 +109,7 @@ class SettingsHolder(
         thumbClusterSettings = ThumbClusterSettings(
             xOffset = 0.0,
             yOffset = -50.0,
-            zOffset = 35.0,
+            zOffset = 37.0,
             rotateY = -45.0,
             rotateZ = 18.0,
             arcRadiusZ = 0.0,

@@ -25,7 +25,6 @@ import com.github.grishberg.cad3d.keyboard.casebody.controllers.switcher.Switche
 import com.github.grishberg.cad3d.keyboard.casebody.wall.ControllerHolderWall
 import com.github.grishberg.cad3d.keyboard.cfg.KeyPlaceholderType
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
-import com.github.grishberg.cad3d.keyboard.cfg.ThumbClusterSettings
 import com.github.grishberg.cad3d.keyboard.cfg.TrackballMode
 import com.github.grishberg.cad3d.keyboard.cfg.WallsSettings
 import com.github.grishberg.cad3d.keyboard.plate.Plate

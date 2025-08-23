@@ -5,6 +5,7 @@ import eu.printingin3d.javascad.coords.Triangulator;
 import eu.printingin3d.javascad.coords.V3d;
 import eu.printingin3d.javascad.vrl.Facet;
 import eu.printingin3d.javascad.vrl.Polygon;
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -25,7 +26,16 @@ public class StlExporter {
     public static void saveStl(List<Polygon> polygons, String fileName) {
         System.out.println("saveStl: Start generationg polygons from: " + polygons.size());
 
-        List<Polygon> fixPolygons = new PolygonValidator().fixPolygons(polygons);
+        File file = new File(fileName);
+        List<Polygon> fixPolygons = PolygonValidator.fixPolygons(
+            polygons,
+            new PolygonValidator.ProgressObserver() {
+                @Override
+                public void onProgress(int progress) {
+                    System.out.println(file.getName() + " : progress = " + progress);
+                }
+            }
+        );
 
         System.out.println("saveStl: Generated polygons: " + fixPolygons.size());
 

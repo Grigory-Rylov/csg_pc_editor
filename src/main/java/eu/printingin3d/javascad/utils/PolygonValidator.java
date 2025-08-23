@@ -23,14 +23,26 @@ import java.util.TreeMap;
  */
 public class PolygonValidator {
 
+    public static List<Polygon> fixPolygons(List<Polygon> polygons) {
+        return fixPolygons(polygons, ProgressObserver.STUB);
+    }
+
     /**
      * Исправляет проблемы в полигонах: коллинеарные точки, близкие вершины, naked edges
      */
-    public static List<Polygon> fixPolygons(List<Polygon> polygons) {
+    public static List<Polygon> fixPolygons(
+        List<Polygon> polygons,
+        ProgressObserver progressObserver
+    ) {
         long startTime = System.currentTimeMillis();
-        Map<LineKey, List<PolygonEdge>> edges = PolygonValidator.getCommonPolygons(polygons);
+        Map<LineKey, List<PolygonEdge>> edges =
+            PolygonValidator.getCommonPolygons(polygons, progressObserver);
 
         Map<Polygon, Set<PointInsert>> mergedPoints = new HashMap<>();
+
+        int iter = 0;
+        int percent = 0;
+        float percentF;
 
         for (Map.Entry<LineKey, List<PolygonEdge>> entry : edges.entrySet()) {
             Map<Polygon, Set<PointInsert>> newPoints = findNewPoints(entry.getValue());
@@ -43,6 +55,13 @@ public class PolygonValidator {
                 Set<PointInsert> dst = mergedPoints.computeIfAbsent(polygon, k -> new HashSet<>());
                 dst.addAll(points);
             }
+
+            percentF = ((float) iter++ / (float) polygons.size()) * 50f;
+            int newPercent = (int) percentF;
+            if (newPercent > percent) {
+                progressObserver.onProgress(newPercent + 50);
+            }
+            percent = newPercent;
         }
 
         List<Polygon> result = addPolygonNewVertices(mergedPoints);
@@ -52,6 +71,13 @@ public class PolygonValidator {
     }
 
     public static Map<LineKey, List<PolygonEdge>> getCommonPolygons(List<Polygon> polygons) {
+        return getCommonPolygons(polygons, ProgressObserver.STUB);
+    }
+
+    public static Map<LineKey, List<PolygonEdge>> getCommonPolygons(
+        List<Polygon> polygons,
+        ProgressObserver progressObserver
+    ) {
         Map<LineKey, List<PolygonEdge>> map = new HashMap<>();
 
         int percent = 0;
@@ -73,10 +99,10 @@ public class PolygonValidator {
                 }
             }
 
-            percentF = ((float) iter / (float) polygons.size()) * 100f;
+            percentF = ((float) iter / (float) polygons.size()) * 50f;
             int newPercent = (int) percentF;
             if (newPercent > percent) {
-                System.out.println("Common edges: validator status: " + newPercent);
+                progressObserver.onProgress(newPercent);
             }
             percent = newPercent;
             iter++;
@@ -92,8 +118,6 @@ public class PolygonValidator {
             result.put(polygons.get(0).polygon, Collections.emptySet());
             return result;
         }
-        int percent = 0;
-        float percentF = 0f;
         for (int i = 0; i < polygons.size() - 1; i++) {
             PolygonEdge currentPolygon = polygons.get(i);
             for (int j = i + 1; j < polygons.size(); j++) {
@@ -131,12 +155,6 @@ public class PolygonValidator {
                     otherPolygonToBeAdded.add(new PointInsert(b1, otherPolygon.firstPointIndex));
                 }
             }
-            percentF = ((float) i / (float) polygons.size()) * 100f;
-            int newPercent = (int) percentF;
-            if (newPercent > percent) {
-                System.out.println("Polygon validator findNewPoints status: " + newPercent);
-            }
-            percent = newPercent;
         }
         return result;
     }
@@ -585,5 +603,17 @@ public class PolygonValidator {
         public int hashCode() {
             return Objects.hash(polygon, p0, p1, firstPointIndex);
         }
+    }
+
+    public interface ProgressObserver {
+
+        void onProgress(int progress);
+
+        ProgressObserver STUB = new ProgressObserver() {
+            @Override
+            public void onProgress(int progress) {
+                // no op
+            }
+        };
     }
 }

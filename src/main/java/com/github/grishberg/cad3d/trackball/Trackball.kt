@@ -83,7 +83,8 @@ class Trackball(private val cfg: KeyboardConfig, private val keyPlace: KeyPlace)
         val height = holeDiameter + wall * 2
         val midHoleWidth = 7.1
         val width = 14.0
-        val holder = Cube(width, 5.0, height).moveY(-2.5 - height).addModel(
+        val holder = Cube(width, 5.0 + 2, height).moveY(-3.5 - height)
+            .addModel(
             Cylinder(width, Radius.fromDiameter(height)).rotate(Angles3d.yOnly(90.0)).moveY(-height)
         ).subtractModel(
             Cylinder(width, Radius.fromDiameter(holeDiameter)).rotate(Angles3d.yOnly(90.0)).moveY(-height)
@@ -98,7 +99,8 @@ class Trackball(private val cfg: KeyboardConfig, private val keyPlace: KeyPlace)
     }
 
     private fun moveTrackball(model: Abstract3dModel): Abstract3dModel {
-        return keyPlace.place(1, 0, model.rotate(Angles3d.xOnly(60.0)), V3d(0.0, 22.0, 29.0))
+        return keyPlace.place(1, 0, model.rotate(Angles3d.xOnly(60.0)),
+            V3d(0.0, 23.5, 29.0))
     }
 
     private fun createTrackballModel(): Abstract3dModel {

@@ -6,7 +6,7 @@ import com.github.grishberg.cad3d.keyboard.cfg.ThumbClusterSettings
 import eu.printingin3d.javascad.coords.V3d
 import eu.printingin3d.javascad.models.Abstract3dModel
 
-class ThumbKeyPlace(cfg: KeyboardConfig) {
+class ThumbKeyPlace(private val cfg: KeyboardConfig) {
 
     private val thumbConfig: ThumbClusterSettings = cfg.thumbClusterSettings
     private val radiusZ: Double = thumbConfig.arcRadiusZ
@@ -141,7 +141,7 @@ class ThumbKeyPlace(cfg: KeyboardConfig) {
     ): Abstract3dModel {
         return obj.rotate(xAngle.toDouble(), yAngle.toDouble(), zAngle.toDouble()).move(offset)
             .rotate(0.0, thumbConfig.rotateY, thumbConfig.rotateZ)
-            .move(thumbConfig.xOffset, thumbConfig.yOffset, thumbConfig.zOffset)
+            .move(thumbConfig.xOffset, thumbConfig.yOffset, thumbConfig.zOffset + cfg.plateZOffset)
     }
 
     private data class ArcResult(val angleZ: Double, val angleY: Double, val offset: V3d)
