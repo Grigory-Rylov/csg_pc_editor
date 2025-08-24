@@ -119,6 +119,20 @@ class ConfigEditor(
             fireKeyboardSettingsChanges()
         }
 
+        addDoubleSpinner(
+            panel, "Горизонтальный отступ между клавишами, мм:", currentKeyboardSettings.horizontalExtraSpace, 0.0..10.0, 0.1
+        ) {
+            currentKeyboardSettings = currentKeyboardSettings.copy(horizontalExtraSpace = it)
+            fireKeyboardSettingsChanges()
+        }
+
+        addDoubleSpinner(
+            panel, "Вертикальный отступ между клавишами, мм:", currentKeyboardSettings.verticalExtraSpace, 0.0..10.0, 0.1
+        ) {
+            currentKeyboardSettings = currentKeyboardSettings.copy(verticalExtraSpace = it)
+            fireKeyboardSettingsChanges()
+        }
+
         add(panel)
     }
 

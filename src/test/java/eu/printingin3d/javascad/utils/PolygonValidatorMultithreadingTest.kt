@@ -5,6 +5,7 @@ import eu.printingin3d.javascad.coords.V3d
 import eu.printingin3d.javascad.models.Abstract3dModel
 import eu.printingin3d.javascad.models.Cube
 import eu.printingin3d.javascad.models.Sphere
+import eu.printingin3d.javascad.utils.optimizator.PolygonValidatorMultithreading
 import eu.printingin3d.javascad.vrl.CSG
 import eu.printingin3d.javascad.vrl.ColorFacetGenerationContext
 import eu.printingin3d.javascad.vrl.FacetGenerationContext

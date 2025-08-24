@@ -2,7 +2,9 @@ package eu.printingin3d.javascad.utils
 
 import eu.printingin3d.javascad.coords.Triangulator
 import eu.printingin3d.javascad.coords.V3d
-import eu.printingin3d.javascad.utils.PolygonValidator.PointInsert
+import eu.printingin3d.javascad.utils.optimizator.CrossEdgeValidator
+import eu.printingin3d.javascad.utils.optimizator.PolygonValidator
+import eu.printingin3d.javascad.utils.optimizator.PolygonValidator.PointInsert
 import eu.printingin3d.javascad.vrl.Polygon
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue

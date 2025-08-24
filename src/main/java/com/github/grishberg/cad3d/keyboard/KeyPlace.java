@@ -23,8 +23,8 @@ public class KeyPlace {
     public KeyPlace(KeyboardConfig cfg) {
         this.cfg = cfg;
         capTopHeight = cfg.getPlateThickness() + cfg.getSaProfileKeyHeight();
-        mountWidth = cfg.getKeyswitchWidth() + 3.0;
-        mountHeight = cfg.getKeyswitchWidth() + 3.0;
+        mountWidth = cfg.getKeyswitchWidth() + cfg.getHorizontalExtraSpace();
+        mountHeight = cfg.getKeyswitchWidth() + cfg.getVerticalExtraSpace();
 
         columnRadius =
             ((mountWidth + cfg.getExtraHeight()) / 2.0) /

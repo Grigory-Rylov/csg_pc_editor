@@ -1,7 +1,7 @@
 package com.github.grishberg.cad3d.common;
 
 import eu.printingin3d.javascad.coords.V3d;
-import eu.printingin3d.javascad.utils.PolygonValidator;
+import eu.printingin3d.javascad.utils.optimizator.PolygonValidator;
 import eu.printingin3d.javascad.vrl.Facet;
 import eu.printingin3d.javascad.vrl.Polygon;
 import eu.printingin3d.javascad.vrl.VertexPosition;

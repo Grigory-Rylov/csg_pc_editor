@@ -37,7 +37,7 @@ data class ThumbClusterSettings(
     val rotateZ: Double = 10.0,
     val arcRadiusZ: Double = 0.0,
     val arcRadiusY: Double = 0.0,
-    val spaceBetweenKey:Double = 6.5,
+    val spaceBetweenKey: Double = 6.5,
     val type: ThumbClusterMode = ThumbClusterMode.SingleColumn3Buttons,
 )
 
@@ -64,6 +64,8 @@ data class KeyboardSettings(
     val screwHolderWallhickness: Double = 1.6,
     val isSkeletonMode: Boolean,
     val keyPlaceholderType: KeyPlaceholderType,
+    val horizontalExtraSpace: Double = 1.0,
+    val verticalExtraSpace: Double = 1.0,
 )
 
 @Serializable
@@ -89,6 +91,8 @@ data class SettingsContainer(
         keyPlaceHolderWidth = 15.7,
         keyPlaceHolderDepth = 15.7,
         keyPlaceHolderHeight = 4.0,
+        horizontalExtraSpace = keyboardSettings.horizontalExtraSpace,
+        verticalExtraSpace = keyboardSettings.verticalExtraSpace,
         zAngleProvider = KeyZAngleProvider(),
         columnOffsetProvider = KeyOffsetProvider(),
         plateThickness = keyboardSettings.plateThickness,

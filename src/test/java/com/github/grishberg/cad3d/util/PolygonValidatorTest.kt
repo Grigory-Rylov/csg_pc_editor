@@ -3,7 +3,7 @@ package com.github.grishberg.cad3d.util
 import eu.printingin3d.javascad.models.Abstract3dModel
 import eu.printingin3d.javascad.models.Cube
 import eu.printingin3d.javascad.models.Sphere
-import eu.printingin3d.javascad.utils.PolygonValidator
+import eu.printingin3d.javascad.utils.optimizator.PolygonValidator
 import eu.printingin3d.javascad.utils.StlExporter
 import eu.printingin3d.javascad.vrl.CSG
 import org.junit.jupiter.api.Test

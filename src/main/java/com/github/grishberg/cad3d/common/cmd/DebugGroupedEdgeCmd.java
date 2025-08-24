@@ -2,7 +2,7 @@ package com.github.grishberg.cad3d.common.cmd;
 
 import com.github.grishberg.cad3d.common.DebugCmd;
 import com.github.grishberg.cad3d.ui.DebugVisualizer;
-import eu.printingin3d.javascad.utils.PolygonValidator;
+import eu.printingin3d.javascad.utils.optimizator.PolygonValidator;
 
 import java.util.List;
 

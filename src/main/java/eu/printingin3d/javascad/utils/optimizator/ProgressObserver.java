@@ -1,4 +1,4 @@
-package eu.printingin3d.javascad.utils;
+package eu.printingin3d.javascad.utils.optimizator;
 
 public interface ProgressObserver {
 

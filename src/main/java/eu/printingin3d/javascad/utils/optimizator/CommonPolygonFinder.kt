@@ -1,14 +1,10 @@
-package eu.printingin3d.javascad.utils
+package eu.printingin3d.javascad.utils.optimizator
 
-import eu.printingin3d.javascad.utils.PolygonValidatorMultithreading.LineKey
-import eu.printingin3d.javascad.utils.PolygonValidatorMultithreading.PolygonEdge
 import eu.printingin3d.javascad.vrl.Polygon
 
 class CommonPolygonFinder(private val progressObserver: ProgressObserver) : EdgesFinder {
 
-    override suspend fun getCommonPolygons(
-        polygons: List<Polygon>
-    ): Map<LineKey, List<PolygonEdge>> {
+    override suspend fun groupPolygonsByEdges(polygons: List<Polygon>): Map<LineKey, List<PolygonEdge>> {
         val map = HashMap<LineKey, MutableList<PolygonEdge>>()
 
         var percent = 0

@@ -2,7 +2,7 @@ package eu.printingin3d.javascad.coords;
 
 import static eu.printingin3d.javascad.vrl.Const.EPSILON;
 
-import eu.printingin3d.javascad.utils.CrossEdgeValidator;
+import eu.printingin3d.javascad.utils.optimizator.CrossEdgeValidator;
 import eu.printingin3d.javascad.vrl.Facet;
 import eu.printingin3d.javascad.vrl.Polygon;
 import java.util.ArrayList;

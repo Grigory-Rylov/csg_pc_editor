@@ -3,6 +3,8 @@ package eu.printingin3d.javascad.utils;
 import eu.printingin3d.javascad.coords.Triangle3d;
 import eu.printingin3d.javascad.coords.Triangulator;
 import eu.printingin3d.javascad.coords.V3d;
+import eu.printingin3d.javascad.utils.optimizator.PolygonValidatorMultithreading;
+import eu.printingin3d.javascad.utils.optimizator.ProgressObserver;
 import eu.printingin3d.javascad.vrl.Facet;
 import eu.printingin3d.javascad.vrl.Polygon;
 import java.io.File;
@@ -24,10 +26,13 @@ public class StlExporter {
 
 
     public static void saveStl(List<Polygon> polygons, String fileName) {
-        System.out.println("saveStl: Start generationg polygons from: " + polygons.size());
+        System.out.println(
+            "saveStl: Start generationg polygons from: " + polygons.size() + " " + fileName);
+
+        long startTime = System.currentTimeMillis();
 
         File file = new File(fileName);
-        List<Polygon> fixPolygons = PolygonValidator.fixPolygons(
+        List<Polygon> fixPolygons = new PolygonValidatorMultithreading().fixPolygons(
             polygons,
             new ProgressObserver() {
                 @Override
@@ -37,8 +42,12 @@ public class StlExporter {
             }
         );
 
+        System.out.println("saveStl: " + fileName + " fix polygons completed, takes " +
+            (System.currentTimeMillis() - startTime) + " ms");
+
         System.out.println("saveStl: Generated polygons: " + fixPolygons.size());
 
+        long triangulationStartTime = System.currentTimeMillis();
         List<Facet> facetsFromPolygons = new ArrayList<>();
         for (Polygon p : fixPolygons) {
             List<Triangle3d> triangles = Triangulator.triangulate(p.getVertices(), p.getNormal());
@@ -46,6 +55,8 @@ public class StlExporter {
                 facetsFromPolygons.add(new Facet(t, p.getNormal(), p.getColor()));
             }
         }
+        System.out.println("saveStl: " + fileName + " triangulation completed, takes " +
+            (System.currentTimeMillis() - triangulationStartTime) + " ms");
 
         try (FileChannel channel = new FileOutputStream(fileName).getChannel()) {
             StlExporter.writeBinaryStl(facetsFromPolygons, channel);

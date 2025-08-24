@@ -1,10 +1,11 @@
-package eu.printingin3d.javascad.utils;
+package eu.printingin3d.javascad.utils.optimizator;
 
 import static eu.printingin3d.javascad.vrl.Const.EPSILON;
 
 import eu.printingin3d.javascad.coords.Triangle3d;
 import eu.printingin3d.javascad.coords.Triangulator;
 import eu.printingin3d.javascad.coords.V3d;
+import eu.printingin3d.javascad.utils.StlValidator;
 import eu.printingin3d.javascad.vrl.Facet;
 import eu.printingin3d.javascad.vrl.Polygon;
 import java.util.ArrayList;
@@ -550,9 +551,9 @@ public class PolygonValidator {
 
     public static class PointInsert implements Comparable<PointInsert> {
 
-        final V3d point;
+        public final V3d point;
 
-        final int position;
+        public final int position;
 
         public PointInsert(V3d point, int position) {
             this.point = point;

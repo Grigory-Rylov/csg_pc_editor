@@ -1,8 +1,8 @@
-package eu.printingin3d.javascad.utils;
-
-import eu.printingin3d.javascad.coords.V3d;
+package eu.printingin3d.javascad.utils.optimizator;
 
 import static eu.printingin3d.javascad.vrl.Const.EPSILON;
+
+import eu.printingin3d.javascad.coords.V3d;
 
 public class CrossEdgeValidator {
 

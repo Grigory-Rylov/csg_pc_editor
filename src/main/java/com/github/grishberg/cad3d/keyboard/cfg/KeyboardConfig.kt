@@ -37,6 +37,8 @@ data class KeyboardConfig(
     val wallsSettings: WallsSettings,
     val controllerPlateHeight: Double = 1.5,
     val keyPlaceholderType: KeyPlaceholderType,
+    val horizontalExtraSpace: Double,
+    val verticalExtraSpace: Double,
 ) {
 
     val lastCol: Int

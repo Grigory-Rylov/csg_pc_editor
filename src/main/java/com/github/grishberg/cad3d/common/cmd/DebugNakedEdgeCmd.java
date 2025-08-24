@@ -5,7 +5,7 @@ import com.github.grishberg.cad3d.ui.DebugVisualizer;
 import eu.printingin3d.javascad.coords.Triangulator;
 import eu.printingin3d.javascad.coords.V3d;
 import eu.printingin3d.javascad.utils.Color;
-import eu.printingin3d.javascad.utils.PolygonValidator;
+import eu.printingin3d.javascad.utils.optimizator.PolygonValidator;
 import eu.printingin3d.javascad.vrl.Facet;
 import eu.printingin3d.javascad.vrl.Polygon;
 import java.util.ArrayList;

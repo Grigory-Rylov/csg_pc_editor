@@ -10,7 +10,7 @@ import eu.printingin3d.javascad.models.Cube;
 import eu.printingin3d.javascad.models.IModel;
 import eu.printingin3d.javascad.models.Sphere;
 import eu.printingin3d.javascad.utils.Color;
-import eu.printingin3d.javascad.utils.PolygonValidator;
+import eu.printingin3d.javascad.utils.optimizator.PolygonValidator;
 import eu.printingin3d.javascad.utils.StlValidator;
 import eu.printingin3d.javascad.vrl.CSG;
 import eu.printingin3d.javascad.vrl.ColorFacetGenerationContext;
