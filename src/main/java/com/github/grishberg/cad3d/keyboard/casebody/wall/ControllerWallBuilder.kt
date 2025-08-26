@@ -31,23 +31,23 @@ class ControllerWallBuilder(
         val left = keyPlace.place(
             0,
             0,
-            KeyPlaceholder.placeHolderTopLeft().move(-cfg.outerLeftOffset, 0.0, cfg.outerBorderZOffset)
+            KeyPlaceholder.placeHolderBackLeft().move(-cfg.outerLeftOffset, 0.0, cfg.outerBorderZOffset)
         )
 
         val right = keyPlace.place(
             2,
             0,
-            KeyPlaceholder.placeHolderTopLeft().move(0.0, cfg.outerVerticalOffset, cfg.outerBorderZOffset)
+            KeyPlaceholder.placeHolderBackLeft().move(0.0, cfg.outerVerticalOffset, cfg.outerBorderZOffset)
         )
 
         val mid = keyPlace.place(
             1, 0,
-            KeyPlaceholder.placeHolderTopLeft().move(0.0, cfg.outerVerticalOffset, cfg.outerBorderZOffset)
+            KeyPlaceholder.placeHolderBackLeft().move(0.0, cfg.outerVerticalOffset, cfg.outerBorderZOffset)
         )
 
         val midLeft = keyPlace.place(
             0, 0,
-            KeyPlaceholder.placeHolderTopLeft().move(0.0, cfg.outerVerticalOffset, cfg.outerBorderZOffset)
+            KeyPlaceholder.placeHolderBackLeft().move(0.0, cfg.outerVerticalOffset, cfg.outerBorderZOffset)
         )
 
 
@@ -113,7 +113,7 @@ class ControllerWallBuilder(
             // center left
             val centerLeft = keyPlace.place(
                 2, 0,
-                KeyPlaceholder.placeHolderTopLeft().move(0.0, cfg.outerVerticalOffset, cfg.outerBorderZOffset)
+                KeyPlaceholder.placeHolderBackLeft().move(0.0, cfg.outerVerticalOffset, cfg.outerBorderZOffset)
             )
 
             models.add(Hull(
@@ -132,12 +132,12 @@ class ControllerWallBuilder(
         val left = keyPlace.place(
             column,
             0,
-            KeyPlaceholder.placeHolderTopLeft().move(0.0, cfg.outerVerticalOffset, cfg.outerBorderZOffset)
+            KeyPlaceholder.placeHolderBackLeft().move(0.0, cfg.outerVerticalOffset, cfg.outerBorderZOffset)
         )
         val right = keyPlace.place(
             column,
             0,
-            KeyPlaceholder.placeHolderTopRight().move(0.0, cfg.outerVerticalOffset, cfg.outerBorderZOffset)
+            KeyPlaceholder.placeHolderBackRight().move(0.0, cfg.outerVerticalOffset, cfg.outerBorderZOffset)
         )
 
         val backControllerRight = controllerHolderWall.getWallPoint(right.move)
@@ -205,9 +205,9 @@ class ControllerWallBuilder(
     private fun backLeftCorner(): Abstract3dModel {
 
         val back =
-            keyPlace.place(0, 0, KeyPlaceholder.placeHolderTopLeft().move(0.0, cfg.outerVerticalOffset, cfg.outerBorderZOffset))
+            keyPlace.place(0, 0, KeyPlaceholder.placeHolderBackLeft().move(0.0, cfg.outerVerticalOffset, cfg.outerBorderZOffset))
         val left =
-            keyPlace.place(0, 0, KeyPlaceholder.placeHolderTopLeft().move(-cfg.outerLeftOffset, 0.0, cfg.outerBorderZOffset))
+            keyPlace.place(0, 0, KeyPlaceholder.placeHolderBackLeft().move(-cfg.outerLeftOffset, 0.0, cfg.outerBorderZOffset))
 
         val backControllerBack = controllerHolderWall.getWallPoint(back.move)
         val backControllerLeft = controllerHolderWall.getWallPoint(left.move)
@@ -217,14 +217,14 @@ class ControllerWallBuilder(
                 keyPlace.place(
                     0,
                     0,
-                    KeyPlaceholder.placeHolderTopLeft().move(0.0, cfg.verticalOffset, cfg.borderZOffset)
+                    KeyPlaceholder.placeHolderBackLeft().move(0.0, cfg.verticalOffset, cfg.borderZOffset)
                 )
             ),
             verticalCube(
                 keyPlace.place(
                     0,
                     0,
-                    KeyPlaceholder.placeHolderTopLeft().move(-cfg.leftOffset, 0.0, cfg.borderZOffset)
+                    KeyPlaceholder.placeHolderBackLeft().move(-cfg.leftOffset, 0.0, cfg.borderZOffset)
                 )
             ),
             back,

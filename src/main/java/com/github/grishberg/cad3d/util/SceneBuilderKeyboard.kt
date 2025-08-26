@@ -476,10 +476,10 @@ class SceneBuilderKeyboard(
         val amoeba = Amoeba(cfg)
         val amoebaHole = amoeba.createHoles(height = 7.0, diameter = 0.7).addModel(amoeba.createSimple())
 
-        val placeHolder = KeyPlaceholder.placeHolder(cfg).apply {
-            if (cfg.keyPlaceholderType == KeyPlaceholderType.AmoebaSu120) {
-                subtractModel(amoebaHole)
-            }
+        val placeHolder = if (cfg.keyPlaceholderType == KeyPlaceholderType.AmoebaSu120) {
+            KeyPlaceholder.placeHolder(cfg).subtractModel(amoebaHole)
+        } else {
+            KeyPlaceholder.placeHolder(cfg)
         }
 
         for (column in 0 until cfg.columnsCount) {

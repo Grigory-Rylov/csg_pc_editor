@@ -16,17 +16,17 @@ class InnerCorners(
 
     override fun backLeft(keyPlace: (Abstract3dModel) -> Abstract3dModel): Abstract3dModel {
         return Utils.hull(
-            verticalCube(keyPlace(KeyPlaceholder.placeHolderTopLeft().move(0.0, verticalOffset, borderZOffset))),
-            verticalCube(keyPlace(KeyPlaceholder.placeHolderTopLeft().move(leftOffset, 0.0, borderZOffset))),
-            keyPlace(KeyPlaceholder.placeHolderTopLeft())
+            verticalCube(keyPlace(KeyPlaceholder.placeHolderBackLeft().move(0.0, verticalOffset, borderZOffset))),
+            verticalCube(keyPlace(KeyPlaceholder.placeHolderBackLeft().move(leftOffset, 0.0, borderZOffset))),
+            keyPlace(KeyPlaceholder.placeHolderBackLeft())
         )
     }
 
     override fun backRight(keyPlace: (Abstract3dModel) -> Abstract3dModel): Abstract3dModel {
         return Utils.hull(
-            verticalCube(keyPlace(KeyPlaceholder.placeHolderTopRight().move(0.0, verticalOffset, borderZOffset))),
-            verticalCube(keyPlace(KeyPlaceholder.placeHolderTopRight().move(rightOffset, 0.0, borderZOffset))),
-            keyPlace(KeyPlaceholder.placeHolderTopRight())
+            verticalCube(keyPlace(KeyPlaceholder.placeHolderBackRight().move(0.0, verticalOffset, borderZOffset))),
+            verticalCube(keyPlace(KeyPlaceholder.placeHolderBackRight().move(rightOffset, 0.0, borderZOffset))),
+            keyPlace(KeyPlaceholder.placeHolderBackRight())
         )
     }
 
@@ -34,13 +34,13 @@ class InnerCorners(
         return Utils.hull(
             verticalCube(
                 keyPlace(
-                    KeyPlaceholder.placeHolderBottomLeft().move(0.0, -verticalOffset, borderZOffset)
+                    KeyPlaceholder.placeHolderFrontLeft().move(0.0, -verticalOffset, borderZOffset)
                 )
             ), verticalCube(
                 keyPlace(
-                    KeyPlaceholder.placeHolderBottomLeft().move(leftOffset, 0.0, borderZOffset)
+                    KeyPlaceholder.placeHolderFrontLeft().move(leftOffset, 0.0, borderZOffset)
                 )
-            ), keyPlace(KeyPlaceholder.placeHolderBottomLeft())
+            ), keyPlace(KeyPlaceholder.placeHolderFrontLeft())
         )
     }
 
@@ -48,13 +48,13 @@ class InnerCorners(
         return Utils.hull(
             verticalCube(
                 keyPlace(
-                    KeyPlaceholder.placeHolderBottomRight().move(0.0, -verticalOffset, borderZOffset)
+                    KeyPlaceholder.placeHolderFrontRight().move(0.0, -verticalOffset, borderZOffset)
                 )
             ), verticalCube(
                 keyPlace(
-                    KeyPlaceholder.placeHolderBottomRight().move(rightOffset, 0.0, borderZOffset)
+                    KeyPlaceholder.placeHolderFrontRight().move(rightOffset, 0.0, borderZOffset)
                 )
-            ), keyPlace(KeyPlaceholder.placeHolderBottomRight())
+            ), keyPlace(KeyPlaceholder.placeHolderFrontRight())
         )
     }
 

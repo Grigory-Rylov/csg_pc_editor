@@ -1,13 +1,13 @@
 package com.github.grishberg.cad3d.keyboard
 
 import com.github.grishberg.cad3d.keyboard.KeyPlaceholder.placeHolderBottom
-import com.github.grishberg.cad3d.keyboard.KeyPlaceholder.placeHolderBottomLeft
-import com.github.grishberg.cad3d.keyboard.KeyPlaceholder.placeHolderBottomRight
+import com.github.grishberg.cad3d.keyboard.KeyPlaceholder.placeHolderFrontLeft
+import com.github.grishberg.cad3d.keyboard.KeyPlaceholder.placeHolderFrontRight
 import com.github.grishberg.cad3d.keyboard.KeyPlaceholder.placeHolderLeft
 import com.github.grishberg.cad3d.keyboard.KeyPlaceholder.placeHolderRight
 import com.github.grishberg.cad3d.keyboard.KeyPlaceholder.placeHolderTop
-import com.github.grishberg.cad3d.keyboard.KeyPlaceholder.placeHolderTopLeft
-import com.github.grishberg.cad3d.keyboard.KeyPlaceholder.placeHolderTopRight
+import com.github.grishberg.cad3d.keyboard.KeyPlaceholder.placeHolderBackLeft
+import com.github.grishberg.cad3d.keyboard.KeyPlaceholder.placeHolderBackRight
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
 import eu.printingin3d.javascad.models.Abstract3dModel
 
@@ -20,10 +20,10 @@ class Connections(private val cfg: KeyboardConfig, private val keyPlace: KeyPlac
         for (column in 0 until cfg.columnsCount - 1) {
             for (row in 0 until cfg.rowsCount - 1) {
                 addHull(
-                    keyPlace.place(column, row, placeHolderBottomRight()),
-                    keyPlace.place(column + 1, row, placeHolderBottomLeft()),
-                    keyPlace.place(column + 1, row + 1, placeHolderTopLeft()),
-                    keyPlace.place(column, row + 1, placeHolderTopRight())
+                    keyPlace.place(column, row, placeHolderFrontRight()),
+                    keyPlace.place(column + 1, row, placeHolderFrontLeft()),
+                    keyPlace.place(column + 1, row + 1, placeHolderBackLeft()),
+                    keyPlace.place(column, row + 1, placeHolderBackRight())
                 )
             }
         }

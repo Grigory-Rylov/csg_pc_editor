@@ -18,11 +18,11 @@ class ControllerHolderWall(
         val left = keyPlace.place(
             2,
             0,
-            KeyPlaceholder.placeHolderTopLeft().move(0.0, cfg.outerVerticalOffset, cfg.outerBorderZOffset)
+            KeyPlaceholder.placeHolderBackLeft().move(0.0, cfg.outerVerticalOffset, cfg.outerBorderZOffset)
         )
 
         val right = keyPlace.place(
-            2, 0, KeyPlaceholder.placeHolderTopRight().move(0.0, cfg.outerVerticalOffset, cfg.outerBorderZOffset)
+            2, 0, KeyPlaceholder.placeHolderBackRight().move(0.0, cfg.outerVerticalOffset, cfg.outerBorderZOffset)
         )
 
         val leftPatch = left.move

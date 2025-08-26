@@ -25,13 +25,13 @@ class InnerBordersBuilder(
 
             verticalCube(
                 keyPlace(
-                    KeyPlaceholder.placeHolderTopLeft().move(0.0, verticalOffset, borderZOffset)
+                    KeyPlaceholder.placeHolderBackLeft().move(0.0, verticalOffset, borderZOffset)
                 )
             ),
 
             verticalCube(
                 keyPlace(
-                    KeyPlaceholder.placeHolderTopRight().move(0.0, verticalOffset, borderZOffset)
+                    KeyPlaceholder.placeHolderBackRight().move(0.0, verticalOffset, borderZOffset)
                 )
             )
         )
@@ -42,17 +42,17 @@ class InnerBordersBuilder(
         leftPlace: (Abstract3dModel) -> Abstract3dModel, rightPlace: (Abstract3dModel) -> Abstract3dModel
     ): Abstract3dModel {
         return Utils.hull(
-            leftPlace.invoke(KeyPlaceholder.placeHolderTopRight()),
-            rightPlace.invoke(KeyPlaceholder.placeHolderTopLeft()),
+            leftPlace.invoke(KeyPlaceholder.placeHolderBackRight()),
+            rightPlace.invoke(KeyPlaceholder.placeHolderBackLeft()),
 
             verticalCube(
                 leftPlace.invoke(
-                    KeyPlaceholder.placeHolderTopRight().move(0.0, verticalOffset, borderZOffset)
+                    KeyPlaceholder.placeHolderBackRight().move(0.0, verticalOffset, borderZOffset)
                 )
             ),
             verticalCube(
                 rightPlace.invoke(
-                    KeyPlaceholder.placeHolderTopLeft().move(0.0, verticalOffset, borderZOffset)
+                    KeyPlaceholder.placeHolderBackLeft().move(0.0, verticalOffset, borderZOffset)
                 )
             )
         )
@@ -65,12 +65,12 @@ class InnerBordersBuilder(
             keyPlace(KeyPlaceholder.placeHolderLeft()),
             verticalCube(
                 keyPlace(
-                    KeyPlaceholder.placeHolderTopLeft().move(leftOffset, 0.0, borderZOffset)
+                    KeyPlaceholder.placeHolderBackLeft().move(leftOffset, 0.0, borderZOffset)
                 )
             ),
             verticalCube(
                 keyPlace(
-                    KeyPlaceholder.placeHolderBottomLeft().move(leftOffset, 0.0, borderZOffset)
+                    KeyPlaceholder.placeHolderFrontLeft().move(leftOffset, 0.0, borderZOffset)
                 )
             ),
         )
@@ -80,16 +80,16 @@ class InnerBordersBuilder(
         leftPlace: (Abstract3dModel) -> Abstract3dModel, rightPlace: (Abstract3dModel) -> Abstract3dModel
     ): Abstract3dModel {
         return Utils.hull(
-            leftPlace(KeyPlaceholder.placeHolderBottomLeft()),
-            rightPlace(KeyPlaceholder.placeHolderTopLeft()),
+            leftPlace(KeyPlaceholder.placeHolderFrontLeft()),
+            rightPlace(KeyPlaceholder.placeHolderBackLeft()),
             verticalCube(
                 leftPlace(
-                    KeyPlaceholder.placeHolderBottomLeft().move(leftOffset, 0.0, borderZOffset)
+                    KeyPlaceholder.placeHolderFrontLeft().move(leftOffset, 0.0, borderZOffset)
                 )
             ),
             verticalCube(
                 rightPlace(
-                    KeyPlaceholder.placeHolderTopLeft().move(leftOffset, 0.0, borderZOffset)
+                    KeyPlaceholder.placeHolderBackLeft().move(leftOffset, 0.0, borderZOffset)
                 )
             ),
         )
@@ -102,12 +102,12 @@ class InnerBordersBuilder(
             keyPlace(KeyPlaceholder.placeHolderBottom()),
             verticalCube(
                 keyPlace(
-                    KeyPlaceholder.placeHolderBottomLeft().move(0.0, -verticalOffset, borderZOffset)
+                    KeyPlaceholder.placeHolderFrontLeft().move(0.0, -verticalOffset, borderZOffset)
                 )
             ),
             verticalCube(
                 keyPlace(
-                    KeyPlaceholder.placeHolderBottomRight().move(0.0, -verticalOffset, borderZOffset)
+                    KeyPlaceholder.placeHolderFrontRight().move(0.0, -verticalOffset, borderZOffset)
                 )
             ),
         )
@@ -120,16 +120,16 @@ class InnerBordersBuilder(
         rightPlace: (Abstract3dModel) -> Abstract3dModel
     ): Abstract3dModel {
         return Utils.hull(
-            leftPlace(KeyPlaceholder.placeHolderBottomRight()),
-            rightPlace(KeyPlaceholder.placeHolderBottomLeft()),
+            leftPlace(KeyPlaceholder.placeHolderFrontRight()),
+            rightPlace(KeyPlaceholder.placeHolderFrontLeft()),
             verticalCube(
                 leftPlace(
-                    KeyPlaceholder.placeHolderBottomRight().move(0.0, -verticalOffset, borderZOffset)
+                    KeyPlaceholder.placeHolderFrontRight().move(0.0, -verticalOffset, borderZOffset)
                 )
             ),
             verticalCube(
                 rightPlace(
-                    KeyPlaceholder.placeHolderBottomLeft().move(0.0, -verticalOffset, borderZOffset)
+                    KeyPlaceholder.placeHolderFrontLeft().move(0.0, -verticalOffset, borderZOffset)
                 )
             ),
         )
@@ -142,10 +142,10 @@ class InnerBordersBuilder(
             keyPlace(KeyPlaceholder.placeHolderRight()),
             verticalCube(
                 keyPlace(
-                    KeyPlaceholder.placeHolderBottomRight().move(rightOffset, 0.0, borderZOffset)
+                    KeyPlaceholder.placeHolderFrontRight().move(rightOffset, 0.0, borderZOffset)
                 )
             ),
-            verticalCube(keyPlace(KeyPlaceholder.placeHolderTopRight().move(rightOffset, 0.0, borderZOffset))),
+            verticalCube(keyPlace(KeyPlaceholder.placeHolderBackRight().move(rightOffset, 0.0, borderZOffset))),
         )
     }
 
@@ -153,16 +153,16 @@ class InnerBordersBuilder(
         backPlace: (Abstract3dModel) -> Abstract3dModel, frontPlace: (Abstract3dModel) -> Abstract3dModel
     ): Abstract3dModel {
         return Utils.hull(
-            backPlace(KeyPlaceholder.placeHolderBottomRight()),
-            frontPlace(KeyPlaceholder.placeHolderTopRight()),
+            backPlace(KeyPlaceholder.placeHolderFrontRight()),
+            frontPlace(KeyPlaceholder.placeHolderBackRight()),
             verticalCube(
                 backPlace(
-                    KeyPlaceholder.placeHolderBottomRight().move(rightOffset, 0.0, borderZOffset)
+                    KeyPlaceholder.placeHolderFrontRight().move(rightOffset, 0.0, borderZOffset)
                 )
             ),
             verticalCube(
                 frontPlace(
-                    KeyPlaceholder.placeHolderTopRight().move(rightOffset, 0.0, borderZOffset)
+                    KeyPlaceholder.placeHolderBackRight().move(rightOffset, 0.0, borderZOffset)
                 )
             )
         )
@@ -175,22 +175,22 @@ class InnerBordersBuilder(
     ) = Utils.hull(
         verticalCube(
             thumbKeyPlace.placeM(
-                KeyPlaceholder.placeHolderBottomLeft().move(0.0, -verticalOffset, borderZOffset)
+                KeyPlaceholder.placeHolderFrontLeft().move(0.0, -verticalOffset, borderZOffset)
             )
         ),
         verticalCube(
             thumbKeyPlace.placeM(
-                KeyPlaceholder.placeHolderBottomRight().move(0.0, -verticalOffset, borderZOffset)
+                KeyPlaceholder.placeHolderFrontRight().move(0.0, -verticalOffset, borderZOffset)
             )
         ),
         verticalCube(
             thumbKeyPlace.placeL(
-                KeyPlaceholder.placeHolderBottomRight().move(0.0, -verticalOffset, borderZOffset)
+                KeyPlaceholder.placeHolderFrontRight().move(0.0, -verticalOffset, borderZOffset)
             )
         ),
         verticalCube(
             thumbKeyPlace.placeR(
-                KeyPlaceholder.placeHolderBottomLeft().move(0.0, -verticalOffset, borderZOffset)
+                KeyPlaceholder.placeHolderFrontLeft().move(0.0, -verticalOffset, borderZOffset)
             )
         ),
     )
