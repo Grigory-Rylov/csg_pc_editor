@@ -458,82 +458,129 @@ class Walls(
 
     private fun betweenThumbAndMatrixBorders(borderThickness: Double, borderHeight: Double) {
         val verticalOffset = 2.0
+        val defaultVerticalOffset = 4.0
         val leftOffset = -8.0
         val rightOffset = 2.0
         val borderZOffset = -2.0
 
-        val cL0 = keyPlace.place(0, cfg.lastRow, KeyPlaceholder.placeHolderFrontLeft()).move
-        val cR0 = keyPlace.place(0, cfg.lastRow, KeyPlaceholder.placeHolderFrontRight()).move
-
-        val cL1 = keyPlace.place(1, cfg.lastRow, KeyPlaceholder.placeHolderFrontLeft()).move
-        val cR1 = keyPlace.place(1, cfg.lastRow, KeyPlaceholder.placeHolderFrontRight()).move
-
-        val cL2 = keyPlace.place(2, cfg.lastRow, KeyPlaceholder.placeHolderFrontLeft()).move
-        val cR2 = keyPlace.place(2, cfg.lastRow, KeyPlaceholder.placeHolderFrontRight()).move
-
-        val cEL0 = keyPlace.place(0, cfg.lastRow, KeyPlaceholder.placeHolderFrontLeft().moveY(-verticalOffset)).move
-        val cER0 = keyPlace.place(0, cfg.lastRow, KeyPlaceholder.placeHolderFrontRight().moveY(-verticalOffset)).move
-
-        val cEL1 = keyPlace.place(1, cfg.lastRow, KeyPlaceholder.placeHolderFrontLeft().moveY(-verticalOffset)).move
-        val cER1 = keyPlace.place(1, cfg.lastRow, KeyPlaceholder.placeHolderFrontRight().moveY(-verticalOffset)).move
-
-        val cEL2 = keyPlace.place(2, cfg.lastRow, KeyPlaceholder.placeHolderFrontLeft().moveY(-verticalOffset)).move
-        val cER2 = keyPlace.place(2, cfg.lastRow, KeyPlaceholder.placeHolderFrontRight().moveY(-verticalOffset)).move
-
-        val tERF = thumbKeyPlace.placeR(
-            KeyPlaceholder.placeHolderFrontRight().move(0.0, verticalOffset, borderZOffset)
+        val a = keyPlace.place(
+            0,
+            cfg.lastRow,
+            KeyPlaceholder.placeHolderFrontLeft().move(leftOffset, 0.0, borderZOffset)
         ).move
-        val tERB = thumbKeyPlace.placeR(
-            KeyPlaceholder.placeHolderBackRight().move(0.0, -verticalOffset, borderZOffset)
-        ).move
+        val b = keyPlace.place(0, cfg.lastRow, KeyPlaceholder.placeHolderFrontLeft()).move
+        val c = keyPlace.place(0, cfg.lastRow, KeyPlaceholder.placeHolderFrontRight()).move
 
-        val tERFL = thumbKeyPlace.placeR(
+        val d = keyPlace.place(1, cfg.lastRow, KeyPlaceholder.placeHolderFrontLeft()).move
+        val e = keyPlace.place(1, cfg.lastRow, KeyPlaceholder.placeHolderFrontRight()).move
+
+        val f = keyPlace.place(2, cfg.lastRow, KeyPlaceholder.placeHolderFrontLeft()).move
+        val g = keyPlace.place(2, cfg.lastRow, KeyPlaceholder.placeHolderFrontRight()).move
+
+        val h = keyPlace.place(0, cfg.lastRow, KeyPlaceholder.placeHolderFrontLeft().moveY(-verticalOffset)).move
+        val i = keyPlace.place(0, cfg.lastRow, KeyPlaceholder.placeHolderFrontRight().moveY(-verticalOffset)).move
+
+        val j = keyPlace.place(1, cfg.lastRow, KeyPlaceholder.placeHolderFrontLeft().moveY(-defaultVerticalOffset)).move
+        val k = keyPlace.place(1, cfg.lastRow, KeyPlaceholder.placeHolderFrontRight().moveY(-defaultVerticalOffset)).move
+
+        val l = keyPlace.place(2, cfg.lastRow, KeyPlaceholder.placeHolderFrontLeft().moveY(-verticalOffset)).move
+        val m = keyPlace.place(2, cfg.lastRow, KeyPlaceholder.placeHolderFrontRight().moveY(-verticalOffset)).move
+
+        val n = keyPlace.place(3, cfg.lastRow, KeyPlaceholder.placeHolderFrontLeft()).move
+        val o = keyPlace.place(3, cfg.lastRow, KeyPlaceholder.placeHolderFrontLeft().moveY(-defaultVerticalOffset)).move
+
+        val p = thumbKeyPlace.placeM(
             KeyPlaceholder.placeHolderBackLeft().move(0.0, verticalOffset, borderZOffset)
         ).move
-        val tERFR = thumbKeyPlace.placeR(
-            KeyPlaceholder.placeHolderFrontRight().move(0.0, verticalOffset, borderZOffset)
+
+        val q = thumbKeyPlace.placeM(
+            KeyPlaceholder.placeHolderBackRight().move(0.0, verticalOffset, borderZOffset)
         ).move
 
-        val tEMFL = thumbKeyPlace.placeM(
+        val r = thumbKeyPlace.placeR(
+            KeyPlaceholder.placeHolderBackRight().move(0.0, verticalOffset, borderZOffset)
+        ).move
+
+        val s = thumbKeyPlace.placeR(
+            KeyPlaceholder.placeHolderBackRight().move(rightOffset, 0, borderZOffset)
+        ).move
+
+        val t = thumbKeyPlace.placeR(
             KeyPlaceholder.placeHolderBackLeft().move(0.0, verticalOffset, borderZOffset)
         ).move
-        val tEMFR = thumbKeyPlace.placeM(
-            KeyPlaceholder.placeHolderFrontRight().move(0.0, verticalOffset, borderZOffset)
+
+        val u = thumbKeyPlace.placeL(
+            KeyPlaceholder.placeHolderBackRight().move(0.0, verticalOffset, borderZOffset)
         ).move
+
 
         // col 0 front edge
         models.add(
             hull(
-                border(cL0, borderThickness, borderHeight),
-                border(cR0, borderThickness, borderHeight),
-
-                border(cEL0, borderThickness, borderHeight),
-                border(cER0, borderThickness, borderHeight),
+                keyPlace.place(0, cfg.lastRow, KeyPlaceholder.placeHolderFront()),
+                border(h, borderThickness, borderHeight),
+                border(i, borderThickness, borderHeight),
             )
         )
 
         // col 1 front edge
         models.add(
             hull(
-                keyPlace.place(1, cfg.lastRow, KeyPlaceholder.placeHolderBottom()),
-                keyPlace.place(1, cfg.lastRow, KeyPlaceholder.placeHolderBottom().moveY(-2.0)),
+                keyPlace.place(1, cfg.lastRow, KeyPlaceholder.placeHolderFront()),
+//                keyPlace.place(1, cfg.lastRow, KeyPlaceholder.placeHolderBack().moveY(-defaultVerticalOffset)),
+                border(j, borderThickness, borderHeight),
+                border(k, borderThickness, borderHeight),
             )
         )
 
         // col 2 front edge
         models.add(
             hull(
-                keyPlace.place(2, cfg.lastRow, KeyPlaceholder.placeHolderBottom()),
-                keyPlace.place(2, cfg.lastRow, KeyPlaceholder.placeHolderBottom().moveY(-2.0)),
+                keyPlace.place(2, cfg.lastRow, KeyPlaceholder.placeHolderFront()),
+                keyPlace.place(2, cfg.lastRow, KeyPlaceholder.placeHolderFront().moveY(-verticalOffset)),
             )
         )
 
+        addHull(a, p, h, borderThickness, borderHeight)
+        //addHull(a, b, h, borderThickness, borderHeight)
+        models.add(
+            hull(
+                border(a, borderThickness, borderHeight),
+                keyPlace.place(0, cfg.lastRow, KeyPlaceholder.placeHolderFrontLeft()),
+                border(h, borderThickness, borderHeight),
+            )
+        )
+
+        addHull(h, i, p, borderThickness, borderHeight)
+        addHull(p, i, j, borderThickness, borderHeight)
+        addHull(k, q, t, borderThickness, borderHeight)
+        addHull(p, j, k, borderThickness, borderHeight)
+        addHull(p, k, q, borderThickness, borderHeight)
+        addHull(k, t, r, borderThickness, borderHeight)
+        addHull(m, l, k, borderThickness, borderHeight)
+        addHull(o, k, r, borderThickness, borderHeight)
+        addHull(k, o, m, borderThickness, borderHeight)
+        addHull(o, r, s, borderThickness, borderHeight)
+        addHull(a, p, u, borderThickness, borderHeight)
+    }
+
+    private fun addHull(p0: V3d, p1: V3d, p2: V3d, borderThickness: Double = 1.5, borderHeight: Double) {
+        models.add(
+            hull(
+                border(p0, borderThickness, borderHeight),
+                border(p1, borderThickness, borderHeight),
+                border(p2, borderThickness, borderHeight),
+            )
+        )
     }
 
     private fun border(p: V3d, borderThickness: Double, borderHeight: Double): Abstract3dModel {
         return borderObject(borderThickness, borderHeight).move(p)
     }
 
+    private fun cube(p: V3d, borderHeight: Double): Abstract3dModel {
+        return Utils.cube(1.5, 1.5, 4.0).move(p)
+    }
 
     private fun verticalCube(obj: Abstract3dModel, borderThickness: Double, borderHeight: Double): Abstract3dModel {
         return borderObject(borderThickness, borderHeight).move(obj.move)

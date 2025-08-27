@@ -1,10 +1,7 @@
 package eu.printingin3d.javascad.utils;
 
 import eu.printingin3d.javascad.coords.Triangle3d;
-import eu.printingin3d.javascad.coords.Triangulator;
 import eu.printingin3d.javascad.coords.V3d;
-import eu.printingin3d.javascad.utils.optimizator.PolygonValidatorMultithreading;
-import eu.printingin3d.javascad.utils.optimizator.ProgressObserver;
 import eu.printingin3d.javascad.vrl.Facet;
 import eu.printingin3d.javascad.vrl.Polygon;
 import java.io.File;
@@ -14,7 +11,6 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
 import java.nio.channels.WritableByteChannel;
-import java.util.ArrayList;
 import java.util.List;
 
 
@@ -27,29 +23,40 @@ public class StlExporter {
 
     public static void saveStl(List<Polygon> polygons, String fileName) {
         System.out.println(
-            "saveStl: Start generationg polygons from: " + polygons.size() + " " + fileName);
-
-        long startTime = System.currentTimeMillis();
+            "saveStl: Start generating polygons from: " + polygons.size() + " " + fileName);
 
         File file = new File(fileName);
-        List<Polygon> fixPolygons = new PolygonValidatorMultithreading().fixPolygons(
-            polygons,
-            new ProgressObserver() {
-                @Override
-                public void onProgress(int progress) {
-                    System.out.println(file.getName() + " : progress = " + progress);
-                }
-            }
-        );
+        String path = file.getParent();
+        String name = file.getName();
+        long startTime = System.currentTimeMillis();
+        try {
+            String absolutePath = new File(path, name + ".bin").getAbsolutePath();
+            PolygonBinaryIO.savePolygonsToBinary(polygons, absolutePath);
+            System.out.println("Polygons saved successfully. " + absolutePath);
+        } catch (IOException e) {
+            System.err.println("Error saving polygons: " + e.getMessage());
+            e.printStackTrace();
+        }
+        System.out.println("saveStl to bin: " + fileName + " fix polygons completed, takes " +
+            (System.currentTimeMillis() - startTime) + " ms");
 
+//        List<Polygon> fixPolygons = new PolygonValidatorMultithreading().fixPolygons(
+//            polygons,
+//            new ProgressObserver() {
+//                @Override
+//                public void onProgress(int progress) {
+//                    System.out.println(file.getName() + " : progress = " + progress);
+//                }
+//            }
+//        );
+/*
         System.out.println("saveStl: " + fileName + " fix polygons completed, takes " +
             (System.currentTimeMillis() - startTime) + " ms");
 
-        System.out.println("saveStl: Generated polygons: " + fixPolygons.size());
 
         long triangulationStartTime = System.currentTimeMillis();
         List<Facet> facetsFromPolygons = new ArrayList<>();
-        for (Polygon p : fixPolygons) {
+        for (Polygon p : polygons) {
             List<Triangle3d> triangles = Triangulator.triangulate(p.getVertices(), p.getNormal());
             for (Triangle3d t : triangles) {
                 facetsFromPolygons.add(new Facet(t, p.getNormal(), p.getColor()));
@@ -64,6 +71,8 @@ public class StlExporter {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+ */
     }
 
     public static void writeBinaryStl(

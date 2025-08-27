@@ -21,7 +21,7 @@ class InnerBordersBuilder(
         onlyBorder: Boolean, keyPlace: (Abstract3dModel) -> Abstract3dModel
     ): Abstract3dModel {
         return Utils.hull(
-            keyPlace(KeyPlaceholder.placeHolderTop()),
+            keyPlace(KeyPlaceholder.placeHolderBack()),
 
             verticalCube(
                 keyPlace(
@@ -99,7 +99,7 @@ class InnerBordersBuilder(
         leftOffset: Double, rightOffset: Double, onlyBottomEdge: Boolean, keyPlace: (Abstract3dModel) -> Abstract3dModel
     ): Abstract3dModel {
         return Utils.hull(
-            keyPlace(KeyPlaceholder.placeHolderBottom()),
+            keyPlace(KeyPlaceholder.placeHolderFront()),
             verticalCube(
                 keyPlace(
                     KeyPlaceholder.placeHolderFrontLeft().move(0.0, -verticalOffset, borderZOffset)

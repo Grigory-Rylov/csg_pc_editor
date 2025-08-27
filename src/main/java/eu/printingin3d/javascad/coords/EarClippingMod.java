@@ -1,11 +1,9 @@
 package eu.printingin3d.javascad.coords;
 
-import eu.printingin3d.javascad.vrl.Const;
+import static eu.printingin3d.javascad.vrl.Const.EPSILON;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static eu.printingin3d.javascad.vrl.Const.EPSILON;
 
 public class EarClippingMod {
 
@@ -14,14 +12,15 @@ public class EarClippingMod {
      * Использует модифицированный алгоритм Ear Clipping.
      *
      * @param vertices Список вершин полигона (в порядке обхода).
-     *                 Предполагается, что полигон выпуклый.
+     * Предполагается, что полигон выпуклый.
      * @return Список треугольников (Triangle3d), представляющих триангуляцию полигона.
      * @throws IllegalArgumentException если количество вершин меньше 3.
      */
     public static List<Triangle3d> triangulate(List<V3d> vertices, V3d normal) {
         int n = vertices.size();
         if (n < 3) {
-            throw new IllegalArgumentException("Полигон должен иметь не менее 3 вершин. Получено: " + n);
+            throw new IllegalArgumentException(
+                "Полигон должен иметь не менее 3 вершин. Получено: " + n);
         }
 
         List<Triangle3d> triangles = new ArrayList<>();
@@ -100,7 +99,9 @@ public class EarClippingMod {
 
                 // Если даже коллинеарные точки не найдены, прерываем цикл
                 if (!collinearRemoved) {
-                    System.err.println("Предупреждение: Не удалось завершить триангуляцию. Оставшиеся вершины: " + indices.size());
+                    System.err.println(
+                        "Предупреждение: Не удалось завершить триангуляцию. Оставшиеся вершины: " +
+                            indices.size());
                     break;
                 }
             }
@@ -108,7 +109,8 @@ public class EarClippingMod {
 
         // Обработка зацикливания
         if (iterations >= MAX_ITERATIONS) {
-            System.err.println("Ошибка: Превышено максимальное количество итераций в триангуляции.");
+            System.err.println("Ошибка: Превышено максимальное количество итераций в триангуляции" +
+                ".");
             // Возвращаем то, что есть
             return triangles;
         }
@@ -143,7 +145,14 @@ public class EarClippingMod {
      * @param epsilon Точность для вычислений
      * @return true, если вершина b является допустимым "ухом"
      */
-    private static boolean isEar(V3d a, V3d b, V3d c, List<V3d> allVertices, List<Integer> currentIndices, double epsilon) {
+    private static boolean isEar(
+        V3d a,
+        V3d b,
+        V3d c,
+        List<V3d> allVertices,
+        List<Integer> currentIndices,
+        double epsilon
+    ) {
         // 1. Проверка на вырожденность
         if (isDegenerate(a, b, c, epsilon)) {
             return false; // Коллинеарные точки не образуют "уха"
@@ -179,6 +188,7 @@ public class EarClippingMod {
 
     /**
      * Проверяет, является ли треугольник, образованный тремя точками, вырожденным.
+     *
      * @param a Первая точка
      * @param b Вторая точка
      * @param c Третья точка
@@ -206,6 +216,7 @@ public class EarClippingMod {
     /**
      * Проверяет, является ли угол при вершине b выпуклым.
      * Для выпуклого полигона все внутренние углы должны быть выпуклыми.
+     *
      * @param a Предыдущая вершина
      * @param b Текущая вершина
      * @param c Следующая вершина
@@ -265,6 +276,7 @@ public class EarClippingMod {
     /**
      * Проверяет, находится ли точка внутри или на границе треугольника в 3D пространстве.
      * Предполагается, что точка лежит в той же плоскости, что и треугольник.
+     *
      * @param p Точка для проверки
      * @param a Вершина треугольника
      * @param b Вершина треугольника

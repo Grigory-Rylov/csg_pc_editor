@@ -8,6 +8,7 @@ import java.io.FileInputStream
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import kotlin.math.abs
+import kotlin.math.roundToInt
 import kotlin.math.sqrt
 
 class STLParser {
@@ -29,6 +30,8 @@ class STLParser {
 
             println("Reading $numberOfTriangles triangles...")
 
+            var percent = 0
+            var percentF: Float
             for (i in 0 until numberOfTriangles) {
                 try {
                     val polygon = readTriangle(dis)
@@ -39,10 +42,12 @@ class STLParser {
                     // break // Закомментировано, чтобы продолжать чтение
                 }
 
-                // Прогресс для больших файлов
-                if (i % 1000 == 0 && i > 0) {
-                    println("Processed $i triangles...")
+                percentF = (i/ numberOfTriangles.toFloat()) * 100f
+                val newPercent = percentF.roundToInt()
+                if (newPercent > percent) {
+                    println("Progress $newPercent")
                 }
+                percent = newPercent
             }
         }
 
@@ -100,121 +105,4 @@ class STLParser {
         val z = readLittleEndianFloat(dis).toDouble()
         return V3d(x, y, z)
     }
-
-    // Альтернативная версия с ByteBuffer для большей производительности (остается без изменений)
-    fun parseBinarySTLWithByteBuffer(filePath: String): List<Polygon> {
-        val polygons = mutableListOf<Polygon>()
-
-        FileInputStream(filePath).use { fis ->
-            val channel = fis.channel
-            val fileSize = channel.size()
-
-            if (fileSize < 84) { // 80 + 4 байта
-                throw IllegalArgumentException("File too small to be a valid STL")
-            }
-
-            // Читаем весь файл в память (для больших файлов лучше использовать mmap)
-            val buffer = ByteBuffer.allocate(fileSize.toInt())
-            channel.read(buffer)
-            buffer.flip()
-            buffer.order(ByteOrder.LITTLE_ENDIAN) // STL использует little-endian
-
-            // Пропускаем заголовок
-            buffer.position(80)
-
-            // Читаем количество треугольников
-            val numberOfTriangles = buffer.int
-            val expectedSize = 84L + numberOfTriangles * 50L // 50 байт на треугольник
-
-            if (fileSize != expectedSize) {
-                println(
-                    "Warning: File size doesn't match expected size. " +
-                        "Expected: $expectedSize, Actual: $fileSize"
-                )
-            }
-
-            println("Reading $numberOfTriangles triangles with ByteBuffer...")
-
-            for (i in 0 until numberOfTriangles) {
-                if (buffer.remaining() < 50) {
-                    println("Not enough data for triangle $i")
-                    break
-                }
-
-                val polygon = readTriangleFromBuffer(buffer)
-                polygons.add(polygon)
-            }
-        }
-
-        return polygons
-    }
-
-    private fun readTriangleFromBuffer(buffer: ByteBuffer): Polygon {
-        val normal = readVector3DFromBuffer(buffer)
-
-        val vertices = listOf(
-            readVector3DFromBuffer(buffer),
-            readVector3DFromBuffer(buffer),
-            readVector3DFromBuffer(buffer)
-        )
-
-        val attributes = buffer.short
-
-        return Polygon.fromPolygons(vertices, normal, Color.red)
-    }
-
-    private fun readVector3DFromBuffer(buffer: ByteBuffer): V3d {
-        val x = buffer.float
-        val y = buffer.float
-        val z = buffer.float
-        return V3d(x.toDouble(), y.toDouble(), z.toDouble())
-    }
-
-    // Валидация STL файла (остается без изменений)
-    fun validateSTLFile(filePath: String): Boolean {
-        return try {
-            FileInputStream(filePath).use { fis ->
-                val buffer = ByteArray(84) // 80 + 4 байта
-                fis.read(buffer)
-
-                val bb = ByteBuffer.wrap(buffer, 80, 4)
-                bb.order(ByteOrder.LITTLE_ENDIAN)
-                val numberOfTriangles = bb.int
-
-                val fileSize = File(filePath).length()
-                val expectedSize = 84L + numberOfTriangles * 50L
-
-                fileSize == expectedSize && numberOfTriangles > 0
-            }
-        } catch (e: Exception) {
-            false
-        }
-    }
 }
-
-// Функции расширения для удобства (остаются без изменений)
-fun List<Polygon>.calculateBounds(): Pair<V3d, V3d> {
-    if (isEmpty()) return Pair(V3d(0.0, 0.0, 0.0), V3d(0.0, 0.0, 0.0))
-
-    var minX = Double.MAX_VALUE
-    var minY = Double.MAX_VALUE
-    var minZ = Double.MAX_VALUE
-    var maxX = Double.MIN_VALUE
-    var maxY = Double.MIN_VALUE
-    var maxZ = Double.MIN_VALUE
-
-    for (polygon in this) {
-        for (vertex in polygon.vertices) {
-            minX = minOf(minX, vertex.x)
-            minY = minOf(minY, vertex.y)
-            minZ = minOf(minZ, vertex.z)
-            maxX = maxOf(maxX, vertex.x)
-            maxY = maxOf(maxY, vertex.y)
-            maxZ = maxOf(maxZ, vertex.z)
-        }
-    }
-
-    return Pair(V3d(minX, minY, minZ), V3d(maxX, maxY, maxZ))
-}
-
-fun List<Polygon>.getVertexCount(): Int = sumOf { it.vertices.size }

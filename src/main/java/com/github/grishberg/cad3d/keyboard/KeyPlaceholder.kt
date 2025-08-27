@@ -81,7 +81,7 @@ object KeyPlaceholder {
 
     @JvmStatic
     @JvmOverloads
-    fun placeHolderTop(thickness: Double = WALL_THICKNESS): Abstract3dModel {
+    fun placeHolderBack(thickness: Double = WALL_THICKNESS): Abstract3dModel {
         return cube(OUTER_WIDTH, thickness, TOP_THICKNESS).move(0.0, CORNER_OFFSET + thickness, CORNER_PLACEHOLDER_TOP_OFFSET)
     }
 
@@ -98,7 +98,7 @@ object KeyPlaceholder {
     }
 
     @JvmStatic
-    fun placeHolderBottom(): Abstract3dModel {
+    fun placeHolderFront(): Abstract3dModel {
         return cube(OUTER_WIDTH, WALL_THICKNESS, TOP_THICKNESS).move(
             0.0, -CORNER_OFFSET - WALL_THICKNESS, CORNER_PLACEHOLDER_TOP_OFFSET
         )
