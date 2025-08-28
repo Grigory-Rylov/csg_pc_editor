@@ -41,6 +41,7 @@ class LineKey private constructor(// Геттеры (опционально, е�
          * @return LineKey, представляющий прямую, проходящую через p0 и p1.
          * @throws IllegalArgumentException если p0 и p1 совпадают.
          */
+        @JvmStatic
         fun fromSegment(p0: V3d, p1: V3d): LineKey? {
             if (p0 == p1) {
                 return null
@@ -53,7 +54,9 @@ class LineKey private constructor(// Геттеры (опционально, е�
             val length =
                 sqrt(directionVector.x * directionVector.x + directionVector.y * directionVector.y + directionVector.z * directionVector.z)
 
-            require(!(length < Const.EPSILON)) { "Точки p0 и p1 совпадают (длина вектора близка к нулю)." }
+            //require(!(length < Const.EPSILON)) {
+            //    "Точки p0 и p1 совпадают (длина вектора близка к нулю)."
+           // }
 
             var unitDirection = V3d(
                 directionVector.x / length, directionVector.y / length, directionVector.z / length

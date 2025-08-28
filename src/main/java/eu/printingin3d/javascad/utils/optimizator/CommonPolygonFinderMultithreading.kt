@@ -42,11 +42,11 @@ class CommonPolygonFinderMultithreading(private val numChunks: Int, progressObse
         val localMap = mutableMapOf<LineKey, MutableList<PolygonEdge>>()
 
         for (polygon in chunk) {
-            val vertices = polygon.getVertices()
+            val vertices = polygon.vertices
             for (i in vertices.indices) {
                 val a = vertices[i]
                 val b = vertices[(i + 1) % vertices.size]
-                val key: LineKey? = LineKey.Companion.fromSegment(a, b)
+                val key: LineKey? = LineKey.fromSegment(a, b)
                 if (key != null) {
                     val currentList = localMap.computeIfAbsent(key) { mutableListOf() }
                     currentList.add(PolygonEdge(polygon, a, b, i))

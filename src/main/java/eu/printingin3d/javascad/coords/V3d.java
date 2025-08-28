@@ -1,11 +1,10 @@
 package eu.printingin3d.javascad.coords;
 
-import java.nio.ByteBuffer;
-import java.util.Locale;
+import static eu.printingin3d.javascad.vrl.Const.EPSILON;
 
 import eu.printingin3d.javascad.basic.Angle;
-
-import static eu.printingin3d.javascad.vrl.Const.EPSILON;
+import java.nio.ByteBuffer;
+import java.util.Locale;
 
 /**
  * Immutable representation of a 3D coordinate with useful helper methods.
@@ -106,6 +105,14 @@ public class V3d extends Basic3dFunc<V3d> {
      */
     public V3d(double x, double y, double z) {
         super(x, y, z);
+    }
+
+    final static double multiplier = 1.0 / EPSILON;
+
+    private static double roundToEps(double value) {
+
+        // Округляем каждую координату
+        return Math.round(value * multiplier) * EPSILON;
     }
 
     /**
@@ -211,34 +218,6 @@ public class V3d extends Basic3dFunc<V3d> {
         return String.format(Locale.US, "V3d(%.4f, %.4f, %.4f)", x, y, z);
     }
 
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null || getClass() != obj.getClass()) {
-            return false;
-        }
-
-        V3d v3d = (V3d) obj;
-
-        return Math.abs(x - v3d.x) < EPSILON &&
-            Math.abs(y - v3d.y) < EPSILON &&
-            Math.abs(z - v3d.z) < EPSILON;
-    }
-
-    @Override
-    public int hashCode() {
-        int xHash = hashCodeWithEpsilon(x);
-        int yHash = hashCodeWithEpsilon(y);
-        int zHash = hashCodeWithEpsilon(z);
-
-        return (xHash ^ (xHash >>> 32) ^
-            yHash ^ (yHash >>> 32) ^
-            zHash ^ (zHash >>> 32));
-    }
-
-
     /**
      * Вычисляет hashCode для double с учетом точности EPSILON.
      * Близкие значения (разница <= EPSILON) будут иметь одинаковый хэш.
@@ -277,6 +256,7 @@ public class V3d extends Basic3dFunc<V3d> {
     /**
      * Creates a V3d instance from JSON string.
      * Expected format: {"x":1.0,"y":2.0,"z":3.0}
+     *
      * @param json the JSON string
      * @return the V3d instance
      */
@@ -286,26 +266,48 @@ public class V3d extends Basic3dFunc<V3d> {
         if (!json.startsWith("{") || !json.endsWith("}")) {
             throw new IllegalArgumentException("Invalid JSON format for V3d: " + json);
         }
-        
+
         String content = json.substring(1, json.length() - 1);
         String[] parts = content.split(",");
-        
+
         double x = 0.0, y = 0.0, z = 0.0;
-        
+
         for (String part : parts) {
             String[] keyValue = part.split(":");
-            if (keyValue.length != 2) continue;
-            
+            if (keyValue.length != 2) {
+                continue;
+            }
+
             String key = keyValue[0].trim().replace("\"", "");
             double value = Double.parseDouble(keyValue[1].trim());
-            
+
             switch (key) {
-                case "x": x = value; break;
-                case "y": y = value; break;
-                case "z": z = value; break;
+                case "x":
+                    x = value;
+                    break;
+                case "y":
+                    y = value;
+                    break;
+                case "z":
+                    z = value;
+                    break;
             }
         }
-        
+
         return new V3d(x, y, z);
+    }
+
+    public V3d roundedToEpsilon() {
+        // Вычисляем множитель для округления
+        final double multiplier = 1.0 / EPSILON;
+
+        // Округляем каждую координату
+        double roundedX = Math.round(this.x * multiplier) * EPSILON;
+        double roundedY = Math.round(this.y * multiplier) * EPSILON;
+        double roundedZ = Math.round(this.z * multiplier) * EPSILON;
+
+        // Создаем и возвращаем новый экземпляр
+        // Используем конструктор напрямую, чтобы избежать лишних проверок в create()
+        return new V3d(roundedX, roundedY, roundedZ);
     }
 }

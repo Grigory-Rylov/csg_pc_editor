@@ -1,15 +1,18 @@
 package com.github.grishberg.cad3d.util
 
+import eu.printingin3d.javascad.coords.V3d
 import eu.printingin3d.javascad.models.Abstract3dModel
 import eu.printingin3d.javascad.models.Cube
 import eu.printingin3d.javascad.models.Sphere
 import eu.printingin3d.javascad.utils.NonManifoldFinder
 import eu.printingin3d.javascad.utils.STLParser
 import eu.printingin3d.javascad.utils.StlExporter
+import eu.printingin3d.javascad.utils.optimizator.LineKey
 import eu.printingin3d.javascad.utils.optimizator.PolygonValidator
 import eu.printingin3d.javascad.vrl.CSG
 import kotlin.math.roundToInt
 import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 import org.junit.jupiter.api.Test
 
@@ -28,39 +31,67 @@ class PolygonValidatorTest {
     @Test
     fun testMatrixEdges() {
         println("read stl")
-        val polygons = STLParser().parseBinarySTL("stl/test.stl")
+        val polygons = STLParser().parseBinarySTL("stl/test2.stl")
 
         println("find non manifold edges...")
         // Ищем проблемные рёбра
         val problems = NonManifoldFinder.findNonManifoldEdges(polygons)
 
         println("Найдено проблемных рёбер: " + problems.size)
-        for (edge in problems) {
-            println(
-                "Проблемное ребро: (" + edge.p1.x + "," + edge.p1.y + "," + edge.p1.z + ") - (" + edge.p2.x + "," + edge.p2.y + "," + edge.p2.z + ")"
-            )
-        }
-        assertEquals(0, polygons.size)
+        assertEquals(0, problems.size)
     }
 
     @Test
-    fun testFor() {
-        val size = 400000
-        var iter = 0
-        var percent = 0
-        var percentF: Float
-        for (i in 0 until size) {
+    fun testLineKey() {
+        val a1 = V3d(0.0, 0.0, 0.0)
+        val b1 = V3d(10.0, 10.0, 0.0)
 
-            percentF = (iter++ / size.toFloat()) * 100f
-            val newPercent = percentF.roundToInt()
-            if (newPercent > percent) {
-                println("Progress $newPercent")
-            }
-            percent = newPercent
-        }
+        val a2 = V3d(5.0, 5.0, 0.0)
+        val b2 = V3d(12.0, 12.0, 0.0)
 
-        assertTrue(false)
+        val key1 = LineKey.fromSegment(a1, b1)
+        val key2 = LineKey.fromSegment(a2, b2)
+        assertEquals(key1, key2)
+    }
 
+    @Test
+    fun testLineKey2() {
+        val a1 = V3d(-8.6602540378444, -25.0, 25.0)
+        val b1 = V3d(-25.0, -15.566243270259356, 25.0)
+
+        val a2 = V3d(-25.0, -15.566243270259356, 25.0)
+        val b2 = V3d(-12.99038105676658, -22.5, 25.0)
+
+        val key1 = LineKey.fromSegment(a1, b1)
+        val key2 = LineKey.fromSegment(a2, b2)
+        assertEquals(key1, key2)
+        assertEquals(key1.hashCode(), key2.hashCode())
+    }
+
+    @Test
+    fun testOppositeLineKey() {
+        val a1 = V3d(0.0, 0.0, 0.0)
+        val b1 = V3d(10.0, 10.0, 0.0)
+
+        val a2 = V3d(12.0, 12.0, 0.0)
+        val b2 = V3d(5.0, 5.0, 0.0)
+
+        val key1 = LineKey.fromSegment(a1, b1)
+        val key2 = LineKey.fromSegment(a2, b2)
+        assertEquals(key1, key2)
+    }
+
+    @Test
+    fun testLineKeysNotEquals() {
+        val a1 = V3d(0.0, 0.0, 0.0)
+        val b1 = V3d(10.0, 10.0, 0.0)
+
+        val a2 = V3d(5.0, 5.5, 0.0)
+        val b2 = V3d(12.0, 12.0, 0.0)
+
+        val key1 = LineKey.fromSegment(a1, b1)
+        val key2 = LineKey.fromSegment(a2, b2)
+        assertNotEquals(key1, key2)
     }
 
     private fun createModel(): CSG {

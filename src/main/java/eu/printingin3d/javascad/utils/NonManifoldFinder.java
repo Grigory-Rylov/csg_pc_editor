@@ -34,30 +34,6 @@ public class NonManifoldFinder {
             // Добавляем полигон в список для каждого ребра
             for (Edge edge : edges) {
                 edgePolygonsMap.computeIfAbsent(edge, k -> new ArrayList<>()).add(polygon);
-
-                // Проверяем, если ребро используется больше чем в 2 гранях
-                List<Polygon> polygonList = edgePolygonsMap.get(edge);
-                if (polygonList.size() > 2) {
-                    StringBuilder errorMessage = new StringBuilder();
-                    errorMessage.append("Ошибка: Ребро ")
-                        .append(edge)
-                        .append(" используется в ")
-                        .append(polygonList.size())
-                        .append(" гранях. Ожидается максимум 2. Полигоны: ");
-
-                    // Добавляем информацию о каждом полигоне
-                    for (int i = 0; i < polygonList.size(); i++) {
-                        if (i > 0) {
-                            errorMessage.append(", ");
-                        }
-                        errorMessage.append(polygonList.get(i).toString())
-                            .append("\n");
-                    }
-
-                    System.err.println(errorMessage.toString());
-                    // Можно также бросить исключение, если это критическая ошибка:
-                    // throw new IllegalStateException(errorMessage.toString());
-                }
             }
 
             percentF = ((float) iter / (float) polygons.size()) * 100f;
@@ -144,6 +120,11 @@ public class NonManifoldFinder {
         @Override
         public int hashCode() {
             return Objects.hash(p1, p2);
+        }
+
+        @Override
+        public String toString() {
+            return "Edge " + p1.toJson() + " - " + p2.toJson();
         }
     }
 }

@@ -1,5 +1,6 @@
 package eu.printingin3d.javascad.coords;
 
+import eu.printingin3d.javascad.vrl.Const;
 import java.nio.ByteBuffer;
 
 import eu.printingin3d.javascad.enums.OutputFormat;
@@ -97,10 +98,30 @@ public abstract class Abstract3d {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + DoubleUtils.hashCodeEps(x);
-		result = prime * result + DoubleUtils.hashCodeEps(y);
-		result = prime * result + DoubleUtils.hashCodeEps(z);
+		// Округляем координаты перед вычислением хэша
+		long xBits = Double.doubleToLongBits(roundToEpsilon(x));
+		long yBits = Double.doubleToLongBits(roundToEpsilon(y));
+		long zBits = Double.doubleToLongBits(roundToEpsilon(z));
+
+		// Комбинируем битовые представления (стандартный способ для Point3D)
+		result = prime * result + (int) (xBits ^ (xBits >>> 32));
+		result = prime * result + (int) (yBits ^ (yBits >>> 32));
+		result = prime * result + (int) (zBits ^ (zBits >>> 32));
 		return result;
+	}
+
+	private static double roundToEpsilon(double value) {
+		// Добавим проверку на специальные значения, как в hashCodeWithEpsilon
+		if (Double.isNaN(value) || Double.isInfinite(value)) {
+			// Для NaN и Infinity возвращаем само значение,
+			// чтобы Double.hashCode работал корректно.
+			// equalsEps для NaN всегда true, так что это должно быть согласовано.
+			// Double.hashCode(NaN) возвращает константу.
+			// Double.hashCode(Infinity) и Double.hashCode(-Infinity) разные.
+			return value;
+		}
+		// Округляем значение до ближайшего кратного EPSILON
+		return Math.round(value / Const.EPSILON) * Const.EPSILON;
 	}
 
 	@Override
@@ -115,12 +136,13 @@ public abstract class Abstract3d {
 			return false;
 		}
 		Abstract3d other = (Abstract3d) obj;
-		
+
+		// Используем существующий метод equalsEps
 		return DoubleUtils.equalsEps(x, other.x) &&
-				DoubleUtils.equalsEps(y, other.y) &&
-				DoubleUtils.equalsEps(z, other.z);
+			DoubleUtils.equalsEps(y, other.y) &&
+			DoubleUtils.equalsEps(z, other.z);
 	}
-	
+
 	/**
 	 * Checks a much closer equal relation than the equals method does. The difference could be much smaller this way.
 	 * @param value1 the first value to be checked

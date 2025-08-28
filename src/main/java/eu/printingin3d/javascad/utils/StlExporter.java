@@ -1,7 +1,10 @@
 package eu.printingin3d.javascad.utils;
 
 import eu.printingin3d.javascad.coords.Triangle3d;
+import eu.printingin3d.javascad.coords.Triangulator;
 import eu.printingin3d.javascad.coords.V3d;
+import eu.printingin3d.javascad.utils.optimizator.PolygonValidatorMultithreading;
+import eu.printingin3d.javascad.utils.optimizator.ProgressObserver;
 import eu.printingin3d.javascad.vrl.Facet;
 import eu.printingin3d.javascad.vrl.Polygon;
 import java.io.File;
@@ -11,6 +14,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
 import java.nio.channels.WritableByteChannel;
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -26,42 +30,39 @@ public class StlExporter {
             "saveStl: Start generating polygons from: " + polygons.size() + " " + fileName);
 
         File file = new File(fileName);
-        String path = file.getParent();
-        String name = file.getName();
         long startTime = System.currentTimeMillis();
-        try {
-            String absolutePath = new File(path, name + ".bin").getAbsolutePath();
-            PolygonBinaryIO.savePolygonsToBinary(polygons, absolutePath);
-            System.out.println("Polygons saved successfully. " + absolutePath);
-        } catch (IOException e) {
-            System.err.println("Error saving polygons: " + e.getMessage());
-            e.printStackTrace();
-        }
+
         System.out.println("saveStl to bin: " + fileName + " fix polygons completed, takes " +
             (System.currentTimeMillis() - startTime) + " ms");
 
-//        List<Polygon> fixPolygons = new PolygonValidatorMultithreading().fixPolygons(
-//            polygons,
-//            new ProgressObserver() {
-//                @Override
-//                public void onProgress(int progress) {
-//                    System.out.println(file.getName() + " : progress = " + progress);
-//                }
-//            }
-//        );
-/*
+        List<Polygon> fixPolygons = new PolygonValidatorMultithreading().fixPolygons(
+            polygons,
+            new ProgressObserver() {
+                @Override
+                public void onProgress(int progress) {
+                    System.out.println(file.getName() + " : progress = " + progress);
+                }
+            }
+        );
+
         System.out.println("saveStl: " + fileName + " fix polygons completed, takes " +
             (System.currentTimeMillis() - startTime) + " ms");
 
-
         long triangulationStartTime = System.currentTimeMillis();
         List<Facet> facetsFromPolygons = new ArrayList<>();
-        for (Polygon p : polygons) {
+        for (Polygon p : fixPolygons) {
             List<Triangle3d> triangles = Triangulator.triangulate(p.getVertices(), p.getNormal());
             for (Triangle3d t : triangles) {
-                facetsFromPolygons.add(new Facet(t, p.getNormal(), p.getColor()));
+                ArrayList<V3d> rounded = new ArrayList<>();
+                for(V3d trianglePoint: t.getPoints()){
+                    rounded.add(trianglePoint.roundedToEpsilon());
+                }
+                //facetsFromPolygons.add(new Facet(t, p.getNormal(), p.getColor()));
+                Triangle3d newT = new Triangle3d(rounded.get(0), rounded.get(1), rounded.get(2));
+                facetsFromPolygons.add(new Facet(newT, p.getNormal(), p.getColor()));
             }
         }
+
         System.out.println("saveStl: " + fileName + " triangulation completed, takes " +
             (System.currentTimeMillis() - triangulationStartTime) + " ms");
 
@@ -72,7 +73,6 @@ public class StlExporter {
             e.printStackTrace();
         }
 
- */
     }
 
     public static void writeBinaryStl(

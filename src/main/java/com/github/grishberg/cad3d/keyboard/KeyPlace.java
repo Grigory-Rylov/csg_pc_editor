@@ -52,7 +52,6 @@ public class KeyPlace {
             .move(keyOffset.x, keyOffset.y, keyOffset.z)
             .rotate(Angles3d.zOnly(cfg.getZAngleProvider().getZAngle(column)))
             .rotate(Angles3d.yOnly(cfg.getTentingAngle()))
-            .rotate(Angles3d.yOnly(cfg.getTentingAngle())) // ?????
             .move(0, 0, cfg.getPlateZOffset());
     }
 
@@ -82,7 +81,6 @@ public class KeyPlace {
             .move(keyOffset.x, keyOffset.y, keyOffset.z)
             .rotate(Angles3d.zOnly(cfg.getZAngleProvider().getZAngle(column)))
             .rotate(Angles3d.yOnly(cfg.getTentingAngle()))
-            .rotate(Angles3d.yOnly(cfg.getTentingAngle())) // ???
             .move(0, 0, cfg.getPlateZOffset())
             .getMove();
     }
