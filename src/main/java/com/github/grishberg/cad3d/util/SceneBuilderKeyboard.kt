@@ -1,15 +1,12 @@
 package com.github.grishberg.cad3d.util
 
-import com.github.grishberg.cad3d.keyboard.Connections
 import com.github.grishberg.cad3d.keyboard.ControlPointsController
 import com.github.grishberg.cad3d.keyboard.KeyCaps
 import com.github.grishberg.cad3d.keyboard.KeyHolderBottomWalls
 import com.github.grishberg.cad3d.keyboard.KeyPlace
 import com.github.grishberg.cad3d.keyboard.KeyPlaceHoles
-import com.github.grishberg.cad3d.keyboard.KeyPlaceholder
 import com.github.grishberg.cad3d.keyboard.KeySwitchHoles
 import com.github.grishberg.cad3d.keyboard.ModelHolder
-import com.github.grishberg.cad3d.keyboard.ThumbConnections
 import com.github.grishberg.cad3d.keyboard.ThumbKeyPlace
 import com.github.grishberg.cad3d.keyboard.Utils
 import com.github.grishberg.cad3d.keyboard.amoeba.Amoeba
@@ -27,6 +24,7 @@ import com.github.grishberg.cad3d.keyboard.cfg.KeyPlaceholderType
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
 import com.github.grishberg.cad3d.keyboard.cfg.TrackballMode
 import com.github.grishberg.cad3d.keyboard.cfg.WallsSettings
+import com.github.grishberg.cad3d.keyboard.matrix.KeyMatrix
 import com.github.grishberg.cad3d.keyboard.plate.Plate
 import com.github.grishberg.cad3d.keyboard.screws.ScrewBase
 import com.github.grishberg.cad3d.keyboard.screws.ScrewKeyMatrixPlace
@@ -35,6 +33,8 @@ import com.github.grishberg.cad3d.keyboard.screws.ScrewsMatrixHolder
 import com.github.grishberg.cad3d.keyboard.wristrest.WristRest
 import com.github.grishberg.cad3d.trackball.Trackball
 import com.github.grishberg.cad3d.util.SceneBuilder.ReadyListener
+import eu.printingin3d.javascad.coords.Triangle3d
+import eu.printingin3d.javascad.coords.Triangulator
 import eu.printingin3d.javascad.coords.V3d
 import eu.printingin3d.javascad.models.Abstract3dModel
 import eu.printingin3d.javascad.models.Cube
@@ -43,8 +43,11 @@ import eu.printingin3d.javascad.models.IModel
 import eu.printingin3d.javascad.tranzitions.Union
 import eu.printingin3d.javascad.utils.Color
 import eu.printingin3d.javascad.utils.StlExporter
+import eu.printingin3d.javascad.utils.optimizator.PolygonValidatorMultithreading
 import eu.printingin3d.javascad.vrl.ColorFacetGenerationContext
+import eu.printingin3d.javascad.vrl.Facet
 import eu.printingin3d.javascad.vrl.FacetGenerationContext
+import eu.printingin3d.javascad.vrl.Polygon
 import eu.printingin3d.javascad.vrl.VertexHolder
 import java.io.File
 import java.io.IOException
@@ -216,15 +219,22 @@ class SceneBuilderKeyboard(
 
         val startTime = System.currentTimeMillis()
         if (settings.settingsShowMatrix) {
-            val connections = createConnectionsModel(keyPlace, thumbKeyPlace)
-            val borders = createBordersModel(keyPlace, thumbKeyPlace)
-            val placeHolders = createPlaceholders(keyPlace, thumbKeyPlace)
+            val keyMatrix = KeyMatrix(cfg, keyPlace, thumbKeyPlace)
+            val connections = keyMatrix.createConnectionsModel()
+            val amoebaHoles = amoebaHoles(
+                cfg,
+                keyPlace,
+                thumbKeyPlace
+            ).takeIf { cfg.keyPlaceholderType == KeyPlaceholderType.AmoebaSu120 }
+            val borders = keyMatrix.createBordersModel(amoebaHoles)
+            val placeHolders = keyMatrix.createPlaceholders()
 
             result.addAll(connections.vertexHolders)
             result.addAll(borders.vertexHolders)
             result.addAll(placeHolders.vertexHolders)
 
             val matrix = connections.model.addModel(borders.model).addModel(placeHolders.model)
+
             saveModel("matrix.stl", matrix)
         }
         val delta = System.currentTimeMillis() - startTime
@@ -470,36 +480,6 @@ class SceneBuilderKeyboard(
         return KeyHolderBottomWalls(cfg, keyPlace).build()
     }
 
-    private fun createPlaceholders(keyPlace: KeyPlace, thumbKeyPlace: ThumbKeyPlace): ModelHolder {
-        val models = mutableListOf<Abstract3dModel>()
-
-        val amoeba = Amoeba(cfg)
-        val amoebaHole = amoeba.createHoles(height = 7.0, diameter = 0.7).addModel(amoeba.createSimple())
-
-        val placeHolder = if (cfg.keyPlaceholderType == KeyPlaceholderType.AmoebaSu120) {
-            KeyPlaceholder.placeHolder(cfg).subtractModel(amoebaHole)
-        } else {
-            KeyPlaceholder.placeHolder(cfg)
-        }
-
-        for (column in 0 until cfg.columnsCount) {
-            for (row in 0 until cfg.rowsCount) {
-                models.add(keyPlace.place(column, row, placeHolder))
-            }
-        }
-
-        models.add(thumbKeyPlace.thumbPlace(placeHolder))
-
-        val allPlaceholders = Union(models)
-
-        saveModel("placeHolder.stl", placeHolder)
-
-        return ModelHolder(
-            allPlaceholders,
-            createVertexHolder(allPlaceholders, Color(30, 127, 40)),
-        )
-    }
-
     private fun createKeycapsModel(model: Abstract3dModel, keyPlace: KeyPlace, color: Color): ModelHolder {
         val models = mutableListOf<Abstract3dModel>()
         for (column in 0 until cfg.columnsCount) {
@@ -509,37 +489,6 @@ class SceneBuilderKeyboard(
         }
         val result = Union(models)
         return ModelHolder(result, VertexHolder.fromModel(result, color, 20))
-    }
-
-    private fun createConnectionsModel(keyPlace: KeyPlace, thumbKeyPlace: ThumbKeyPlace): ModelHolder {
-        val connections = Connections(cfg, keyPlace).buildConnections()
-        val thumbPlaceConnections = ThumbConnections(thumbKeyPlace).buildThumbPlaceConnections()
-
-        return ModelHolder(
-            connections.addModel(thumbPlaceConnections),
-            createVertexHolder(connections, DEFAULT_COLOR),
-            createVertexHolder(thumbPlaceConnections, DEFAULT_COLOR)
-        )
-    }
-
-    private fun createBordersModel(keyPlace: KeyPlace, thumbKeyPlace: ThumbKeyPlace): ModelHolder {
-        val screwBase = ScrewBase(cfg)
-        val screws = ScrewKeyMatrixPlace(cfg, keyPlace, thumbKeyPlace).place(screwBase.matrixScrewHole())
-
-        val borderHeigth = 2.5
-        val wallsSettings = WallsSettings(
-            borderHeight = borderHeigth, bottomBorderHeight = 4.0
-
-        )
-        val amoebaHoles = amoebaHoles(cfg, keyPlace, thumbKeyPlace)
-        val borders = Walls(cfg, wallsSettings, keyPlace, thumbKeyPlace, topEdgeOffsetZ = 0.0).createBorders(
-            1.5, borderHeigth
-        ).subtractModel(screws).subtractModel(amoebaHoles)
-
-        return ModelHolder(
-            borders,
-            createVertexHolder(borders, Color.lightGray),
-        )
     }
 
     private fun createCaseModel(

@@ -17,11 +17,6 @@ public class NonManifoldFinder {
         // 1. Собираем все рёбра и храним список полигонов, которым они принадлежат
         Map<Edge, List<Polygon>> edgePolygonsMap = new HashMap<>();
 
-        var percent = 0;
-        var percentF = 0f;
-        int iter = 0;
-        long startTime = System.currentTimeMillis();
-
         for (Polygon polygon : polygons) {
             List<V3d> vertices = polygon.getVertices();
             Edge[] edges = new Edge[vertices.size()];
@@ -35,17 +30,6 @@ public class NonManifoldFinder {
             for (Edge edge : edges) {
                 edgePolygonsMap.computeIfAbsent(edge, k -> new ArrayList<>()).add(polygon);
             }
-
-            percentF = ((float) iter / (float) polygons.size()) * 100f;
-            int newPercent = Math.round(percentF);
-            if (newPercent > percent) {
-                long delta = System.currentTimeMillis() - startTime;
-                startTime = System.currentTimeMillis();
-                System.out.println(
-                    "Progress = " + newPercent + ", cnt = " + iter + " time = " + delta);
-            }
-            percent = newPercent;
-            iter++;
         }
 
         System.out.println("Check edges...");

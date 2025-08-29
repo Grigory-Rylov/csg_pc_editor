@@ -558,6 +558,9 @@ public abstract class Abstract3dModel implements IModel {
 	 * @return a new model which contains the union of this object and the given object
 	 */
 	public Abstract3dModel addModel(Abstract3dModel model) {
+		if (model == null) {
+			return this;
+		}
 		return new Union(this, model);
 	}
 
@@ -589,6 +592,9 @@ public abstract class Abstract3dModel implements IModel {
 	 * @return a new model which contains the difference of this object and the given object
 	 */
 	public Abstract3dModel subtractModel(Abstract3dModel model) {
+		if (model == null) {
+			return this;
+		}
 		return new Difference(this, model);
 	}
 
