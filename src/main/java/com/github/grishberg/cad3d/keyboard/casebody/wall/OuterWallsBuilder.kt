@@ -39,6 +39,8 @@ class OuterWallsBuilder(
             keyPlace(KeyPlaceholder.placeHolderBackLeft().move(0.0, cfg.outerVerticalOffset, cfg.outerBorderZOffset))
         val right =
             keyPlace(KeyPlaceholder.placeHolderBackRight().move(0.0, cfg.outerVerticalOffset, cfg.outerBorderZOffset))
+        val right0 =
+            keyPlace(KeyPlaceholder.placeHolderBackRight().move(-4.0, cfg.outerVerticalOffset, cfg.outerBorderZOffset))
 
         val border = hull(
             left, right,
@@ -63,7 +65,10 @@ class OuterWallsBuilder(
                 border,
                 // connection
                 hull(
-                    right, bottomEdgePatcher.backPoint(right)
+                    right,
+                    right0,
+                    bottomEdgePatcher.backPoint(right),
+                    bottomEdgePatcher.backPoint(right0),
                 ),
                 // bottom edge
                 hull(
@@ -73,7 +78,9 @@ class OuterWallsBuilder(
             )
         }
         val wall = hull(
-            left, right, bottomEdgePatcher.backPoint(left), bottomEdgePatcher.backPoint(right)
+            left, right,
+            bottomEdgePatcher.backPoint(left),
+            bottomEdgePatcher.backPoint(right)
         )
         return Union(border, wall)
     }

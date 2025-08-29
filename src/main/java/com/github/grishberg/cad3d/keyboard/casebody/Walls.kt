@@ -72,7 +72,7 @@ class Walls(
             thickness = 1.5,
             objectHeight = bottomBorderHeight,
             radiusX = 115.0,
-            radiusY = 84.5,
+            radiusY = 81.0,
             centerY = -35.0,
         )
         val controllerHolderWall = ControllerHolderWall(cfg.wallsSettings, keyPlace)
