@@ -109,7 +109,7 @@ class ScrewWallPlaces(
         offsetZ: Double = 0.0
     ): Abstract3dModel {
         val p = place.move(wallsSettings.outerHorizontalOffset, wallsSettings.outerVerticalOffset, 0.0).move
-        val targetPoint = V3d(p.x, p.y + 9.0, 0.0)
+        val targetPoint = V3d(p.x, p.y + 5.0, 0.0)
         return obj.move(targetPoint.add(V3d(offsetX, offsetY, offsetZ)))
     }
 
@@ -122,7 +122,7 @@ class ScrewWallPlaces(
     ): Abstract3dModel {
         val p = place.move(wallsSettings.outerHorizontalOffset, -wallsSettings.outerVerticalOffset, 0.0).move
         val targetPoint = V3d(p.x, p.y, 0.0)
-        return obj.move(targetPoint.add(V3d(offsetX, offsetY - 2.5, offsetZ)))
+        return obj.move(targetPoint.add(V3d(offsetX, offsetY - 1.5, offsetZ)))
     }
 
     private fun placeTop(

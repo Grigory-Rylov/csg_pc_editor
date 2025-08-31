@@ -35,12 +35,7 @@ class CircleBottomEdgePatcher(
     }
 
     override fun rightPoint(o: Abstract3dModel): Abstract3dModel {
-        if (radiusX == 0.0 || radiusY == 0.0) {
-            return projection(o)
-        }
-        val point = o.move
-        val convertedPoint = projectToEllipseX(point, centerX, centerY, radiusX, radiusY)
-        return borderObject(thickness, objectHeight).move(convertedPoint)
+        return projection(o)
     }
 
     /**
