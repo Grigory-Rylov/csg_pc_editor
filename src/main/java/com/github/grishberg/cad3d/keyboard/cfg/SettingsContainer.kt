@@ -1,5 +1,6 @@
 package com.github.grishberg.cad3d.keyboard.cfg
 
+import com.github.grishberg.cad3d.keyboard.KeyboardPart
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -26,7 +27,28 @@ data class AssemblySettings(
     val showTrackbalBall: Boolean = false,
     val showControllerHolder: Boolean = false,
     val showAmoeba: Boolean = false,
-)
+) {
+
+    fun toKeyboardPartsList(): Set<KeyboardPart> {
+        val result = mutableSetOf<KeyboardPart>()
+        if (settingsShowCaps) {
+            result.add(KeyboardPart.KeyCaps)
+        }
+        if (settingsShowCase) {
+            result.add(KeyboardPart.Case)
+        }
+        if (settingsShowMatrix) {
+            result.add(KeyboardPart.KeyMatrix)
+        }
+        if (settingsTrackball) {
+            result.add(KeyboardPart.TrackBall)
+        }
+        if (showAmoeba) {
+            result.add(KeyboardPart.Amoeba)
+        }
+        return result.toSet()
+    }
+}
 
 @Serializable
 data class ThumbClusterSettings(
@@ -77,7 +99,7 @@ data class SettingsContainer(
     val trackballSettings: TrackballConfig,
 ) {
 
-    fun getKeyboardConfig(): KeyboardConfig = KeyboardConfig(
+    fun getKeyboardConfig(modifiedKeyboardParts: Set<KeyboardPart>): KeyboardConfig = KeyboardConfig(
         fn = keyboardSettings.fn,
         stlFn = keyboardSettings.stlFn,
         plateZOffset = keyboardSettings.plateZOffset,
@@ -106,7 +128,8 @@ data class SettingsContainer(
         isHasHotswap = keyboardSettings.isHasHotswap,
         isMagneticWristRestHolder = keyboardSettings.isMagneticWristRestHolder,
         bordersOffset = keyboardSettings.bordersOffset,
-        assemblySettings = assemblySettings,
+        visibleKeyboardParts = assemblySettings.toKeyboardPartsList(),
+        modifiedKeyboardParts = modifiedKeyboardParts,
         thumbClusterSettings = thumbClusterSettings,
         screwNutHoleDiameter = keyboardSettings.screwNutHoleDiameter,
         screwHolderWallhickness = keyboardSettings.screwHolderWallhickness,

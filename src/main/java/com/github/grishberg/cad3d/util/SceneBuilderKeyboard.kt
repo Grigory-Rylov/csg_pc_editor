@@ -6,6 +6,7 @@ import com.github.grishberg.cad3d.keyboard.KeyHolderBottomWalls
 import com.github.grishberg.cad3d.keyboard.KeyPlace
 import com.github.grishberg.cad3d.keyboard.KeyPlaceHoles
 import com.github.grishberg.cad3d.keyboard.KeySwitchHoles
+import com.github.grishberg.cad3d.keyboard.KeyboardPart
 import com.github.grishberg.cad3d.keyboard.ModelHolder
 import com.github.grishberg.cad3d.keyboard.ThumbKeyPlace
 import com.github.grishberg.cad3d.keyboard.Utils
@@ -33,8 +34,6 @@ import com.github.grishberg.cad3d.keyboard.screws.ScrewsMatrixHolder
 import com.github.grishberg.cad3d.keyboard.wristrest.WristRest
 import com.github.grishberg.cad3d.trackball.Trackball
 import com.github.grishberg.cad3d.util.SceneBuilder.ReadyListener
-import eu.printingin3d.javascad.coords.Triangle3d
-import eu.printingin3d.javascad.coords.Triangulator
 import eu.printingin3d.javascad.coords.V3d
 import eu.printingin3d.javascad.models.Abstract3dModel
 import eu.printingin3d.javascad.models.Cube
@@ -43,57 +42,72 @@ import eu.printingin3d.javascad.models.IModel
 import eu.printingin3d.javascad.tranzitions.Union
 import eu.printingin3d.javascad.utils.Color
 import eu.printingin3d.javascad.utils.StlExporter
-import eu.printingin3d.javascad.utils.optimizator.PolygonValidatorMultithreading
 import eu.printingin3d.javascad.vrl.ColorFacetGenerationContext
-import eu.printingin3d.javascad.vrl.Facet
 import eu.printingin3d.javascad.vrl.FacetGenerationContext
-import eu.printingin3d.javascad.vrl.Polygon
 import eu.printingin3d.javascad.vrl.VertexHolder
 import java.io.File
 import java.io.IOException
-import javax.swing.SwingUtilities
+import java.util.concurrent.ConcurrentHashMap
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 
 class SceneBuilderKeyboard(
     private val initialConfig: KeyboardConfig,
     private val pointsController: ControlPointsController,
     private val coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.Default),
+    private val mainThreadDispatcher: CoroutineDispatcher,
 ) : SceneBuilder {
 
-    @Volatile private var cfg: KeyboardConfig = initialConfig
+    private var cfg: KeyboardConfig = initialConfig
 
     private var resolution = 15 // Количество промежуточных точек между заданными точками
     private var listener: ReadyListener? = null
-    private val mutex = Mutex()
+    private val cache = ConcurrentHashMap<KeyboardPart, List<VertexHolder>>()
+    private val resultsChannel = Channel<List<VertexHolder>>()
+    private val currentResults = mutableListOf<VertexHolder>()
 
     init {
         pointsController.addListener { row: Int, col: Int -> rebuildCaseAndInvalidate() }
+        coroutineScope.launch(mainThreadDispatcher) {
+            for (result in resultsChannel) {
+                currentResults.addAll(result)
+                println("resultsChannel ready: result=$result, currentResults = ${currentResults.size}")
+                listener?.onReady(currentResults.toList())
+            }
+        }
     }
 
-    override fun setConfig(cfg: KeyboardConfig) {
-        this.cfg = cfg
-    }
-
-    override fun setListener(listener: ReadyListener) {
+    override fun setListener(listener: ReadyListener?) {
         this.listener = listener
     }
 
-    override fun requestBuffers() {
+    override fun rebuildModels(cfg: KeyboardConfig) {
+        this.cfg = cfg
         if (resolution == 0) {
             resolution = 20
         }
-        create3dModels()
+        create3dModels(cfg)
     }
 
     private fun rebuildCaseAndInvalidate() {
-        create3dModels()
+        create3dModels(cfg)
     }
 
-    private fun create3dModels() {
+    private fun create3dModels(cfg: KeyboardConfig) {
+        currentResults.clear()
+
+        val visibleModels = cfg.visibleKeyboardParts
+        println("create3dModels: visibleModels = $visibleModels, modifiedKeyboardParts = ${cfg.modifiedKeyboardParts}")
+
+        // remove modified parts from cache
+        cfg.modifiedKeyboardParts.forEach {
+            cache.remove(it)
+        }
+
         val keyPlace = KeyPlace(cfg)
         val thumbKeyPlace = ThumbKeyPlace(cfg)
 
@@ -121,92 +135,64 @@ class SceneBuilderKeyboard(
             keyPlace, thumbKeyPlace, topEdgeOffsetZ = topEdgeOffsetZ,
         )
 
-        var count = 0
         coroutineScope.launch {
+            createIfNeeded(KeyboardPart.KeyMatrix, visibleModels) {
+                createMatrix(cfg, keyPlace, thumbKeyPlace)
+            }
 
-            val buffers = mutableListOf<VertexHolder>()
-            count++
-            launch {
-                val result = createMatrix(cfg, keyPlace, thumbKeyPlace)
-                mutex.withLock {
-                    buffers.addAll(result)
-                    renderUi(buffers, --count == 0)
-                }
+            createIfNeeded(KeyboardPart.Case, visibleModels) {
+                createCase(cfg, keyPlace, thumbKeyPlace, screwWallPlaces, walls)
             }
-            count++
-            launch {
-                val result = createCase(cfg, keyPlace, thumbKeyPlace, screwWallPlaces, walls)
-                mutex.withLock {
-                    buffers.addAll(result)
-                    renderUi(buffers, --count == 0)
-                }
+            createIfNeeded(KeyboardPart.KeyCaps, visibleModels) {
+                createKeyCaps(cfg, keyPlace, thumbKeyPlace)
             }
-            count++
-            launch {
-                val result = createKeyCaps(cfg, keyPlace, thumbKeyPlace)
-                mutex.withLock {
-                    buffers.addAll(result)
-                    renderUi(buffers, --count == 0)
-                }
+            createIfNeeded(KeyboardPart.WristRest, visibleModels) {
+                createWristRest(cfg, keyPlace, thumbKeyPlace)
             }
-            count++
-            launch {
-                val result = createWristRest(cfg, keyPlace, thumbKeyPlace)
-                mutex.withLock {
-                    buffers.addAll(result)
-                    renderUi(buffers, --count == 0)
-                }
+            createIfNeeded(KeyboardPart.TrackBallHolder, visibleModels) {
+                createTrackball(cfg, keyPlace)
             }
-            count++
-            launch {
-                val result = createTrackball(cfg, keyPlace, thumbKeyPlace)
-                mutex.withLock {
-                    buffers.addAll(result)
-                    renderUi(buffers, --count == 0)
-                }
+            createIfNeeded(KeyboardPart.TrackBall, visibleModels) {
+                createTrackBall(cfg, keyPlace)
             }
-            count++
-            launch {
-                val result = createController(cfg, controllerPlace, controller)
-                mutex.withLock {
-                    buffers.addAll(result)
-                    renderUi(buffers, --count == 0)
-                }
+            createIfNeeded(KeyboardPart.TrackBallSensor, visibleModels) {
+                createTrackballSensor(cfg, keyPlace)
             }
-            count++
-            launch {
-                val result = createControllerHolder(
+            createIfNeeded(KeyboardPart.TrackBallSensorCap, visibleModels) {
+                createTrackballSensorCap(cfg, keyPlace)
+            }
+            createIfNeeded(KeyboardPart.Controller, visibleModels) {
+                createController(cfg, controllerPlace)
+            }
+            createIfNeeded(KeyboardPart.ControllerHolder, visibleModels) {
+                createControllerHolder(
                     cfg, controllerPlace, controller, controllerHolderDimensions, screwWallPlaces
                 )
-                mutex.withLock {
-                    buffers.addAll(result)
-                    renderUi(buffers, --count == 0)
-                }
             }
-            count++
-            launch {
-                val result = createPlate(cfg, wallsForPlate)
-                mutex.withLock {
-                    buffers.addAll(result)
-                    renderUi(buffers, --count == 0)
-                }
+            createIfNeeded(KeyboardPart.Plate, visibleModels) {
+                createPlate(cfg, wallsForPlate)
             }
-
-            count++
-            launch {
-                val result = createAmoeba(cfg, keyPlace, thumbKeyPlace)
-                mutex.withLock {
-                    buffers.addAll(result)
-                    renderUi(buffers, --count == 0)
-                }
+            createIfNeeded(KeyboardPart.Amoeba, visibleModels) {
+                createAmoeba(cfg, keyPlace, thumbKeyPlace)
             }
         }
     }
 
-    private fun renderUi(buffers: List<VertexHolder>, isAll: Boolean = false) {
-        SwingUtilities.invokeLater {
-            if (listener != null) {
-                listener!!.onReady(buffers, isAll)
+    private fun CoroutineScope.createIfNeeded(
+        keyboardPart: KeyboardPart, visibleModels: Set<KeyboardPart>, producer: () -> List<VertexHolder>
+    ) {
+        if (!visibleModels.contains(keyboardPart)) {
+            return
+        }
+        val cachedPart = cache.get(keyboardPart)
+
+        launch {
+            if (cachedPart == null) {
+                val vertexHolders = producer.invoke()
+                cache[keyboardPart] = vertexHolders
+                resultsChannel.send(vertexHolders)
+            } else {
+                resultsChannel.send(cachedPart)
             }
         }
     }
@@ -214,29 +200,26 @@ class SceneBuilderKeyboard(
     private fun createMatrix(
         cfg: KeyboardConfig, keyPlace: KeyPlace, thumbKeyPlace: ThumbKeyPlace
     ): List<VertexHolder> {
-        val settings = cfg.assemblySettings
         val result = mutableListOf<VertexHolder>()
 
         val startTime = System.currentTimeMillis()
-        if (settings.settingsShowMatrix) {
-            val keyMatrix = KeyMatrix(cfg, keyPlace, thumbKeyPlace)
-            val connections = keyMatrix.createConnectionsModel()
-            val amoebaHoles = amoebaHoles(
-                cfg,
-                keyPlace,
-                thumbKeyPlace
-            ).takeIf { cfg.keyPlaceholderType == KeyPlaceholderType.AmoebaSu120 }
-            val borders = keyMatrix.createBordersModel(amoebaHoles)
-            val placeHolders = keyMatrix.createPlaceholders()
 
-            result.addAll(connections.vertexHolders)
-            result.addAll(borders.vertexHolders)
-            result.addAll(placeHolders.vertexHolders)
+        val keyMatrix = KeyMatrix(cfg, keyPlace, thumbKeyPlace)
+        val connections = keyMatrix.createConnectionsModel()
+        val amoebaHoles = amoebaHoles(
+            cfg, keyPlace, thumbKeyPlace
+        ).takeIf { cfg.keyPlaceholderType == KeyPlaceholderType.AmoebaSu120 }
+        val borders = keyMatrix.createBordersModel(amoebaHoles)
+        val placeHolders = keyMatrix.createPlaceholders()
 
-            val matrix = connections.model.addModel(borders.model).addModel(placeHolders.model)
+        result.addAll(connections.vertexHolders)
+        result.addAll(borders.vertexHolders)
+        result.addAll(placeHolders.vertexHolders)
 
-            saveModel("matrix.stl", matrix)
-        }
+        val matrix = connections.model.addModel(borders.model).addModel(placeHolders.model)
+
+        saveModel("matrix.stl", matrix)
+
         val delta = System.currentTimeMillis() - startTime
         println("createMatrix : $delta")
         return result
@@ -249,24 +232,21 @@ class SceneBuilderKeyboard(
         screwWallPlaces: ScrewWallPlaces,
         walls: Walls,
     ): List<VertexHolder> {
-        val settings = cfg.assemblySettings
         val result = mutableListOf<VertexHolder>()
 
         val startTime = System.currentTimeMillis()
 
         var tbHolder: Abstract3dModel? = null
-        if (settings.settingsShowCase) {
-            val caseWalls = createCaseModel(cfg, keyPlace, thumbKeyPlace, screwWallPlaces, walls)
-            if (cfg.trackball.mode != TrackballMode.None) {
-                val trackBallHolder = Trackball(cfg, keyPlace).createTrackballHolder()
-                tbHolder = trackBallHolder.model
-                result.addAll(trackBallHolder.vertexHolders)
+        val caseWalls = createCaseModel(cfg, keyPlace, thumbKeyPlace, screwWallPlaces, walls)
+        if (cfg.trackball.mode != TrackballMode.None) {
+            val trackBallHolder = Trackball(cfg, keyPlace).createTrackballHolder()
+            tbHolder = trackBallHolder.model
+            result.addAll(trackBallHolder.vertexHolders)
 
-            }
-            result.addAll(caseWalls.vertexHolders)
-            val resultCase = if (tbHolder != null) caseWalls.model.addModel(tbHolder) else caseWalls.model
-            saveModel("case.stl", resultCase)
         }
+        result.addAll(caseWalls.vertexHolders)
+        val resultCase = if (tbHolder != null) caseWalls.model.addModel(tbHolder) else caseWalls.model
+        saveModel("case.stl", resultCase)
         val delta = System.currentTimeMillis() - startTime
         println("createCase : $delta")
         return result
@@ -275,18 +255,16 @@ class SceneBuilderKeyboard(
     private fun createKeyCaps(
         cfg: KeyboardConfig, keyPlace: KeyPlace, thumbKeyPlace: ThumbKeyPlace
     ): List<VertexHolder> {
-        val settings = cfg.assemblySettings
+        val settings = cfg.visibleKeyboardParts
         val result = mutableListOf<VertexHolder>()
         val startTime = System.currentTimeMillis()
-        if (settings.settingsShowCaps) {
-            val keyCap = KeyCaps(cfg)
-            result.addAll(
-                createThumbKeyPlaceModel(
-                    keyCap.create().model, thumbKeyPlace, Color.BLUE
-                ).vertexHolders
-            )
-            result.addAll(createKeycapsModel(keyCap.create().model, keyPlace, Color.PINK).vertexHolders)
-        }
+        val keyCap = KeyCaps(cfg)
+        result.addAll(
+            createThumbKeyPlaceModel(
+                keyCap.create().model, thumbKeyPlace, Color.BLUE
+            ).vertexHolders
+        )
+        result.addAll(createKeycapsModel(keyCap.create().model, keyPlace, Color.PINK).vertexHolders)
         val delta = System.currentTimeMillis() - startTime
         println("createKeyCaps : $delta")
         return result
@@ -305,58 +283,56 @@ class SceneBuilderKeyboard(
     private fun createWristRest(
         cfg: KeyboardConfig, keyPlace: KeyPlace, thumbKeyPlace: ThumbKeyPlace
     ): List<VertexHolder> {
-        val settings = cfg.assemblySettings
+        val settings = cfg.visibleKeyboardParts
         val result = mutableListOf<VertexHolder>()
         val startTime = System.currentTimeMillis()
-        if (settings.settingsShowWristRest) {
-            val wristRest = createWristRestModel()
-            result.addAll(wristRest.vertexHolders)
-        }
+        val wristRest = createWristRestModel()
+        result.addAll(wristRest.vertexHolders)
         val delta = System.currentTimeMillis() - startTime
         println("createWristRest : $delta")
         return result
     }
 
     private fun createTrackball(
-        cfg: KeyboardConfig, keyPlace: KeyPlace, thumbKeyPlace: ThumbKeyPlace
+        cfg: KeyboardConfig, keyPlace: KeyPlace,
     ): List<VertexHolder> {
-        val settings = cfg.assemblySettings
+        val settings = cfg.visibleKeyboardParts
         val result = mutableListOf<VertexHolder>()
         val startTime = System.currentTimeMillis()
-        if (settings.settingsTrackball) {
-            val trackball = Trackball(cfg, keyPlace)
-            val trackBallModelHolder = trackball.create(settings.showTrackbalBall)
-            result.addAll(trackBallModelHolder.vertexHolders)
-            saveModel("trackball.stl", trackBallModelHolder.model)
-
-            if (settings.showTrackballSensor) {
-                result.addAll(trackball.createTrackballSensor().vertexHolders)
-            }
-        }
-
-        if (settings.showTrackbalSensorCap) {
-            val trackball = Trackball(cfg, keyPlace)
-            val sensorCap = trackball.createSensorCap()
-            result.addAll(sensorCap.vertexHolders)
-            saveModel("trackballCap.stl", sensorCap.model)
-        }
+        val trackball = Trackball(cfg, keyPlace)
+        val trackBallModelHolder = trackball.create()
+        result.addAll(trackBallModelHolder.vertexHolders)
+        saveModel("trackball.stl", trackBallModelHolder.model)
 
         val delta = System.currentTimeMillis() - startTime
         println("createTrackball : $delta")
         return result
     }
 
+    private fun createTrackBall(cfg: KeyboardConfig, keyPlace: KeyPlace): List<VertexHolder> {
+        val trackball = Trackball(cfg, keyPlace)
+        return listOf(trackball.createTrackBall())
+    }
+
+    private fun createTrackballSensorCap(cfg: KeyboardConfig, keyPlace: KeyPlace): List<VertexHolder> {
+        val trackball = Trackball(cfg, keyPlace)
+        val sensorCap = trackball.createSensorCap()
+        saveModel("trackballCap.stl", sensorCap.model)
+        return sensorCap.vertexHolders
+    }
+
+    private fun createTrackballSensor(cfg: KeyboardConfig, keyPlace: KeyPlace): List<VertexHolder> {
+        val trackball = Trackball(cfg, keyPlace)
+        return trackball.createTrackballSensor().vertexHolders
+    }
+
     private fun createController(
-        cfg: KeyboardConfig, controllerPlace: ControllerPlace, controller: Controller,
+        cfg: KeyboardConfig, controllerPlace: ControllerPlace,
     ): List<VertexHolder> {
-        val settings = cfg.assemblySettings
         val result = mutableListOf<VertexHolder>()
         val startTime = System.currentTimeMillis()
-        if (settings.showController) {
-            val trackBall = SuperMiniNRF52840(cfg, controllerPlace).create()
-            result.addAll(trackBall.vertexHolders)
-        }
-
+        val trackBall = SuperMiniNRF52840(cfg, controllerPlace).create()
+        result.addAll(trackBall.vertexHolders)
         val delta = System.currentTimeMillis() - startTime
         println("createController : $delta")
         return result
@@ -366,25 +342,23 @@ class SceneBuilderKeyboard(
         cfg: KeyboardConfig, controllerPlace: ControllerPlace, controller: Controller,
         controllerHolderDimensions: ControllerHolderDimensions, screwWallPlaces: ScrewWallPlaces,
     ): List<VertexHolder> {
-        val settings = cfg.assemblySettings
         val result = mutableListOf<VertexHolder>()
         val startTime = System.currentTimeMillis()
-        if (settings.showControllerHolder) {
-            val switcherFactory = SwitcherFactory(cfg)
-            val batteryFactory = BatteryFactory(cfg)
 
-            val controllerHolder = ControllerHolderBuilder(
-                cfg,
-                controller,
-                controllerPlace,
-                controllerHolderDimensions,
-                screwWallPlaces,
-                switcherFactory.createSwitcher(),
-                batteryFactory.create()
-            ).create(showPreview = true)
-            result.addAll(controllerHolder.vertexHolders)
-            saveModel("controller_holder.stl", controllerHolder.model)
-        }
+        val switcherFactory = SwitcherFactory(cfg)
+        val batteryFactory = BatteryFactory(cfg)
+
+        val controllerHolder = ControllerHolderBuilder(
+            cfg,
+            controller,
+            controllerPlace,
+            controllerHolderDimensions,
+            screwWallPlaces,
+            switcherFactory.createSwitcher(),
+            batteryFactory.create()
+        ).create(showPreview = true)
+        result.addAll(controllerHolder.vertexHolders)
+        saveModel("controller_holder.stl", controllerHolder.model)
 
         val delta = System.currentTimeMillis() - startTime
         println("createControllerHolder : $delta")
@@ -392,16 +366,13 @@ class SceneBuilderKeyboard(
     }
 
     private fun createPlate(cfg: KeyboardConfig, walls: Walls): List<VertexHolder> {
-        val settings = cfg.assemblySettings
         val result = mutableListOf<VertexHolder>()
         val startTime = System.currentTimeMillis()
-        if (settings.settingsShowPlate) {
 
-            val plate = Plate(cfg, walls).create()
+        val plate = Plate(cfg, walls).create()
 
-            result.addAll(plate.vertexHolders)
-            //saveModel("controller_holder.stl", controllerHolder.model)
-        }
+        result.addAll(plate.vertexHolders)
+        //saveModel("controller_holder.stl", controllerHolder.model)
 
         val delta = System.currentTimeMillis() - startTime
         println("createPlate : $delta")
@@ -411,17 +382,14 @@ class SceneBuilderKeyboard(
     private fun createAmoeba(
         cfg: KeyboardConfig, keyPlace: KeyPlace, thumbKeyPlace: ThumbKeyPlace
     ): List<VertexHolder> {
-        val settings = cfg.assemblySettings
+        val settings = cfg.visibleKeyboardParts
         val result = mutableListOf<VertexHolder>()
         val startTime = System.currentTimeMillis()
-        if (settings.showAmoeba) {
 
-            val amoeba = Amoeba(cfg).create()
+        val amoeba = Amoeba(cfg).create()
 
-            result.addAll(createThumbKeyPlaceModel(amoeba, thumbKeyPlace, Color.GREEN).vertexHolders)
-            result.addAll(createKeycapsModel(amoeba, keyPlace, Color.green).vertexHolders)
-
-        }
+        result.addAll(createThumbKeyPlaceModel(amoeba, thumbKeyPlace, Color.GREEN).vertexHolders)
+        result.addAll(createKeycapsModel(amoeba, keyPlace, Color.green).vertexHolders)
 
         val delta = System.currentTimeMillis() - startTime
         println("createAmoeba : $delta")
@@ -509,6 +477,7 @@ class SceneBuilderKeyboard(
             bottomBorderHeight = if (cfg.isSkeletonMode) 4.0 else 2.0
         )
 
+        val holeBorderHeight = 2.0
         val holeBorders = Walls(
             this.cfg,
             wallsSettings,
@@ -517,8 +486,9 @@ class SceneBuilderKeyboard(
             topEdgeOffsetZ = holeVerticalExtra / 2,
             isPlateMode = false,
         ).createBorders(
-            1.7, borderHeight + holeVerticalExtra
-        )
+            borderThickness = holeBorderHeight,
+            borderHeight = borderHeight + holeVerticalExtra
+        ).moveZ(holeBorderHeight - 1.7)
 
         val screwBase = ScrewBase(this.cfg)
         val matrixWallScrewHolder = ScrewsMatrixHolder(this.cfg, screwBase).create()
@@ -541,6 +511,7 @@ class SceneBuilderKeyboard(
             wallsModel.addModel(screwMatrixHolders).addModel(wallScrews).subtractModel(screwMatrixHoldersHoles),
             createVertexHolder(wallsModel.subtractModel(screwMatrixHoldersHoles), Color.gray),
             createVertexHolder(wallScrews, Color.yellow),
+            //createVertexHolder(holeBorders, Color.PINK),
             createVertexHolder(
                 screwMatrixHolders.subtractModel(Cube(300.0, 300.0, 50.0).move(0.0, 0.0, -25.0)), Color.CYAN
             )

@@ -1,4 +1,4 @@
-package com.github.grishberg.cad3d.common.cmd;
+package com.github.grishberg.cad3d.debug.cmd;
 
 import eu.printingin3d.javascad.utils.Color;
 

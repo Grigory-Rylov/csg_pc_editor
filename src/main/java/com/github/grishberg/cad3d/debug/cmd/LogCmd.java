@@ -1,7 +1,7 @@
-package com.github.grishberg.cad3d.common.cmd;
+package com.github.grishberg.cad3d.debug.cmd;
 
 
-import com.github.grishberg.cad3d.common.DebugCmd;
+import com.github.grishberg.cad3d.debug.DebugCmd;
 import com.github.grishberg.cad3d.ui.DebugVisualizer;
 import java.util.List;
 import eu.printingin3d.javascad.coords.V3d;

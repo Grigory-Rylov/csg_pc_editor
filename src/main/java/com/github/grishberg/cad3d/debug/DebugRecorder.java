@@ -1,4 +1,4 @@
-package com.github.grishberg.cad3d.common;
+package com.github.grishberg.cad3d.debug;
 
 import eu.printingin3d.javascad.coords.V3d;
 import eu.printingin3d.javascad.utils.optimizator.PolygonValidator;

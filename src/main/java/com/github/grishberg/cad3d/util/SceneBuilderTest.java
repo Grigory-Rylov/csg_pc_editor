@@ -1,6 +1,6 @@
 package com.github.grishberg.cad3d.util;
 
-import com.github.grishberg.cad3d.common.DebugRecorder;
+import com.github.grishberg.cad3d.debug.DebugRecorder;
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig;
 import eu.printingin3d.javascad.coords.Triangle3d;
 import eu.printingin3d.javascad.coords.Triangulator;
@@ -36,11 +36,6 @@ public class SceneBuilderTest implements SceneBuilder {
         buffers = new ArrayList<>();
     }
 
-    @Override
-    public void setConfig(@NotNull KeyboardConfig cfg) {
-        //do nothing.
-    }
-
     private ReadyListener listener;
 
     @Override
@@ -49,7 +44,8 @@ public class SceneBuilderTest implements SceneBuilder {
     }
 
     @Override
-    public void requestBuffers() {
+    public void rebuildModels(@NotNull KeyboardConfig cfg) {
+
         create3dModels();
     }
 
@@ -131,7 +127,7 @@ public class SceneBuilderTest implements SceneBuilder {
         }
 
         if (listener != null) {
-            listener.onReady(buffers, true);
+            listener.onReady(buffers);
         }
     }
 

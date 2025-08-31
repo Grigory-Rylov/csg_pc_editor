@@ -14,6 +14,7 @@ import com.github.grishberg.cad3d.keyboard.cfg.WallsSettings
 import com.github.grishberg.cad3d.keyboard.screws.ScrewBase
 import com.github.grishberg.cad3d.keyboard.screws.ScrewKeyMatrixPlace
 import eu.printingin3d.javascad.models.Abstract3dModel
+import eu.printingin3d.javascad.models.Cube
 import eu.printingin3d.javascad.models.IModel
 import eu.printingin3d.javascad.tranzitions.Union
 import eu.printingin3d.javascad.utils.Color

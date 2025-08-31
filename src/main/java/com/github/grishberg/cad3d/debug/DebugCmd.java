@@ -1,4 +1,4 @@
-package com.github.grishberg.cad3d.common;
+package com.github.grishberg.cad3d.debug;
 
 import com.github.grishberg.cad3d.ui.DebugVisualizer;
 

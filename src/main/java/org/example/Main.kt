@@ -1,7 +1,8 @@
 package org.example
 
-import com.github.grishberg.cad3d.common.DebugCmd
+import com.github.grishberg.cad3d.debug.DebugCmd
 import com.github.grishberg.cad3d.keyboard.ControlPointsController
+import com.github.grishberg.cad3d.keyboard.KeyboardPart
 import com.github.grishberg.cad3d.keyboard.cfg.SettingsHolder
 import com.github.grishberg.cad3d.ui.DebugRecorderImpl
 import com.github.grishberg.cad3d.util.SceneBuilder
@@ -35,6 +36,8 @@ import javax.swing.JCheckBox
 import javax.swing.JFrame
 import javax.swing.JLabel
 import javax.swing.JPanel
+import javax.swing.SwingUtilities
+import kotlinx.coroutines.Dispatchers
 import org.example.debug.DebugVisualizerImpl
 import org.example.dialog.ConfigEditor
 
@@ -58,7 +61,6 @@ class Main(title: String?) : JFrame(title), GLEventListener {
     private val debugVisualizer = DebugVisualizerImpl()
     private val debugCommands = mutableListOf<DebugCmd>()
 
-    private var requestRenderingTime = 0L
     private var showDebugInfo = false
     private var currentDebugCommandIndex = 0
     private lateinit var debugNavigationPanel: JPanel
@@ -68,20 +70,25 @@ class Main(title: String?) : JFrame(title), GLEventListener {
 
     init {
         settingsHolder.loadSettings()
-        sceneBuilder = SceneBuilderKeyboard(settingsHolder.settings.getKeyboardConfig(), pointsController)
+        sceneBuilder = SceneBuilderKeyboard(
+            initialConfig = settingsHolder.settings.getKeyboardConfig(modifiedKeyboardParts = emptySet()),
+            pointsController = pointsController,
+            mainThreadDispatcher = Dispatchers.Main,
+        )
         val debugRecorder = DebugRecorderImpl()
         //sceneBuilder = SceneBuilderTest(debugRecorder)
-        sceneBuilder.setListener { buffers: List<VertexHolder>?, isReady: Boolean ->
-            if (isReady) {
-                val timeDelta = System.currentTimeMillis() - requestRenderingTime
-                println("Rendering time = $timeDelta ms")
+        sceneBuilder.setListener(object : SceneBuilder.ReadyListener {
+            override fun onReady(buffers: List<VertexHolder>) {
+                SwingUtilities.invokeLater {
+                    debugCommands.clear()
+                    debugCommands.addAll(debugRecorder.commands)
+                    vertexHolderList.clear()
+                    vertexHolderList.addAll(buffers)
+                }
             }
-            debugCommands.clear()
-            debugCommands.addAll(debugRecorder.commands)
-            vertexHolderList.clear()
-            vertexHolderList.addAll(buffers!!)
-        }
-        rebuildConfigAndRequestRendering()
+        })
+
+        rebuildConfigAndRequestRendering(emptySet())
         setup()
     }
 
@@ -95,50 +102,50 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         // Добавляем переключатели
         val keysButton = createToggleButton("Клавиши", settingsHolder.settingsShowCaps) {
             settingsHolder.settingsShowCaps = it
-            rebuildConfigAndRequestRendering()
+            rebuildConfigAndRequestRendering(emptySet())
         }
         val caseButton = createToggleButton("Корпус", settingsHolder.settingsShowCase) {
             settingsHolder.settingsShowCase = it
-            rebuildConfigAndRequestRendering()
+            rebuildConfigAndRequestRendering(emptySet())
         }
         val matrixButton = createToggleButton("Матрица", settingsHolder.settingsShowMatrix) {
             settingsHolder.settingsShowMatrix = it
-            rebuildConfigAndRequestRendering()
+            rebuildConfigAndRequestRendering(emptySet())
         }
         val plateButton = createToggleButton("Поддон", settingsHolder.settingsShowPlate) {
             settingsHolder.settingsShowPlate = it
-            rebuildConfigAndRequestRendering()
+            rebuildConfigAndRequestRendering(emptySet())
         }
         val wristRestButton = createToggleButton("Держатель рук", settingsHolder.settingsShowWristRest) {
             settingsHolder.settingsShowWristRest = it
-            rebuildConfigAndRequestRendering()
+            rebuildConfigAndRequestRendering(emptySet())
         }
         val trackballButton = createToggleButton("Трэкбол", settingsHolder.settingsTrackball) {
             settingsHolder.settingsTrackball = it
-            rebuildConfigAndRequestRendering()
+            rebuildConfigAndRequestRendering(emptySet())
         }
         val trackballSensorButton = createToggleButton("Сенсор ТБ", settingsHolder.showTrackballSensor) {
             settingsHolder.showTrackballSensor = it
-            rebuildConfigAndRequestRendering()
+            rebuildConfigAndRequestRendering(emptySet())
         }
         val trackballSensorCapButton = createToggleButton("Крышка сенсора ТБ", settingsHolder.showTrackballSensorCap) {
             settingsHolder.showTrackballSensorCap = it
-            rebuildConfigAndRequestRendering()
+            rebuildConfigAndRequestRendering(emptySet())
         }
         val showControllerHolderButton =
             createToggleButton("Держатель контроллера", settingsHolder.showControllerHolder) {
                 settingsHolder.showControllerHolder = it
-                rebuildConfigAndRequestRendering()
+                rebuildConfigAndRequestRendering(emptySet())
             }
 
         val showControllerButton = createToggleButton("Контроллера", settingsHolder.showController) {
             settingsHolder.showController = it
-            rebuildConfigAndRequestRendering()
+            rebuildConfigAndRequestRendering(emptySet())
         }
 
         val showAmoebaButton = createToggleButton("Амебы", settingsHolder.showAmoeba) {
             settingsHolder.showAmoeba = it
-            rebuildConfigAndRequestRendering()
+            rebuildConfigAndRequestRendering(emptySet())
         }
 
         val debugButton = createToggleButton("Debug", showDebugInfo) {
@@ -254,23 +261,36 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         val configDialog = ConfigEditor(
             settingsHolder.settings, onKeyboardSettingsChanged = {
             settingsHolder.updateSettings(it)
-            rebuildConfigAndRequestRendering()
+            rebuildConfigAndRequestRendering(
+                setOf(
+                    KeyboardPart.KeyMatrix,
+                    KeyboardPart.KeyCaps, KeyboardPart.Case, KeyboardPart.Plate,
+                )
+            )
         },
 
             onThumbClusterSettingsChanged = {
                 settingsHolder.updateSettings(it)
-                rebuildConfigAndRequestRendering()
+                rebuildConfigAndRequestRendering(
+                    setOf(
+                        KeyboardPart.KeyMatrix,
+                        KeyboardPart.KeyCaps, KeyboardPart.Case, KeyboardPart.Plate,
+                    )
+                )
             }, onTrackballSettingsChanged = {
                 settingsHolder.updateSettings(it)
-                rebuildConfigAndRequestRendering()
+                rebuildConfigAndRequestRendering(
+                    setOf(
+                        KeyboardPart.TrackBall,
+                        KeyboardPart.TrackBallSensor, KeyboardPart.TrackBallHolder, KeyboardPart.TrackBallSensorCap,
+                    )
+                )
             })
         configDialog.isVisible = true
     }
 
-    private fun rebuildConfigAndRequestRendering() {
-        sceneBuilder.setConfig(settingsHolder.settings.getKeyboardConfig())
-        requestRenderingTime = System.currentTimeMillis()
-        sceneBuilder.requestBuffers()
+    private fun rebuildConfigAndRequestRendering(modifiedKeyboardParts: Set<KeyboardPart>) {
+        sceneBuilder.rebuildModels(settingsHolder.settings.getKeyboardConfig(modifiedKeyboardParts))
     }
 
     private fun addDebugCommands() {

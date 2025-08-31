@@ -1,5 +1,7 @@
 package com.github.grishberg.cad3d.keyboard.cfg
 
+import com.github.grishberg.cad3d.keyboard.KeyboardPart
+
 data class KeyboardConfig(
     val fn: Int,
     val stlFn: Int,
@@ -27,7 +29,8 @@ data class KeyboardConfig(
     val isHasHotswap: Boolean,
     val isMagneticWristRestHolder: Boolean,
     val bordersOffset: Double,
-    @field:Volatile var assemblySettings: AssemblySettings,
+    val visibleKeyboardParts: Set<KeyboardPart>,
+    val modifiedKeyboardParts: Set<KeyboardPart>,
     val thumbClusterSettings: ThumbClusterSettings,
     val screwNutHoleDiameter: Double,
     val screwHolderWallhickness: Double,

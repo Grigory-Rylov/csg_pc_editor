@@ -91,7 +91,8 @@ class NonManifoldFinderTest {
         keyPlaceHolderHeight = 4.0,
         zAngleProvider = KeyZAngleProvider(),
         columnOffsetProvider = KeyOffsetProvider(),
-        assemblySettings = AssemblySettings(),
+        visibleKeyboardParts = AssemblySettings().toKeyboardPartsList(),
+        modifiedKeyboardParts = emptySet(),
         thumbClusterSettings = ThumbClusterSettings(
             xOffset = 0.0,
             yOffset = -50.0,

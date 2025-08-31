@@ -1,19 +1,16 @@
-package com.github.grishberg.cad3d.util;
+package com.github.grishberg.cad3d.util
 
-import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig;
-import eu.printingin3d.javascad.vrl.VertexHolder;
-import java.util.List;
-import org.jetbrains.annotations.NotNull;
+import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
+import eu.printingin3d.javascad.vrl.VertexHolder
 
-public interface SceneBuilder {
+interface SceneBuilder {
 
-   void requestBuffers();
+    fun rebuildModels(cfg: KeyboardConfig)
 
-   void setListener(ReadyListener listener);
+    fun setListener(listener: ReadyListener?)
 
-   void setConfig(@NotNull KeyboardConfig cfg);
+    interface ReadyListener {
 
-   interface ReadyListener {
-      void  onReady(List<VertexHolder> buffers, boolean isAll);
-   }
+        fun onReady(buffers: List<VertexHolder>)
+    }
 }

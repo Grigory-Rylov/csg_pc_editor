@@ -33,7 +33,7 @@
  */
 package eu.printingin3d.javascad.vrl;
 
-import com.github.grishberg.cad3d.common.DebugRecorder;
+import com.github.grishberg.cad3d.debug.DebugRecorder;
 import eu.printingin3d.javascad.coords.Triangle3d;
 import eu.printingin3d.javascad.coords.Triangulator;
 import eu.printingin3d.javascad.coords.V3d;

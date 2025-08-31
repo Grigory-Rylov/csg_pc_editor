@@ -1,6 +1,6 @@
 package org.example.debug;
 
-import com.github.grishberg.cad3d.common.DebugCmd;
+import com.github.grishberg.cad3d.debug.DebugCmd;
 import com.github.grishberg.cad3d.ui.DebugVisualizer;
 import com.jogamp.opengl.GL2;
 import eu.printingin3d.javascad.coords.V3d;
