@@ -283,6 +283,7 @@ class Main(title: String?) : JFrame(title), GLEventListener {
                     setOf(
                         KeyboardPart.TrackBall,
                         KeyboardPart.TrackBallSensor, KeyboardPart.TrackBallHolder, KeyboardPart.TrackBallSensorCap,
+                        KeyboardPart.Case,
                     )
                 )
             })
@@ -431,10 +432,6 @@ class Main(title: String?) : JFrame(title), GLEventListener {
 
     override fun reshape(drawable: GLAutoDrawable, x: Int, y: Int, width: Int, height: Int) {
         var height = height
-        println(
-            "reshape x=$x, y=$y, widht=$width, height=$height"
-        )
-        // TODO Auto-generated method stub
         val gl = drawable.gl.gL2
         if (height <= 0) {
             height = 1
