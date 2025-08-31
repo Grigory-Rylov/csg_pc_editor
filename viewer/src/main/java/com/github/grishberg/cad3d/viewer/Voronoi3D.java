@@ -1,4 +1,4 @@
-package org.example;
+package com.github.grishberg.cad3d.viewer;
 
 import com.jogamp.opengl.*;
 import com.jogamp.opengl.awt.GLCanvas;

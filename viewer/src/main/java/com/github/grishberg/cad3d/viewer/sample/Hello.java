@@ -1,4 +1,4 @@
-package org.example.sample;
+package com.github.grishberg.cad3d.viewer.sample;
 
 /**
  * Copyright 2019 Gothel Software e.K. All rights reserved.

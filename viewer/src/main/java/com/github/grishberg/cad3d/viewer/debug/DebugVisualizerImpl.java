@@ -1,4 +1,4 @@
-package org.example.debug;
+package com.github.grishberg.cad3d.viewer.debug;
 
 import com.github.grishberg.cad3d.debug.DebugCmd;
 import com.github.grishberg.cad3d.ui.DebugVisualizer;

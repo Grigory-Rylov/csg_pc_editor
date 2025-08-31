@@ -1,4 +1,4 @@
-package org.example.dialog
+package com.github.grishberg.cad3d.viewer.dialog
 
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardSettings
 import com.github.grishberg.cad3d.keyboard.cfg.SettingsContainer
@@ -30,7 +30,7 @@ class ConfigEditor(
         title = "Конфигурация клавиатуры"
         isModal = false
         layout = BoxLayout(contentPane, BoxLayout.Y_AXIS)
-        defaultCloseOperation = JDialog.DISPOSE_ON_CLOSE
+        defaultCloseOperation = DISPOSE_ON_CLOSE
 
         createKeyCountPanel()
         createAnglesPanel()

@@ -1,4 +1,4 @@
-package org.example.sample;
+package com.github.grishberg.cad3d.viewer.sample;
 
 /**
  * Copyright 2010 JogAmp Community. All rights reserved.

@@ -1,4 +1,4 @@
-package org.example;
+package com.github.grishberg.cad3d.viewer;
 
 import com.jogamp.newt.event.KeyEvent;
 import com.jogamp.newt.event.KeyListener;

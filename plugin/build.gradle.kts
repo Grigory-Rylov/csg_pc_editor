@@ -3,6 +3,6 @@ plugins {
     `java-library`
 }
 
-dependencies {
-    testImplementation("junit:junit:4.13.1")
+kotlin {
+    jvmToolchain(17) // Устанавливаем единую версию Java для всех задач
 }

@@ -42,7 +42,7 @@ data class KeyboardConfig(
     val keyPlaceholderType: KeyPlaceholderType,
     val horizontalExtraSpace: Double,
     val verticalExtraSpace: Double,
-) {
+): Config {
 
     val lastCol: Int
         get() = columnsCount - 1

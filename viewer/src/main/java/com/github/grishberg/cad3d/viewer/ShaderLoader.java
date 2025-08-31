@@ -1,4 +1,4 @@
-package org.example;
+package com.github.grishberg.cad3d.viewer;
 
 import java.io.BufferedReader;
 import java.io.InputStream;

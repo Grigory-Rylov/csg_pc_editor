@@ -1,13 +1,17 @@
-package org.example
+package com.github.grishberg.cad3d.viewer
 
 import com.github.grishberg.cad3d.debug.DebugCmd
 import com.github.grishberg.cad3d.keyboard.ControlPointsController
 import com.github.grishberg.cad3d.keyboard.KeyboardPart
 import com.github.grishberg.cad3d.keyboard.cfg.SettingsHolder
 import com.github.grishberg.cad3d.plugin.VertexHolder
+import com.github.grishberg.cad3d.plugins.FileWatcher
+import com.github.grishberg.cad3d.plugins.PluginManager
 import com.github.grishberg.cad3d.ui.DebugRecorderImpl
 import com.github.grishberg.cad3d.util.SceneBuilder
-import com.github.grishberg.cad3d.util.SceneBuilderKeyboard
+import com.github.grishberg.cad3d.KeyboardBuilder
+import com.github.grishberg.cad3d.viewer.debug.DebugVisualizerImpl
+import com.github.grishberg.cad3d.viewer.dialog.ConfigEditor
 import com.jogamp.opengl.GL2
 import com.jogamp.opengl.GLAutoDrawable
 import com.jogamp.opengl.GLCapabilities
@@ -31,15 +35,17 @@ import java.awt.event.MouseWheelEvent
 import java.awt.event.MouseWheelListener
 import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
+import java.io.File
 import javax.swing.JButton
 import javax.swing.JCheckBox
 import javax.swing.JFrame
 import javax.swing.JLabel
 import javax.swing.JPanel
 import javax.swing.SwingUtilities
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import org.example.debug.DebugVisualizerImpl
-import org.example.dialog.ConfigEditor
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 
 class Main(title: String?) : JFrame(title), GLEventListener {
 
@@ -67,10 +73,17 @@ class Main(title: String?) : JFrame(title), GLEventListener {
     private lateinit var debugInfoLabel: JLabel
     private lateinit var prevDebugButton: JButton
     private lateinit var nextDebugButton: JButton
+    private val pluginManager: PluginManager
+    private val coroutineScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
     init {
         settingsHolder.loadSettings()
-        sceneBuilder = SceneBuilderKeyboard(
+
+        val pluginsDir = File("cad3d/build/libs")
+
+        pluginManager = PluginManager(pluginsDir, FileWatcher(pluginsDir))
+
+        sceneBuilder = KeyboardBuilder(
             initialConfig = settingsHolder.settings.getKeyboardConfig(modifiedKeyboardParts = emptySet()),
             pointsController = pointsController,
             mainThreadDispatcher = Dispatchers.Main,
@@ -90,6 +103,16 @@ class Main(title: String?) : JFrame(title), GLEventListener {
 
         rebuildConfigAndRequestRendering(emptySet())
         setup()
+
+        coroutineScope.launch {
+            // Загрузка плагинов при старте
+            val plugins = pluginManager.loadPlugins()
+            println("Initial plugins loaded: ${plugins.size}")
+
+            // Получение данных для отрисовки
+            val vertexHolders = pluginManager.getVertexHolders()
+            //renderScene(vertexHolders)
+        }
     }
 
     fun setup() {
@@ -205,6 +228,7 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         // Обработка закрытия окна
         addWindowListener(object : WindowAdapter() {
             override fun windowClosing(e: WindowEvent) {
+                pluginManager.stop()
                 settingsHolder.saveSettings()
                 animator!!.stop()
                 dispose()

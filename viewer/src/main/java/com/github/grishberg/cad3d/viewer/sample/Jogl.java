@@ -1,4 +1,4 @@
-package org.example.sample;
+package com.github.grishberg.cad3d.viewer.sample;
 
 import com.jogamp.opengl.GLCapabilities;
 import com.jogamp.opengl.GLProfile;

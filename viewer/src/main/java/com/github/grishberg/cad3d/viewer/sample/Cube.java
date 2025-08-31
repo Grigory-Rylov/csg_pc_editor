@@ -1,4 +1,4 @@
-package org.example.sample;
+package com.github.grishberg.cad3d.viewer.sample;
 
 import com.jogamp.opengl.GL;
 import com.jogamp.opengl.GL2;

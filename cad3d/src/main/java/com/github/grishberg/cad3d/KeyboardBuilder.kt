@@ -1,6 +1,5 @@
-package com.github.grishberg.cad3d.util
+package com.github.grishberg.cad3d
 
-import com.github.grishberg.cad3d.keyboard.ControlPointsController
 import com.github.grishberg.cad3d.keyboard.KeyCaps
 import com.github.grishberg.cad3d.keyboard.KeyHolderBottomWalls
 import com.github.grishberg.cad3d.keyboard.KeyPlace
@@ -34,7 +33,9 @@ import com.github.grishberg.cad3d.keyboard.screws.ScrewsMatrixHolder
 import com.github.grishberg.cad3d.keyboard.wristrest.WristRest
 import com.github.grishberg.cad3d.plugin.VertexHolder
 import com.github.grishberg.cad3d.trackball.Trackball
-import com.github.grishberg.cad3d.util.SceneBuilder.ReadyListener
+import com.github.grishberg.cad3d.util.SceneBuilder
+import com.github.grishberg.cad3d.util.fromModel
+import com.github.grishberg.javascad.StlExporter
 import eu.printingin3d.javascad.coords.V3d
 import eu.printingin3d.javascad.models.Abstract3dModel
 import eu.printingin3d.javascad.models.Cube
@@ -42,7 +43,6 @@ import eu.printingin3d.javascad.models.Cylinder
 import eu.printingin3d.javascad.models.IModel
 import eu.printingin3d.javascad.tranzitions.Union
 import eu.printingin3d.javascad.utils.Color
-import com.github.grishberg.javascad.StlExporter
 import eu.printingin3d.javascad.vrl.ColorFacetGenerationContext
 import eu.printingin3d.javascad.vrl.FacetGenerationContext
 import java.io.File
@@ -54,23 +54,18 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 
-class SceneBuilderKeyboard(
-    private val initialConfig: KeyboardConfig,
-    private val pointsController: ControlPointsController,
+class KeyboardBuilder(
     private val coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.Default),
     private val mainThreadDispatcher: CoroutineDispatcher,
 ) : SceneBuilder {
 
-    private var cfg: KeyboardConfig = initialConfig
-
     private var resolution = 15 // Количество промежуточных точек между заданными точками
-    private var listener: ReadyListener? = null
+    private var listener: SceneBuilder.ReadyListener? = null
     private val cache = ConcurrentHashMap<KeyboardPart, List<VertexHolder>>()
     private val resultsChannel = Channel<List<VertexHolder>>()
     private val currentResults = mutableListOf<VertexHolder>()
 
     init {
-        pointsController.addListener { row: Int, col: Int -> rebuildCaseAndInvalidate() }
         coroutineScope.launch(mainThreadDispatcher) {
             for (result in resultsChannel) {
                 currentResults.addAll(result)
@@ -80,7 +75,7 @@ class SceneBuilderKeyboard(
         }
     }
 
-    override fun setListener(listener: ReadyListener?) {
+    override fun setListener(listener: SceneBuilder.ReadyListener?) {
         this.listener = listener
     }
 
@@ -216,6 +211,7 @@ class SceneBuilderKeyboard(
         result.addAll(placeHolders.vertexHolders)
 
         val matrix = connections.model.addModel(borders.model).addModel(placeHolders.model)
+        //.subtractModel(Cube(130.0, 200.0, 100.0).move(0.0, 0.0, 20.0).rotate(Angles3d.zOnly(-15.0)))
 
         saveModel("matrix.stl", matrix)
 
@@ -485,8 +481,7 @@ class SceneBuilderKeyboard(
             topEdgeOffsetZ = holeVerticalExtra / 2,
             isPlateMode = false,
         ).createBorders(
-            borderThickness = holeBorderHeight,
-            borderHeight = borderHeight + holeVerticalExtra
+            borderThickness = holeBorderHeight, borderHeight = borderHeight + holeVerticalExtra
         ).moveZ(holeBorderHeight - 1.7)
 
         val screwBase = ScrewBase(this.cfg)

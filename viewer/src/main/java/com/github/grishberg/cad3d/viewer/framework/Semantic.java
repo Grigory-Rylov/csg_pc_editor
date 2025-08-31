@@ -1,4 +1,4 @@
-package org.example.framework;
+package com.github.grishberg.cad3d.viewer.framework;
 
 /*
  * To change this license header, choose License Headers in Project Properties.
