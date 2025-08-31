@@ -1,47 +1,28 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.8.0"
-    id("java")
-    kotlin("plugin.serialization") version "1.9.0"
-    application
+    kotlin("jvm") version "1.8.0" apply false
+    kotlin("plugin.serialization") version "1.9.0" apply false
 }
 
-group = "org.example"
-version = "1.0-SNAPSHOT"
-
-dependencies {
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-swing:1.8.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.0")
-    // https://mvnrepository.com/artifact/org.jogamp.jogl/jogl-all
-    //implementation (files("libs/jogamp-fat.jar"))
-
-    implementation("org.jogamp.gluegen:gluegen-rt-main:2.5.0")
-//    implementation("org.jogamp.jogl:jogl-all:2.5.0")
-    implementation (files("libs/jogl-all-2.5.0.jar"))
-    implementation (files("libs/jogl-all-2.5.0-natives-macosx-universal.jar"))
-    testImplementation("junit:junit:4.13.1")
-    testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
-    testImplementation(kotlin("test"))
+allprojects {
+    group = "com.github.grishberg.cad3d"
+    version = "1.0"
 }
 
-tasks.test {
-    useJUnitPlatform()
-}
+subprojects {
 
-kotlin {
-    jvmToolchain(11)
-}
-application {
-    mainClass.set("org.example.MainKt")
-}
+    // Альтернатива: явное указание версий для Java и Kotlin
+    tasks.withType<JavaCompile> {
+        sourceCompatibility = "17"
+        targetCompatibility = "17"
+    }
 
-val compileKotlin: KotlinCompile by tasks
-compileKotlin.kotlinOptions {
-    jvmTarget = "11"
-}
-val compileTestKotlin: KotlinCompile by tasks
-compileTestKotlin.kotlinOptions {
-    jvmTarget = "11"
+    tasks.withType<KotlinCompile> {
+        kotlinOptions.jvmTarget = "17"
+    }
+
+    tasks.withType<Test> {
+        useJUnitPlatform()
+    }
 }
