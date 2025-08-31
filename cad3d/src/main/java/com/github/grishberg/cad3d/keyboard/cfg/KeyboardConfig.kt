@@ -1,6 +1,7 @@
 package com.github.grishberg.cad3d.keyboard.cfg
 
 import com.github.grishberg.cad3d.keyboard.KeyboardPart
+import com.github.grishberg.cad3d.plugin.Config
 
 data class KeyboardConfig(
     val fn: Int,

@@ -1,8 +1,6 @@
-package com.github.grishberg.cad3d.plugin;
+package com.github.grishberg.cad3d.plugin
 
-import java.util.List;
+interface ResultListener {
 
-public interface ResultListener {
-
-    void onReady(List<VertexHolder> vertexHolders);
+    fun onReady(result: List<VertexHolder>)
 }

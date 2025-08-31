@@ -31,9 +31,9 @@ import com.github.grishberg.cad3d.keyboard.screws.ScrewKeyMatrixPlace
 import com.github.grishberg.cad3d.keyboard.screws.ScrewWallPlaces
 import com.github.grishberg.cad3d.keyboard.screws.ScrewsMatrixHolder
 import com.github.grishberg.cad3d.keyboard.wristrest.WristRest
+import com.github.grishberg.cad3d.plugin.ResultListener
 import com.github.grishberg.cad3d.plugin.VertexHolder
 import com.github.grishberg.cad3d.trackball.Trackball
-import com.github.grishberg.cad3d.util.SceneBuilder
 import com.github.grishberg.cad3d.util.fromModel
 import com.github.grishberg.javascad.StlExporter
 import eu.printingin3d.javascad.coords.V3d
@@ -52,50 +52,31 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.ClosedReceiveChannelException
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 class KeyboardBuilder(
     private val coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.Default),
     private val mainThreadDispatcher: CoroutineDispatcher,
-) : SceneBuilder {
+) {
 
     private var resolution = 15 // Количество промежуточных точек между заданными точками
-    private var listener: SceneBuilder.ReadyListener? = null
     private val cache = ConcurrentHashMap<KeyboardPart, List<VertexHolder>>()
-    private val resultsChannel = Channel<List<VertexHolder>>()
     private val currentResults = mutableListOf<VertexHolder>()
 
-    init {
-        coroutineScope.launch(mainThreadDispatcher) {
-            for (result in resultsChannel) {
-                currentResults.addAll(result)
-                println("resultsChannel ready: result=$result, currentResults = ${currentResults.size}")
-                listener?.onReady(currentResults.toList())
-            }
-        }
-    }
-
-    override fun setListener(listener: SceneBuilder.ReadyListener?) {
-        this.listener = listener
-    }
-
-    override fun rebuildModels(cfg: KeyboardConfig) {
-        this.cfg = cfg
+    fun rebuildModels(cfg: KeyboardConfig, listener: ResultListener) {
         if (resolution == 0) {
             resolution = 20
         }
-        create3dModels(cfg)
+        create3dModels(cfg, listener)
     }
 
-    private fun rebuildCaseAndInvalidate() {
-        create3dModels(cfg)
-    }
-
-    private fun create3dModels(cfg: KeyboardConfig) {
+    private fun create3dModels(cfg: KeyboardConfig, listener: ResultListener) {
         currentResults.clear()
 
         val visibleModels = cfg.visibleKeyboardParts
-        println("create3dModels: visibleModels = $visibleModels, modifiedKeyboardParts = ${cfg.modifiedKeyboardParts}")
+        println("--------------- create3dModels: ${this} visibleModels = $visibleModels, modifiedKeyboardParts = ${cfg.modifiedKeyboardParts}")
 
         // remove modified parts from cache
         cfg.modifiedKeyboardParts.forEach {
@@ -118,62 +99,85 @@ class KeyboardBuilder(
 
         val topEdgeOffsetZ = -2.0
         val walls = Walls(
-            this.cfg, wallsSettings, keyPlace, thumbKeyPlace, topEdgeOffsetZ = topEdgeOffsetZ,
+            cfg, wallsSettings, keyPlace, thumbKeyPlace, topEdgeOffsetZ = topEdgeOffsetZ,
         )
 
         val wallsForPlate = Walls(
-            this.cfg,
+            cfg,
             wallsSettings.copy(
                 borderThickness = cfg.plateThickness, borderHeight = cfg.plateThickness
             ),
             keyPlace, thumbKeyPlace, topEdgeOffsetZ = topEdgeOffsetZ,
         )
 
+        val resultsChannel = Channel<List<VertexHolder>>()
         coroutineScope.launch {
-            createIfNeeded(KeyboardPart.KeyMatrix, visibleModels) {
+            createIfNeeded(resultsChannel, KeyboardPart.KeyMatrix, visibleModels) {
                 createMatrix(cfg, keyPlace, thumbKeyPlace)
             }
 
-            createIfNeeded(KeyboardPart.Case, visibleModels) {
+            createIfNeeded(resultsChannel, KeyboardPart.Case, visibleModels) {
                 createCase(cfg, keyPlace, thumbKeyPlace, screwWallPlaces, walls)
             }
-            createIfNeeded(KeyboardPart.KeyCaps, visibleModels) {
+            createIfNeeded(resultsChannel, KeyboardPart.KeyCaps, visibleModels) {
                 createKeyCaps(cfg, keyPlace, thumbKeyPlace)
             }
-            createIfNeeded(KeyboardPart.WristRest, visibleModels) {
-                createWristRest(cfg, keyPlace, thumbKeyPlace)
+            createIfNeeded(resultsChannel, KeyboardPart.WristRest, visibleModels) {
+                createWristRest(cfg)
             }
-            createIfNeeded(KeyboardPart.TrackBallHolder, visibleModels) {
+            createIfNeeded(resultsChannel, KeyboardPart.TrackBallHolder, visibleModels) {
                 createTrackball(cfg, keyPlace)
             }
-            createIfNeeded(KeyboardPart.TrackBall, visibleModels) {
+            createIfNeeded(resultsChannel, KeyboardPart.TrackBall, visibleModels) {
                 createTrackBall(cfg, keyPlace)
             }
-            createIfNeeded(KeyboardPart.TrackBallSensor, visibleModels) {
+            createIfNeeded(resultsChannel, KeyboardPart.TrackBallSensor, visibleModels) {
                 createTrackballSensor(cfg, keyPlace)
             }
-            createIfNeeded(KeyboardPart.TrackBallSensorCap, visibleModels) {
+            createIfNeeded(resultsChannel, KeyboardPart.TrackBallSensorCap, visibleModels) {
                 createTrackballSensorCap(cfg, keyPlace)
             }
-            createIfNeeded(KeyboardPart.Controller, visibleModels) {
+            createIfNeeded(resultsChannel, KeyboardPart.Controller, visibleModels) {
                 createController(cfg, controllerPlace)
             }
-            createIfNeeded(KeyboardPart.ControllerHolder, visibleModels) {
+            createIfNeeded(resultsChannel, KeyboardPart.ControllerHolder, visibleModels) {
                 createControllerHolder(
                     cfg, controllerPlace, controller, controllerHolderDimensions, screwWallPlaces
                 )
             }
-            createIfNeeded(KeyboardPart.Plate, visibleModels) {
+            createIfNeeded(resultsChannel, KeyboardPart.Plate, visibleModels) {
                 createPlate(cfg, wallsForPlate)
             }
-            createIfNeeded(KeyboardPart.Amoeba, visibleModels) {
+            createIfNeeded(resultsChannel, KeyboardPart.Amoeba, visibleModels) {
                 createAmoeba(cfg, keyPlace, thumbKeyPlace)
+            }
+
+            val expectedCount = visibleModels.size
+            launch(mainThreadDispatcher) {
+                var receivedCount = 0
+
+                while (receivedCount < expectedCount && isActive) {
+                    try {
+                        currentResults.addAll(resultsChannel.receive())
+                        receivedCount++
+                    } catch (e: ClosedReceiveChannelException) {
+                        println("Channel was closed ${this@KeyboardBuilder}" + e.message)
+                        break
+                    }
+                }
+                println("--------------- create3dModels: $this onReady : ${currentResults.size}")
+
+                listener.onReady(currentResults)
+                resultsChannel.close()
             }
         }
     }
 
     private fun CoroutineScope.createIfNeeded(
-        keyboardPart: KeyboardPart, visibleModels: Set<KeyboardPart>, producer: () -> List<VertexHolder>
+        resultsChannel: Channel<List<VertexHolder>>,
+        keyboardPart: KeyboardPart,
+        visibleModels: Set<KeyboardPart>,
+        producer: () -> List<VertexHolder>
     ) {
         if (!visibleModels.contains(keyboardPart)) {
             return
@@ -211,9 +215,8 @@ class KeyboardBuilder(
         result.addAll(placeHolders.vertexHolders)
 
         val matrix = connections.model.addModel(borders.model).addModel(placeHolders.model)
-        //.subtractModel(Cube(130.0, 200.0, 100.0).move(0.0, 0.0, 20.0).rotate(Angles3d.zOnly(-15.0)))
 
-        saveModel("matrix.stl", matrix)
+        saveModel(cfg, "matrix.stl", matrix)
 
         val delta = System.currentTimeMillis() - startTime
         println("createMatrix : $delta")
@@ -241,7 +244,7 @@ class KeyboardBuilder(
         }
         result.addAll(caseWalls.vertexHolders)
         val resultCase = if (tbHolder != null) caseWalls.model.addModel(tbHolder) else caseWalls.model
-        saveModel("case.stl", resultCase)
+        saveModel(cfg, "case.stl", resultCase)
         val delta = System.currentTimeMillis() - startTime
         println("createCase : $delta")
         return result
@@ -250,16 +253,15 @@ class KeyboardBuilder(
     private fun createKeyCaps(
         cfg: KeyboardConfig, keyPlace: KeyPlace, thumbKeyPlace: ThumbKeyPlace
     ): List<VertexHolder> {
-        val settings = cfg.visibleKeyboardParts
         val result = mutableListOf<VertexHolder>()
         val startTime = System.currentTimeMillis()
         val keyCap = KeyCaps(cfg)
         result.addAll(
             createThumbKeyPlaceModel(
-                keyCap.create().model, thumbKeyPlace, Color.BLUE
+                cfg, keyCap.create().model, thumbKeyPlace, Color.BLUE
             ).vertexHolders
         )
-        result.addAll(createKeycapsModel(keyCap.create().model, keyPlace, Color.PINK).vertexHolders)
+        result.addAll(createKeycapsModel(cfg, keyCap.create().model, keyPlace, Color.PINK).vertexHolders)
         val delta = System.currentTimeMillis() - startTime
         println("createKeyCaps : $delta")
         return result
@@ -270,18 +272,15 @@ class KeyboardBuilder(
         val amoeba = Amoeba(cfg)
         val hole = amoeba.createHoles(height = 7.0, diameter = 0.7).addModel(amoeba.createSimple())
 
-        models.add(createThumbKeyPlaceModel(hole, thumbKeyPlace, Color.BLUE).model)
-        models.add(createKeycapsModel(hole, keyPlace, Color.PINK).model)
+        models.add(createThumbKeyPlaceModel(cfg, hole, thumbKeyPlace, Color.BLUE).model)
+        models.add(createKeycapsModel(cfg, hole, keyPlace, Color.PINK).model)
         return Union(models)
     }
 
-    private fun createWristRest(
-        cfg: KeyboardConfig, keyPlace: KeyPlace, thumbKeyPlace: ThumbKeyPlace
-    ): List<VertexHolder> {
-        val settings = cfg.visibleKeyboardParts
+    private fun createWristRest(cfg: KeyboardConfig): List<VertexHolder> {
         val result = mutableListOf<VertexHolder>()
         val startTime = System.currentTimeMillis()
-        val wristRest = createWristRestModel()
+        val wristRest = createWristRestModel(cfg)
         result.addAll(wristRest.vertexHolders)
         val delta = System.currentTimeMillis() - startTime
         println("createWristRest : $delta")
@@ -291,13 +290,12 @@ class KeyboardBuilder(
     private fun createTrackball(
         cfg: KeyboardConfig, keyPlace: KeyPlace,
     ): List<VertexHolder> {
-        val settings = cfg.visibleKeyboardParts
         val result = mutableListOf<VertexHolder>()
         val startTime = System.currentTimeMillis()
         val trackball = Trackball(cfg, keyPlace)
         val trackBallModelHolder = trackball.create()
         result.addAll(trackBallModelHolder.vertexHolders)
-        saveModel("trackball.stl", trackBallModelHolder.model)
+        saveModel(cfg, "trackball.stl", trackBallModelHolder.model)
 
         val delta = System.currentTimeMillis() - startTime
         println("createTrackball : $delta")
@@ -312,7 +310,7 @@ class KeyboardBuilder(
     private fun createTrackballSensorCap(cfg: KeyboardConfig, keyPlace: KeyPlace): List<VertexHolder> {
         val trackball = Trackball(cfg, keyPlace)
         val sensorCap = trackball.createSensorCap()
-        saveModel("trackballCap.stl", sensorCap.model)
+        saveModel(cfg, "trackballCap.stl", sensorCap.model)
         return sensorCap.vertexHolders
     }
 
@@ -353,7 +351,7 @@ class KeyboardBuilder(
             batteryFactory.create()
         ).create(showPreview = true)
         result.addAll(controllerHolder.vertexHolders)
-        saveModel("controller_holder.stl", controllerHolder.model)
+        saveModel(cfg, "controller_holder.stl", controllerHolder.model)
 
         val delta = System.currentTimeMillis() - startTime
         println("createControllerHolder : $delta")
@@ -383,15 +381,15 @@ class KeyboardBuilder(
 
         val amoeba = Amoeba(cfg).create()
 
-        result.addAll(createThumbKeyPlaceModel(amoeba, thumbKeyPlace, Color.GREEN).vertexHolders)
-        result.addAll(createKeycapsModel(amoeba, keyPlace, Color.green).vertexHolders)
+        result.addAll(createThumbKeyPlaceModel(cfg, amoeba, thumbKeyPlace, Color.GREEN).vertexHolders)
+        result.addAll(createKeycapsModel(cfg, amoeba, keyPlace, Color.green).vertexHolders)
 
         val delta = System.currentTimeMillis() - startTime
         println("createAmoeba : $delta")
         return result
     }
 
-    private fun saveModel(name: String, model: Abstract3dModel, needCheck: Boolean = false) {
+    private fun saveModel(cfg: KeyboardConfig, name: String, model: Abstract3dModel, needCheck: Boolean = false) {
         val outDir = File("stl")
         if (!outDir.exists()) {
             outDir.mkdirs()
@@ -414,17 +412,17 @@ class KeyboardBuilder(
     }
 
     private fun createThumbKeyPlaceModel(
-        model: Abstract3dModel, thumbKeyPlace: ThumbKeyPlace, color: Color
+        cfg: KeyboardConfig, model: Abstract3dModel, thumbKeyPlace: ThumbKeyPlace, color: Color
     ): ModelHolder {
         val placedModel = thumbKeyPlace.thumbPlace(model)
-        return ModelHolder(placedModel, createVertexHolder(placedModel, color))
+        return ModelHolder(placedModel, createVertexHolder(cfg, placedModel, color))
     }
 
-    private fun keyHoles(keyPlace: KeyPlace): Abstract3dModel {
+    private fun keyHoles(cfg: KeyboardConfig, keyPlace: KeyPlace): Abstract3dModel {
         return KeySwitchHoles(cfg, keyPlace).build()
     }
 
-    private fun keyPlaceHoles(keyPlace: KeyPlace, offset: Double): Abstract3dModel {
+    private fun keyPlaceHoles(cfg: KeyboardConfig, keyPlace: KeyPlace, offset: Double): Abstract3dModel {
         return KeyPlaceHoles(cfg, keyPlace).build(offset)
     }
 
@@ -439,11 +437,13 @@ class KeyboardBuilder(
         )
     }
 
-    private fun keyPlaceBottomWalls(keyPlace: KeyPlace): Abstract3dModel {
+    private fun keyPlaceBottomWalls(cfg: KeyboardConfig, keyPlace: KeyPlace): Abstract3dModel {
         return KeyHolderBottomWalls(cfg, keyPlace).build()
     }
 
-    private fun createKeycapsModel(model: Abstract3dModel, keyPlace: KeyPlace, color: Color): ModelHolder {
+    private fun createKeycapsModel(
+        cfg: KeyboardConfig, model: Abstract3dModel, keyPlace: KeyPlace, color: Color
+    ): ModelHolder {
         val models = mutableListOf<Abstract3dModel>()
         for (column in 0 until cfg.columnsCount) {
             for (row in 0 until cfg.rowsCount) {
@@ -474,7 +474,7 @@ class KeyboardBuilder(
 
         val holeBorderHeight = 2.0
         val holeBorders = Walls(
-            this.cfg,
+            cfg,
             wallsSettings,
             keyPlace,
             thumbKeyPlace,
@@ -484,10 +484,10 @@ class KeyboardBuilder(
             borderThickness = holeBorderHeight, borderHeight = borderHeight + holeVerticalExtra
         ).moveZ(holeBorderHeight - 1.7)
 
-        val screwBase = ScrewBase(this.cfg)
-        val matrixWallScrewHolder = ScrewsMatrixHolder(this.cfg, screwBase).create()
-        val matrixWallNutHole = ScrewsMatrixHolder(this.cfg, screwBase).createNutHole()
-        val screwKeyMatrixPlace = ScrewKeyMatrixPlace(this.cfg, keyPlace, thumbKeyPlace)
+        val screwBase = ScrewBase(cfg)
+        val matrixWallScrewHolder = ScrewsMatrixHolder(cfg, screwBase).create()
+        val matrixWallNutHole = ScrewsMatrixHolder(cfg, screwBase).createNutHole()
+        val screwKeyMatrixPlace = ScrewKeyMatrixPlace(cfg, keyPlace, thumbKeyPlace)
         val screwMatrixHoldersHoles = screwKeyMatrixPlace.place(matrixWallNutHole)
         val screwMatrixHolders = screwKeyMatrixPlace.place(matrixWallScrewHolder).subtractModel(holeBorders)
             .subtractModel(screwMatrixHoldersHoles)
@@ -503,11 +503,11 @@ class KeyboardBuilder(
 
         return ModelHolder(
             wallsModel.addModel(screwMatrixHolders).addModel(wallScrews).subtractModel(screwMatrixHoldersHoles),
-            createVertexHolder(wallsModel.subtractModel(screwMatrixHoldersHoles), Color.gray),
-            createVertexHolder(wallScrews, Color.yellow),
+            createVertexHolder(cfg, wallsModel.subtractModel(screwMatrixHoldersHoles), Color.gray),
+            createVertexHolder(cfg, wallScrews, Color.yellow),
             //createVertexHolder(holeBorders, Color.PINK),
             createVertexHolder(
-                screwMatrixHolders.subtractModel(Cube(300.0, 300.0, 50.0).move(0.0, 0.0, -25.0)), Color.CYAN
+                cfg, screwMatrixHolders.subtractModel(Cube(300.0, 300.0, 50.0).move(0.0, 0.0, -25.0)), Color.CYAN
             )
 
         )
@@ -537,29 +537,29 @@ class KeyboardBuilder(
             .addModel(controllerScrewsHolderBack).addModel(controllerScrewsHolderSide)
     }
 
-    private fun createWristRestModel(): ModelHolder {
+    private fun createWristRestModel(cfg: KeyboardConfig): ModelHolder {
         val wristRest = WristRest.build().subtractModel(Cube(300.0, 300.0, 50.0).move(0.0, 0.0, -25.0))
 
         val vertexHolders = mutableListOf<VertexHolder>()
         vertexHolders.add(
             createVertexHolder(
-                wristRest // .subtractModel(keyPlaceHoles(-4))
+                cfg, wristRest // .subtractModel(keyPlaceHoles(-4))
                 , Color.ORANGE
             )
         )
-        vertexHolders.addAll(createControlPoints(pointsController.controlPoints))
+        //vertexHolders.addAll(createControlPoints(pointsController.controlPoints))
 
         return ModelHolder(wristRest, vertexHolders)
     }
 
-    private fun createControlPoints(points: Array<Array<V3d>>): List<VertexHolder> {
+    private fun createControlPoints(cfg: KeyboardConfig, points: Array<Array<V3d>>): List<VertexHolder> {
         val result = mutableListOf<VertexHolder>()
         val colors = arrayOf(Color.RED, Color.BLUE, Color.GREEN, Color.CYAN, Color.MAGENTA, Color.ORANGE)
         for (rowIndex in points.indices) {
             for (colIndex in points[rowIndex].indices) {
                 result.add(
                     createVertexHolder(
-                        Utils.sphere(2.0).move(points[rowIndex][colIndex]), colors[colIndex % colors.size]
+                        cfg, Utils.sphere(2.0).move(points[rowIndex][colIndex]), colors[colIndex % colors.size]
                     )
                 )
             }
@@ -567,11 +567,11 @@ class KeyboardBuilder(
         return result
     }
 
-    private fun createVertexHolder(model: IModel) {
-        createVertexHolder(model, DEFAULT_COLOR)
+    private fun createVertexHolder(cfg: KeyboardConfig, model: IModel) {
+        createVertexHolder(cfg, model, DEFAULT_COLOR)
     }
 
-    private fun createVertexHolder(model: IModel, color: Color): VertexHolder {
+    private fun createVertexHolder(cfg: KeyboardConfig, model: IModel, color: Color): VertexHolder {
         return fromModel(model, color, cfg.fn)
     }
 

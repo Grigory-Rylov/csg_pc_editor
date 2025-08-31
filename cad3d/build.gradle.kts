@@ -5,6 +5,8 @@ plugins {
 }
 
 dependencies {
+    implementation("com.github.kitakeyos-dev:plugin4j:v1.0.1")
+
     implementation(project(":javascad"))
     implementation(project(":plugin"))
 

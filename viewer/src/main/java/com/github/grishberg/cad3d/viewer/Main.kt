@@ -4,12 +4,12 @@ import com.github.grishberg.cad3d.debug.DebugCmd
 import com.github.grishberg.cad3d.keyboard.ControlPointsController
 import com.github.grishberg.cad3d.keyboard.KeyboardPart
 import com.github.grishberg.cad3d.keyboard.cfg.SettingsHolder
+import com.github.grishberg.cad3d.plugin.Cad3dPlugin
+import com.github.grishberg.cad3d.plugin.ResultListener
 import com.github.grishberg.cad3d.plugin.VertexHolder
 import com.github.grishberg.cad3d.plugins.FileWatcher
 import com.github.grishberg.cad3d.plugins.PluginManager
 import com.github.grishberg.cad3d.ui.DebugRecorderImpl
-import com.github.grishberg.cad3d.util.SceneBuilder
-import com.github.grishberg.cad3d.KeyboardBuilder
 import com.github.grishberg.cad3d.viewer.debug.DebugVisualizerImpl
 import com.github.grishberg.cad3d.viewer.dialog.ConfigEditor
 import com.jogamp.opengl.GL2
@@ -41,7 +41,6 @@ import javax.swing.JCheckBox
 import javax.swing.JFrame
 import javax.swing.JLabel
 import javax.swing.JPanel
-import javax.swing.SwingUtilities
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -63,7 +62,8 @@ class Main(title: String?) : JFrame(title), GLEventListener {
     private var prevMouseY = 0
     private val pointsController = ControlPointsController()
     private var glCanvas: GLCanvas? = null
-    private val sceneBuilder: SceneBuilder
+
+    //    private val sceneBuilder: SceneBuilder
     private val debugVisualizer = DebugVisualizerImpl()
     private val debugCommands = mutableListOf<DebugCmd>()
 
@@ -75,6 +75,7 @@ class Main(title: String?) : JFrame(title), GLEventListener {
     private lateinit var nextDebugButton: JButton
     private val pluginManager: PluginManager
     private val coroutineScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+    private var plugins: List<Cad3dPlugin> = emptyList()
 
     init {
         settingsHolder.loadSettings()
@@ -83,35 +84,36 @@ class Main(title: String?) : JFrame(title), GLEventListener {
 
         pluginManager = PluginManager(pluginsDir, FileWatcher(pluginsDir))
 
-        sceneBuilder = KeyboardBuilder(
-            initialConfig = settingsHolder.settings.getKeyboardConfig(modifiedKeyboardParts = emptySet()),
-            pointsController = pointsController,
-            mainThreadDispatcher = Dispatchers.Main,
-        )
+//        sceneBuilder = KeyboardBuilder(
+//            initialConfig = settingsHolder.settings.getKeyboardConfig(modifiedKeyboardParts = emptySet()),
+//            pointsController = pointsController,
+//            mainThreadDispatcher = Dispatchers.Main,
+//        )
         val debugRecorder = DebugRecorderImpl()
         //sceneBuilder = SceneBuilderTest(debugRecorder)
-        sceneBuilder.setListener(object : SceneBuilder.ReadyListener {
-            override fun onReady(buffers: List<VertexHolder>) {
-                SwingUtilities.invokeLater {
-                    debugCommands.clear()
-                    debugCommands.addAll(debugRecorder.commands)
-                    vertexHolderList.clear()
-                    vertexHolderList.addAll(buffers)
-                }
-            }
-        })
+//        sceneBuilder.setListener(object : SceneBuilder.ReadyListener {
+//            override fun onReady(buffers: List<VertexHolder>) {
+//                SwingUtilities.invokeLater {
+//                    debugCommands.clear()
+//                    debugCommands.addAll(debugRecorder.commands)
+//                    vertexHolderList.clear()
+//                    vertexHolderList.addAll(buffers)
+//                }
+//            }
+//        })
 
-        rebuildConfigAndRequestRendering(emptySet())
         setup()
 
         coroutineScope.launch {
-            // Загрузка плагинов при старте
-            val plugins = pluginManager.loadPlugins()
-            println("Initial plugins loaded: ${plugins.size}")
-
-            // Получение данных для отрисовки
-            val vertexHolders = pluginManager.getVertexHolders()
-            //renderScene(vertexHolders)
+            val newPlugins = pluginManager.loadPlugins()
+            plugins = newPlugins
+            rebuildConfigAndRequestRendering(newPlugins, emptySet())
+        }
+        pluginManager.onPluginLoadedListener = object : PluginManager.OnPluginLoadedListener {
+            override fun onPluginsLoaded(newPlugins: List<Cad3dPlugin>) {
+                plugins = newPlugins
+                rebuildConfigAndRequestRendering(newPlugins, emptySet())
+            }
         }
     }
 
@@ -125,50 +127,50 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         // Добавляем переключатели
         val keysButton = createToggleButton("Клавиши", settingsHolder.settingsShowCaps) {
             settingsHolder.settingsShowCaps = it
-            rebuildConfigAndRequestRendering(emptySet())
+            rebuildConfigAndRequestRendering(plugins, emptySet())
         }
         val caseButton = createToggleButton("Корпус", settingsHolder.settingsShowCase) {
             settingsHolder.settingsShowCase = it
-            rebuildConfigAndRequestRendering(emptySet())
+            rebuildConfigAndRequestRendering(plugins, emptySet())
         }
         val matrixButton = createToggleButton("Матрица", settingsHolder.settingsShowMatrix) {
             settingsHolder.settingsShowMatrix = it
-            rebuildConfigAndRequestRendering(emptySet())
+            rebuildConfigAndRequestRendering(plugins, emptySet())
         }
         val plateButton = createToggleButton("Поддон", settingsHolder.settingsShowPlate) {
             settingsHolder.settingsShowPlate = it
-            rebuildConfigAndRequestRendering(emptySet())
+            rebuildConfigAndRequestRendering(plugins, emptySet())
         }
         val wristRestButton = createToggleButton("Держатель рук", settingsHolder.settingsShowWristRest) {
             settingsHolder.settingsShowWristRest = it
-            rebuildConfigAndRequestRendering(emptySet())
+            rebuildConfigAndRequestRendering(plugins, emptySet())
         }
         val trackballButton = createToggleButton("Трэкбол", settingsHolder.settingsTrackball) {
             settingsHolder.settingsTrackball = it
-            rebuildConfigAndRequestRendering(emptySet())
+            rebuildConfigAndRequestRendering(plugins, emptySet())
         }
         val trackballSensorButton = createToggleButton("Сенсор ТБ", settingsHolder.showTrackballSensor) {
             settingsHolder.showTrackballSensor = it
-            rebuildConfigAndRequestRendering(emptySet())
+            rebuildConfigAndRequestRendering(plugins, emptySet())
         }
         val trackballSensorCapButton = createToggleButton("Крышка сенсора ТБ", settingsHolder.showTrackballSensorCap) {
             settingsHolder.showTrackballSensorCap = it
-            rebuildConfigAndRequestRendering(emptySet())
+            rebuildConfigAndRequestRendering(plugins, emptySet())
         }
         val showControllerHolderButton =
             createToggleButton("Держатель контроллера", settingsHolder.showControllerHolder) {
                 settingsHolder.showControllerHolder = it
-                rebuildConfigAndRequestRendering(emptySet())
+                rebuildConfigAndRequestRendering(plugins, emptySet())
             }
 
         val showControllerButton = createToggleButton("Контроллера", settingsHolder.showController) {
             settingsHolder.showController = it
-            rebuildConfigAndRequestRendering(emptySet())
+            rebuildConfigAndRequestRendering(plugins, emptySet())
         }
 
         val showAmoebaButton = createToggleButton("Амебы", settingsHolder.showAmoeba) {
             settingsHolder.showAmoeba = it
-            rebuildConfigAndRequestRendering(emptySet())
+            rebuildConfigAndRequestRendering(plugins, emptySet())
         }
 
         val debugButton = createToggleButton("Debug", showDebugInfo) {
@@ -286,7 +288,7 @@ class Main(title: String?) : JFrame(title), GLEventListener {
             settingsHolder.settings, onKeyboardSettingsChanged = {
             settingsHolder.updateSettings(it)
             rebuildConfigAndRequestRendering(
-                setOf(
+                plugins, setOf(
                     KeyboardPart.KeyMatrix,
                     KeyboardPart.KeyCaps, KeyboardPart.Case, KeyboardPart.Plate,
                 )
@@ -296,7 +298,7 @@ class Main(title: String?) : JFrame(title), GLEventListener {
             onThumbClusterSettingsChanged = {
                 settingsHolder.updateSettings(it)
                 rebuildConfigAndRequestRendering(
-                    setOf(
+                    plugins, setOf(
                         KeyboardPart.KeyMatrix,
                         KeyboardPart.KeyCaps, KeyboardPart.Case, KeyboardPart.Plate,
                     )
@@ -304,7 +306,7 @@ class Main(title: String?) : JFrame(title), GLEventListener {
             }, onTrackballSettingsChanged = {
                 settingsHolder.updateSettings(it)
                 rebuildConfigAndRequestRendering(
-                    setOf(
+                    plugins, setOf(
                         KeyboardPart.TrackBall,
                         KeyboardPart.TrackBallSensor, KeyboardPart.TrackBallHolder, KeyboardPart.TrackBallSensorCap,
                         KeyboardPart.Case,
@@ -314,8 +316,18 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         configDialog.isVisible = true
     }
 
-    private fun rebuildConfigAndRequestRendering(modifiedKeyboardParts: Set<KeyboardPart>) {
-        sceneBuilder.rebuildModels(settingsHolder.settings.getKeyboardConfig(modifiedKeyboardParts))
+    private fun rebuildConfigAndRequestRendering(plugins: List<Cad3dPlugin>, modifiedKeyboardParts: Set<KeyboardPart>) {
+        plugins.forEach {
+            println("Request from ${it.name} , ver ${it.version}")
+            it.requestModels(
+                settingsHolder.settings.getKeyboardConfig(modifiedKeyboardParts), object : ResultListener {
+                    override fun onReady(result: List<VertexHolder>) {
+                        // TODO: remove
+                        vertexHolderList.clear()
+                        vertexHolderList.addAll(result)
+                    }
+                })
+        }
     }
 
     private fun addDebugCommands() {
