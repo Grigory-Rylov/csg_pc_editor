@@ -23,7 +23,7 @@ data class AssemblySettings(
     val showController: Boolean = true,
     val showTrackballSensor: Boolean = false,
     val showTrackbalSensorCap: Boolean = false,
-    val showTrackbalBall: Boolean = false,
+    val showTrackballBall: Boolean = false,
     val showControllerHolder: Boolean = false,
     val showAmoeba: Boolean = false,
 ) {
@@ -40,10 +40,28 @@ data class AssemblySettings(
             result.add(KeyboardPart.KeyMatrix)
         }
         if (settingsTrackball) {
+            result.add(KeyboardPart.TrackBallHolder)
+        }
+        if (showTrackballBall) {
             result.add(KeyboardPart.TrackBall)
+        }
+        if(showTrackballSensor){
+            result.add(KeyboardPart.TrackBallSensor)
+        }
+        if (showTrackbalSensorCap) {
+            result.add(KeyboardPart.TrackBallSensorCap)
         }
         if (showAmoeba) {
             result.add(KeyboardPart.Amoeba)
+        }
+        if (showController) {
+            result.add(KeyboardPart.Controller)
+        }
+        if (showControllerHolder) {
+            result.add(KeyboardPart.ControllerHolder)
+        }
+        if (settingsShowPlate) {
+            result.add(KeyboardPart.Plate)
         }
         return result.toSet()
     }

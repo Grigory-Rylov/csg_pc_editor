@@ -125,7 +125,7 @@ class KeyboardBuilder(
                 createWristRest(cfg)
             }
             createIfNeeded(resultsChannel, KeyboardPart.TrackBallHolder, visibleModels) {
-                createTrackball(cfg, keyPlace)
+                createTrackballHolder(cfg, keyPlace)
             }
             createIfNeeded(resultsChannel, KeyboardPart.TrackBall, visibleModels) {
                 createTrackBall(cfg, keyPlace)
@@ -286,7 +286,7 @@ class KeyboardBuilder(
         return result
     }
 
-    private fun createTrackball(
+    private fun createTrackballHolder(
         cfg: KeyboardConfig, keyPlace: KeyPlace,
     ): List<VertexHolder> {
         val result = mutableListOf<VertexHolder>()
