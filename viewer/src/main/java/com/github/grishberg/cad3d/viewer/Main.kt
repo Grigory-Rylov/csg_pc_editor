@@ -120,6 +120,47 @@ class Main(title: String?) : JFrame(title), GLEventListener {
     fun setup() {
         layout = BorderLayout()
         // Создаем панель управления
+        val controlPanel = createControlPanel()
+
+
+
+        // Создаем панель навигации по debug командам
+        createDebugNavigationPanel()
+
+        val glProfile = GLProfile.get(GLProfile.GL2)
+        val glCapabilities = GLCapabilities(glProfile)
+        glCapabilities.depthBits = 24
+
+        // 2. Создание GLCanvas с явным конструктором
+        glCanvas = GLCanvas(glCapabilities)
+        glCanvas!!.addGLEventListener(this)
+        val mouseListener = GlCanvasMouseListener()
+        glCanvas!!.addMouseListener(mouseListener)
+        glCanvas!!.addMouseMotionListener(mouseListener)
+        glCanvas!!.addMouseWheelListener(mouseListener)
+        glCanvas!!.addKeyListener(GlCanvasKeyListener())
+        defaultCloseOperation = EXIT_ON_CLOSE
+        animator = Animator()
+        animator!!.add(glCanvas)
+        animator!!.start()
+        contentPane.add(glCanvas, BorderLayout.CENTER)
+        contentPane.add(controlPanel, BorderLayout.NORTH)
+        contentPane.add(debugNavigationPanel, BorderLayout.SOUTH)
+
+        // Обработка закрытия окна
+        addWindowListener(object : WindowAdapter() {
+            override fun windowClosing(e: WindowEvent) {
+                pluginManager.stop()
+                settingsHolder.saveSettings()
+                animator!!.stop()
+                dispose()
+            }
+        })
+        setSize(1200, 800)
+        isVisible = true
+    }
+
+    private fun createControlPanel(): JPanel {
         val controlPanel = JPanel()
         controlPanel.layout = FlowLayout(FlowLayout.LEFT)
         controlPanel.preferredSize = Dimension(800, 40)
@@ -203,41 +244,7 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         }
         controlPanel.add(configButton)
         controlPanel.add(debugButton)
-
-        // Создаем панель навигации по debug командам
-        createDebugNavigationPanel()
-
-        val glProfile = GLProfile.get(GLProfile.GL2)
-        val glCapabilities = GLCapabilities(glProfile)
-        glCapabilities.depthBits = 24
-
-        // 2. Создание GLCanvas с явным конструктором
-        glCanvas = GLCanvas(glCapabilities)
-        glCanvas!!.addGLEventListener(this)
-        val mouseListener = GlCanvasMouseListener()
-        glCanvas!!.addMouseListener(mouseListener)
-        glCanvas!!.addMouseMotionListener(mouseListener)
-        glCanvas!!.addMouseWheelListener(mouseListener)
-        glCanvas!!.addKeyListener(GlCanvasKeyListener())
-        defaultCloseOperation = EXIT_ON_CLOSE
-        animator = Animator()
-        animator!!.add(glCanvas)
-        animator!!.start()
-        contentPane.add(glCanvas, BorderLayout.CENTER)
-        contentPane.add(controlPanel, BorderLayout.NORTH)
-        contentPane.add(debugNavigationPanel, BorderLayout.SOUTH)
-
-        // Обработка закрытия окна
-        addWindowListener(object : WindowAdapter() {
-            override fun windowClosing(e: WindowEvent) {
-                pluginManager.stop()
-                settingsHolder.saveSettings()
-                animator!!.stop()
-                dispose()
-            }
-        })
-        setSize(1200, 800)
-        isVisible = true
+        return controlPanel
     }
 
     private fun createDebugNavigationPanel() {
