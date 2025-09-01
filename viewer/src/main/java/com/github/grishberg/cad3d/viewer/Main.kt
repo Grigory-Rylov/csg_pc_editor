@@ -2,12 +2,10 @@ package com.github.grishberg.cad3d.viewer
 
 import com.github.grishberg.cad3d.debug.DebugCmd
 import com.github.grishberg.cad3d.keyboard.ControlPointsController
-import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig.Companion.getKeyboardConfig
-import com.github.grishberg.cad3d.plugin.cfg.KeyboardPart
 import com.github.grishberg.cad3d.plugin.Cad3dPlugin
 import com.github.grishberg.cad3d.plugin.ResultListener
 import com.github.grishberg.cad3d.plugin.VertexHolder
-import com.github.grishberg.cad3d.plugins.FileWatcherImpl
+import com.github.grishberg.cad3d.plugin.cfg.KeyboardPart
 import com.github.grishberg.cad3d.plugins.PluginManager
 import com.github.grishberg.cad3d.plugins.PluginManagerImpl
 import com.github.grishberg.cad3d.ui.DebugRecorderImpl
@@ -81,7 +79,6 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         settingsHolder.loadSettings()
 
         val pluginsDir = File("cad3d/build/libs")
-
 
 //        sceneBuilder = KeyboardBuilder(
 //            initialConfig = settingsHolder.settings.getKeyboardConfig(modifiedKeyboardParts = emptySet()),

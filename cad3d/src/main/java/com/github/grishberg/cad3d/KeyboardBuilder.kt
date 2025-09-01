@@ -5,7 +5,6 @@ import com.github.grishberg.cad3d.keyboard.KeyHolderBottomWalls
 import com.github.grishberg.cad3d.keyboard.KeyPlace
 import com.github.grishberg.cad3d.keyboard.KeyPlaceHoles
 import com.github.grishberg.cad3d.keyboard.KeySwitchHoles
-import com.github.grishberg.cad3d.plugin.cfg.KeyboardPart
 import com.github.grishberg.cad3d.keyboard.ModelHolder
 import com.github.grishberg.cad3d.keyboard.ThumbKeyPlace
 import com.github.grishberg.cad3d.keyboard.Utils
@@ -20,9 +19,7 @@ import com.github.grishberg.cad3d.keyboard.casebody.controllers.SuperMiniNRF5284
 import com.github.grishberg.cad3d.keyboard.casebody.controllers.battery.BatteryFactory
 import com.github.grishberg.cad3d.keyboard.casebody.controllers.switcher.SwitcherFactory
 import com.github.grishberg.cad3d.keyboard.casebody.wall.ControllerHolderWall
-import com.github.grishberg.cad3d.plugin.cfg.KeyPlaceholderType
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
-import com.github.grishberg.cad3d.plugin.cfg.TrackballMode
 import com.github.grishberg.cad3d.keyboard.cfg.WallsSettings
 import com.github.grishberg.cad3d.keyboard.matrix.KeyMatrix
 import com.github.grishberg.cad3d.keyboard.plate.Plate
@@ -33,6 +30,9 @@ import com.github.grishberg.cad3d.keyboard.screws.ScrewsMatrixHolder
 import com.github.grishberg.cad3d.keyboard.wristrest.WristRest
 import com.github.grishberg.cad3d.plugin.ResultListener
 import com.github.grishberg.cad3d.plugin.VertexHolder
+import com.github.grishberg.cad3d.plugin.cfg.KeyPlaceholderType
+import com.github.grishberg.cad3d.plugin.cfg.KeyboardPart
+import com.github.grishberg.cad3d.plugin.cfg.TrackballMode
 import com.github.grishberg.cad3d.trackball.Trackball
 import com.github.grishberg.cad3d.util.fromModel
 import com.github.grishberg.javascad.StlExporter
@@ -50,14 +50,13 @@ import java.io.IOException
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ClosedReceiveChannelException
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 class KeyboardBuilder(
-    private val coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.Default),
+    private val coroutineScope: CoroutineScope,
     private val mainThreadDispatcher: CoroutineDispatcher,
 ) {
 

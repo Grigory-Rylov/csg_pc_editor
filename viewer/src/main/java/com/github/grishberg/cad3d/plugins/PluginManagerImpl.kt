@@ -138,7 +138,7 @@ class PluginManagerImpl(
     private fun unloadPlugin(key: String) {
         // Удаляем ClassLoader и экземпляр плагина
         activeLoaders.remove(key)?.clearAll()
-        pluginInstances.remove(key)
+        pluginInstances.remove(key)?.onUnload()
         keyToMetadataMapping.remove(key)
 
         // Очищаем маппинг файла, если это была последняя версия

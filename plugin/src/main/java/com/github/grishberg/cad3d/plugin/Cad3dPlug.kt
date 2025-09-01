@@ -9,6 +9,8 @@ interface Cad3dPlugin {
         config: SettingsContainer, modifiedKeyboardParts: Set<KeyboardPart>, listener: ResultListener
     )
 
+    fun onUnload()
+
     val name: String
 
     val version: Long

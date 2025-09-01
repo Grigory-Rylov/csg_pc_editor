@@ -5,11 +5,16 @@ import com.github.grishberg.cad3d.plugin.Cad3dPlugin
 import com.github.grishberg.cad3d.plugin.ResultListener
 import com.github.grishberg.cad3d.plugin.cfg.KeyboardPart
 import com.github.grishberg.cad3d.plugin.cfg.SettingsContainer
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
 
 class KeyboardBuilderPlugin : Cad3dPlugin {
 
+    private val coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.Default)
+
     private val keyboardBuilder = KeyboardBuilder(
+        coroutineScope = coroutineScope,
         mainThreadDispatcher = Dispatchers.Main,
     )
 
@@ -19,7 +24,14 @@ class KeyboardBuilderPlugin : Cad3dPlugin {
         keyboardBuilder.rebuildModels(config.getKeyboardConfig(modifiedKeyboardParts), listener)
     }
 
-    override val version: Long = 2
+    override fun onUnload() {
+        println("onUnload $this")
+        coroutineScope.cancel()
+    }
 
-    override val name: String = "Keyboard builder $version"
+    override val version: Long = 1
+
+    override val name: String = "Ergonomic keyboard builder by Grishberg"
+
+    override fun toString(): String = "KeyboardBuilderPlugin : $name, $version"
 }
