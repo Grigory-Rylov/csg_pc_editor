@@ -3,10 +3,9 @@ plugins {
     `java-library`
     kotlin("plugin.serialization") version "1.9.0"
 }
+version = "1.0.1"
 
 dependencies {
-    implementation("com.github.kitakeyos-dev:plugin4j:v1.0.1")
-
     implementation(project(":javascad"))
     implementation(project(":plugin"))
 

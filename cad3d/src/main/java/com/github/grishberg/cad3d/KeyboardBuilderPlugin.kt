@@ -21,7 +21,7 @@ class KeyboardBuilderPlugin : Cad3dPlugin {
         keyboardBuilder.rebuildModels(config, listener)
     }
 
-    override val version: Long = 6
+    override val version: Long = 1
 
     override val name: String = "Keyboard builder $version"
 }

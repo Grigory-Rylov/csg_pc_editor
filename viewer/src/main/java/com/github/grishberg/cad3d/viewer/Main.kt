@@ -3,12 +3,13 @@ package com.github.grishberg.cad3d.viewer
 import com.github.grishberg.cad3d.debug.DebugCmd
 import com.github.grishberg.cad3d.keyboard.ControlPointsController
 import com.github.grishberg.cad3d.keyboard.KeyboardPart
-import com.github.grishberg.cad3d.keyboard.cfg.SettingsHolder
+import com.github.grishberg.cad3d.plugin.cfg.SettingsHolder
 import com.github.grishberg.cad3d.plugin.Cad3dPlugin
 import com.github.grishberg.cad3d.plugin.ResultListener
 import com.github.grishberg.cad3d.plugin.VertexHolder
-import com.github.grishberg.cad3d.plugins.FileWatcher
+import com.github.grishberg.cad3d.plugins.FileWatcherImpl
 import com.github.grishberg.cad3d.plugins.PluginManager
+import com.github.grishberg.cad3d.plugins.PluginManagerImpl
 import com.github.grishberg.cad3d.ui.DebugRecorderImpl
 import com.github.grishberg.cad3d.viewer.debug.DebugVisualizerImpl
 import com.github.grishberg.cad3d.viewer.dialog.ConfigEditor
@@ -44,7 +45,6 @@ import javax.swing.JPanel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
 
 class Main(title: String?) : JFrame(title), GLEventListener {
 
@@ -82,7 +82,6 @@ class Main(title: String?) : JFrame(title), GLEventListener {
 
         val pluginsDir = File("cad3d/build/libs")
 
-        pluginManager = PluginManager(pluginsDir, FileWatcher(pluginsDir))
 
 //        sceneBuilder = KeyboardBuilder(
 //            initialConfig = settingsHolder.settings.getKeyboardConfig(modifiedKeyboardParts = emptySet()),
@@ -104,17 +103,21 @@ class Main(title: String?) : JFrame(title), GLEventListener {
 
         setup()
 
-        coroutineScope.launch {
-            val newPlugins = pluginManager.loadPlugins()
-            plugins = newPlugins
-            rebuildConfigAndRequestRendering(newPlugins, emptySet())
-        }
-        pluginManager.onPluginLoadedListener = object : PluginManager.OnPluginLoadedListener {
+
+        pluginManager = PluginManagerImpl(pluginsDir, FileWatcherImpl(pluginsDir))
+        pluginManager.setOnPluginLoadedListener(object : PluginManager.OnPluginLoadedListener {
             override fun onPluginsLoaded(newPlugins: List<Cad3dPlugin>) {
                 plugins = newPlugins
-                rebuildConfigAndRequestRendering(newPlugins, emptySet())
+                rebuildConfigAndRequestRendering(plugins, emptySet())
             }
-        }
+        })
+
+        pluginManager.start()
+//        coroutineScope.launch {
+//            val newPlugins = pluginManager.loadPlugins()
+//            plugins = newPlugins
+//            rebuildConfigAndRequestRendering(newPlugins, emptySet())
+//        }
     }
 
     fun setup() {

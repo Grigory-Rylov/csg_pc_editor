@@ -9,7 +9,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class FileWatcher(
+class FileWatcherImpl(
     private val pluginsDir: File,
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.IO),
 ) {
