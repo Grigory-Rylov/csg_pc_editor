@@ -13,14 +13,20 @@ import kotlinx.coroutines.withContext
 
 class PluginManagerImpl(
     private val pluginsDir: File,
-    private val fileWatcher: FileWatcherImpl,
     private val coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob()),
 ) : PluginManager {
 
-    // Используем составной ключ вместо просто пути к файлу
+    private val fileWatcher = PluginFileWatcherImpl(pluginsDir)
+
+    // Храним ClassLoader'ы по уникальным ключам
     private val activeLoaders = ConcurrentHashMap<String, DynamicReloadingClassLoader>()
     private val pluginInstances = ConcurrentHashMap<String, Cad3dPlugin>()
-    private val fileToKeyMapping = ConcurrentHashMap<String, String>()
+
+    // Маппинг имени файла на последний загруженный ключ
+    private val fileLastKeyMapping = ConcurrentHashMap<String, String>()
+
+    // Маппинг ключа на метаданные файла
+    private val keyToMetadataMapping = ConcurrentHashMap<String, FileMetadata>()
 
     private var onPluginLoadedListener: PluginManager.OnPluginLoadedListener? = null
 
@@ -28,12 +34,36 @@ class PluginManagerImpl(
         ensurePluginsDirectoryExists()
     }
 
-    override fun start() {
-        startFileWatcher()
-    }
-
     override fun setOnPluginLoadedListener(listener: PluginManager.OnPluginLoadedListener?) {
         onPluginLoadedListener = listener
+    }
+
+    override fun start() {
+        fileWatcher.setListener(object : PluginFileWatcher.OnNewPluginsFoundListener {
+            override fun onNewPluginsFound(file: File) {
+                coroutineScope.launch {
+                    handlePluginFileChanged(file)
+                }
+            }
+        })
+        fileWatcher.startWatching()
+    }
+
+    private suspend fun handlePluginFileChanged(file: File) {
+        try {
+            val newPlugin = loadOrReloadPlugin(file)
+            if (newPlugin != null) {
+                // Выгружаем старую версию этого же файла (если была)
+                unloadOldVersionsOfFile(file)
+
+                val currentPlugins = getLoadedPlugins()
+                withContext(Dispatchers.Main) {
+                    onPluginLoadedListener?.onPluginsLoaded(currentPlugins)
+                }
+            }
+        } catch (e: Exception) {
+            println("Failed to handle plugin file change for ${file.name}: ${e.message}")
+        }
     }
 
     override fun stop() {
@@ -42,62 +72,41 @@ class PluginManagerImpl(
         shutdown()
     }
 
-    fun loadPlugins(): List<Cad3dPlugin> {
-        val pluginsList = mutableListOf<Cad3dPlugin>()
-        getPluginFiles().forEach { jarFile ->
-            loadOrReloadPlugin(jarFile)?.let { plugin ->
-                pluginsList.add(plugin)
-            }
-        }
-        return pluginsList
-    }
-
-    private fun getPluginFiles(): Array<out File> {
-        return pluginsDir.listFiles { file ->
-            file.extension.equals("jar", ignoreCase = true) && file.isFile
-        } ?: emptyArray()
-    }
-
     /**
      * Загружает или перезагружает плагин из JAR файла.
+     * Автоматически выгружает старые версии того же файла.
      */
-    fun loadOrReloadPlugin(jarFile: File): Cad3dPlugin? {
-        val pluginKey = PluginKey.fromFile(jarFile)
-        val uniqueKey = pluginKey.toUniqueString()
+    private fun loadOrReloadPlugin(jarFile: File): Cad3dPlugin? {
         val filePath = jarFile.absolutePath
+        val currentMetadata = FileMetadata.fromFile(jarFile)
+        val uniqueKey = "${filePath}|${currentMetadata.lastModified}|${currentMetadata.fileSize}"
 
         return try {
-            // Проверяем, изменился ли файл по сравнению с предыдущей загрузкой
-            val previousKey = fileToKeyMapping[filePath]
-            val isFileChanged = previousKey != uniqueKey
+            // Проверяем, есть ли уже загруженная версия этого файла
+            val previousKey = fileLastKeyMapping[filePath]
 
-            val loader = if (isFileChanged) {
-                // Файл изменился - создаем новый ClassLoader
-                println("========= File changed, creating new ClassLoader for: $filePath")
-                fileToKeyMapping[filePath] = uniqueKey
-
-                // Удаляем старый ClassLoader если он был
-                previousKey?.let { activeLoaders.remove(it)?.clearAll() }
-
-                DynamicReloadingClassLoader(jarFile, this::class.java.classLoader).also {
-                    activeLoaders[uniqueKey] = it
-                }
-            } else {
-                // Файл не изменился - используем существующий ClassLoader
-                activeLoaders[uniqueKey] ?: run {
-                    println("========= Creating new ClassLoader for unchanged file: $filePath")
-                    DynamicReloadingClassLoader(jarFile, this::class.java.classLoader).also {
-                        activeLoaders[uniqueKey] = it
-                        fileToKeyMapping[filePath] = uniqueKey
-                    }
-                }
+            // Если файл изменился (новая версия), выгружаем старую
+            if (previousKey != null && previousKey != uniqueKey) {
+                println("New version detected for $filePath, unloading old version")
+                unloadPlugin(previousKey)
             }
 
-            // Создаем новый экземпляр плагина
+            val loader = activeLoaders.computeIfAbsent(uniqueKey) {
+                println("Creating new ClassLoader for: $filePath (version: ${currentMetadata.lastModified})")
+                DynamicReloadingClassLoader(jarFile, this::class.java.classLoader)
+            }
+
+            // Создаем экземпляр плагина
             val plugin = loader.newInstance<Cad3dPlugin>(findPluginClassName(jarFile))
+
             plugin?.let {
                 pluginInstances[uniqueKey] = it
-                println("=========== Loaded plugin: ${it.name} v${it.version} from $filePath (key: ${uniqueKey.hashCode()})")
+                fileLastKeyMapping[filePath] = uniqueKey
+                keyToMetadataMapping[uniqueKey] = currentMetadata
+
+                println("Loaded plugin: ${it.name} v${it.version} from $filePath")
+                println("  Version timestamp: ${currentMetadata.lastModified}")
+                println("  Loader key: ${uniqueKey.hashCode()}")
             }
 
             plugin
@@ -105,6 +114,38 @@ class PluginManagerImpl(
             println("Failed to load plugin from $filePath: ${e.message}")
             null
         }
+    }
+
+    /**
+     * Выгружает старые версии указанного файла.
+     */
+    private fun unloadOldVersionsOfFile(file: File) {
+        val filePath = file.absolutePath
+        val currentKey = fileLastKeyMapping[filePath]
+
+        // Находим и выгружаем все ключи для этого файла, кроме текущего
+        keyToMetadataMapping.keys.forEach { key ->
+            if (key.startsWith("$filePath|") && key != currentKey) {
+                println("Unloading old version of $filePath with key: $key")
+                unloadPlugin(key)
+            }
+        }
+    }
+
+    /**
+     * Выгружает конкретный плагин по ключу.
+     */
+    private fun unloadPlugin(key: String) {
+        // Удаляем ClassLoader и экземпляр плагина
+        activeLoaders.remove(key)?.clearAll()
+        pluginInstances.remove(key)
+        keyToMetadataMapping.remove(key)
+
+        // Очищаем маппинг файла, если это была последняя версия
+        fileLastKeyMapping.entries.removeIf { (_, value) -> value == key }
+
+        println("Unloaded plugin with key: $key")
+        System.gc() // Подсказываем GC освободить память
     }
 
     /**
@@ -119,122 +160,24 @@ class PluginManagerImpl(
                 }
             }
 
-            // Альтернативный поиск класса плагина
-            jar.entries().asSequence()
-                .filter { it.name.endsWith(".class") }
-                .map { it.name.removeSuffix(".class").replace('/', '.') }
-                .filter { className ->
+            jar.entries().asSequence().filter { it.name.endsWith(".class") }
+                .map { it.name.removeSuffix(".class").replace('/', '.') }.filter { className ->
                     try {
-                        // Используем временный ClassLoader для проверки
                         val tempLoader = URLClassLoader(arrayOf(jarFile.toURI().toURL()))
                         val clazz = tempLoader.loadClass(className)
-                        Cad3dPlugin::class.java.isAssignableFrom(clazz) &&
-                            !clazz.isInterface &&
-                            !java.lang.reflect.Modifier.isAbstract(clazz.modifiers)
+                        Cad3dPlugin::class.java.isAssignableFrom(clazz) && !clazz.isInterface && !java.lang.reflect.Modifier.isAbstract(
+                            clazz.modifiers
+                        )
                     } catch (e: Exception) {
                         false
                     }
-                }
-                .firstOrNull()
-                ?: throw RuntimeException("No plugin class found in JAR: ${jarFile.name}")
-        }
-    }
-
-    /**
-     * Проверяет обновления всех плагинов.
-     */
-    fun checkForUpdates(): List<Cad3dPlugin> {
-        val updatedPlugins = mutableListOf<Cad3dPlugin>()
-        val currentFiles = getPluginFiles()
-
-        // Проверяем существующие файлы
-        currentFiles.forEach { jarFile ->
-            try {
-                val plugin = loadOrReloadPlugin(jarFile)
-                plugin?.let { updatedPlugins.add(it) }
-            } catch (e: Exception) {
-                println("Failed to update plugin ${jarFile.name}: ${e.message}")
-            }
-        }
-
-        // Удаляем плагины для файлов, которых больше нет
-        cleanupRemovedPlugins(currentFiles)
-
-        return updatedPlugins
-    }
-
-    /**
-     * Очищает плагины для удаленных файлов.
-     */
-    private fun cleanupRemovedPlugins(currentFiles: Array<out File>) {
-        val currentPaths = currentFiles.map { it.absolutePath }.toSet()
-
-        // Находим ключи для удаленных файлов
-        val keysToRemove = fileToKeyMapping.filter { (filePath, _) ->
-            !currentPaths.contains(filePath)
-        }.values.toSet()
-
-        // Удаляем ClassLoader'ы и плагины
-        keysToRemove.forEach { key ->
-            activeLoaders.remove(key)?.clearAll()
-            pluginInstances.remove(key)
-            println("Removed plugin for deleted file (key: $key)")
-        }
-
-        // Очищаем маппинг файлов
-        fileToKeyMapping.keys.removeAll { filePath -> !currentPaths.contains(filePath) }
-    }
-
-    /**
-     * Выгружает плагин по ключу.
-     */
-    fun unloadPlugin(key: String) {
-        pluginInstances.remove(key)
-        activeLoaders.remove(key)?.clearAll()
-
-        // Удаляем маппинг файла
-        fileToKeyMapping.entries.removeIf { (_, value) -> value == key }
-
-        println("Unloaded plugin with key: $key")
-    }
-
-    suspend fun reloadPlugins() {
-        val loadedPlugins = loadPlugins()
-        onPluginsReloaded(loadedPlugins)
-        withContext(Dispatchers.Main) {
-            onPluginLoadedListener?.onPluginsLoaded(loadedPlugins)
+                }.firstOrNull() ?: throw RuntimeException("No plugin class found in JAR: ${jarFile.name}")
         }
     }
 
     private fun ensurePluginsDirectoryExists() {
         if (!pluginsDir.exists()) {
             pluginsDir.mkdirs()
-        }
-    }
-
-    private fun startFileWatcher() {
-        fileWatcher.onPluginFound = { changedFile ->
-            coroutineScope.launch {
-                try {
-                    val plugin = loadOrReloadPlugin(changedFile)
-                    if (plugin != null) {
-                        val currentPlugins = getLoadedPlugins()
-                        withContext(Dispatchers.Main) {
-                            onPluginLoadedListener?.onPluginsLoaded(currentPlugins)
-                        }
-                    }
-                } catch (e: Exception) {
-                    println("Failed to reload plugin ${changedFile.name}: ${e.message}")
-                }
-            }
-        }
-        fileWatcher.startWatching()
-    }
-
-    private fun onPluginsReloaded(plugins: List<Cad3dPlugin>) {
-        println("Plugins reloaded: ${plugins.size} plugins available")
-        plugins.forEach { plugin ->
-            println(" - ${plugin.name} v${plugin.version}")
         }
     }
 
@@ -248,12 +191,43 @@ class PluginManagerImpl(
     /**
      * Очищает все ресурсы.
      */
-    fun shutdown() {
-        activeLoaders.values.forEach { it.clearAll() }
+    private fun shutdown() {
+        // Выгружаем все плагины
+        activeLoaders.keys.toList().forEach { unloadPlugin(it) }
+
+        // Очищаем все коллекции
         activeLoaders.clear()
         pluginInstances.clear()
-        fileToKeyMapping.clear()
-        System.gc()
+        fileLastKeyMapping.clear()
+        keyToMetadataMapping.clear()
+
         println("All plugins and resources cleared")
+    }
+}
+
+// Класс метаданных файла (должен быть в том же файле или вынесен отдельно)
+private data class FileMetadata(
+    val lastModified: Long, val fileSize: Long, val fileHash: String
+) {
+
+    companion object {
+
+        fun fromFile(file: File): FileMetadata {
+            return FileMetadata(
+                lastModified = file.lastModified(), fileSize = file.length(), fileHash = calculateFileHash(file)
+            )
+        }
+
+        private fun calculateFileHash(file: File): String {
+            return file.inputStream().use { input ->
+                val digest = java.security.MessageDigest.getInstance("SHA-256")
+                val buffer = ByteArray(8192)
+                var bytesRead: Int
+                while (input.read(buffer).also { bytesRead = it } != -1) {
+                    digest.update(buffer, 0, bytesRead)
+                }
+                digest.digest().joinToString("") { "%02x".format(it) }
+            }
+        }
     }
 }

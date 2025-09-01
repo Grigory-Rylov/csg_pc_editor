@@ -1,7 +1,6 @@
 package com.github.grishberg.cad3d.plugins
 
 import java.io.File
-import java.net.URL
 import java.net.URLClassLoader
 import java.util.concurrent.ConcurrentHashMap
 
@@ -10,8 +9,7 @@ import java.util.concurrent.ConcurrentHashMap
  * При повторной загрузке того же класса из обновленного JAR создается новый экземпляр класса.
  */
 class DynamicReloadingClassLoader(
-    jarFile: File,
-    parent: ClassLoader
+    jarFile: File, parent: ClassLoader
 ) : URLClassLoader(arrayOf(jarFile.toURI().toURL()), parent) {
 
     private val jarPath = jarFile.absolutePath
@@ -21,13 +19,7 @@ class DynamicReloadingClassLoader(
 
     // Пакеты, которые всегда делегируются родительскому ClassLoader'у
     private val delegatedPackages = setOf(
-        "java.",
-        "javax.",
-        "kotlin.",
-        "org.jetbrains.",
-        //"com.github.grishberg.cad3d.", // Ваши основные пакеты
-        "org.jogamp.",
-        "com.jogamp."
+        "java.", "javax.", "kotlin.", "org.jetbrains.", "org.jogamp.", "com.jogamp."
     )
 
     init {
@@ -41,15 +33,11 @@ class DynamicReloadingClassLoader(
     private fun preloadClassDefinitions(jarFile: File) {
         try {
             java.util.jar.JarFile(jarFile).use { jar ->
-                jar.entries().asSequence()
-                    .filter { it.name.endsWith(".class") }
-                    .forEach { entry ->
-                        val className = entry.name
-                            .removeSuffix(".class")
-                            .replace('/', '.')
-                        val bytes = jar.getInputStream(entry).readAllBytes()
-                        classDefinitions[className] = bytes
-                    }
+                jar.entries().asSequence().filter { it.name.endsWith(".class") }.forEach { entry ->
+                    val className = entry.name.removeSuffix(".class").replace('/', '.')
+                    val bytes = jar.getInputStream(entry).readAllBytes()
+                    classDefinitions[className] = bytes
+                }
             }
             println("Preloaded ${classDefinitions.size} classes from $jarFile")
         } catch (e: Exception) {
@@ -106,13 +94,11 @@ class DynamicReloadingClassLoader(
      * Определяет класс непосредственно из байткода.
      */
     private fun defineClassFromBytes(className: String): Class<*> {
-        val bytes = classDefinitions[className]
-            ?: throw ClassNotFoundException("Class $className not found in JAR")
+        val bytes = classDefinitions[className] ?: throw ClassNotFoundException("Class $className not found in JAR")
 
         val clazz = defineClass(className, bytes, 0, bytes.size)
         loadedTimestamps[className] = System.currentTimeMillis()
 
-        println("Defined class: $className (timestamp: ${loadedTimestamps[className]})")
         return clazz
     }
 

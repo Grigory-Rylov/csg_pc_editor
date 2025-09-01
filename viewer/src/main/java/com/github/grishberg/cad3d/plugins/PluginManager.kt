@@ -19,8 +19,6 @@ interface PluginManager {
      */
     fun stop()
 
-//    fun loadPlugins(): List<Cad3dPlugin>
-
     interface OnPluginLoadedListener {
 
         /**

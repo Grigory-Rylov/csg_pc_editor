@@ -50,8 +50,6 @@ class CommonPolygonFinderMultithreading(private val numChunks: Int, progressObse
                 if (key != null) {
                     val currentList = localMap.computeIfAbsent(key) { mutableListOf() }
                     currentList.add(PolygonEdge(polygon, a, b, i))
-                } else {
-                    println("Found close points $a - $b") // Опционально, может быть много логов
                 }
             }
         }
