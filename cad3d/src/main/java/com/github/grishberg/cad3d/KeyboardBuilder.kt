@@ -22,6 +22,7 @@ import com.github.grishberg.cad3d.keyboard.casebody.wall.ControllerHolderWall
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
 import com.github.grishberg.cad3d.keyboard.cfg.WallsSettings
 import com.github.grishberg.cad3d.keyboard.matrix.KeyMatrix
+import com.github.grishberg.cad3d.keyboard.plate.BottomPoints
 import com.github.grishberg.cad3d.keyboard.plate.Plate
 import com.github.grishberg.cad3d.keyboard.screws.ScrewBase
 import com.github.grishberg.cad3d.keyboard.screws.ScrewKeyMatrixPlace
@@ -125,7 +126,7 @@ class KeyboardBuilder(
                 createWristRest(cfg)
             }
             createIfNeeded(resultsChannel, KeyboardPart.TrackBallHolder, visibleModels) {
-                createTrackball(cfg, keyPlace)
+                createTrackballHolder(cfg, keyPlace)
             }
             createIfNeeded(resultsChannel, KeyboardPart.TrackBall, visibleModels) {
                 createTrackBall(cfg, keyPlace)
@@ -145,7 +146,7 @@ class KeyboardBuilder(
                 )
             }
             createIfNeeded(resultsChannel, KeyboardPart.Plate, visibleModels) {
-                createPlate(cfg, wallsForPlate)
+                createPlate(cfg, keyPlace, thumbKeyPlace, wallsSettings, screwWallPlaces)
             }
             createIfNeeded(resultsChannel, KeyboardPart.Amoeba, visibleModels) {
                 createAmoeba(cfg, keyPlace, thumbKeyPlace)
@@ -286,7 +287,7 @@ class KeyboardBuilder(
         return result
     }
 
-    private fun createTrackball(
+    private fun createTrackballHolder(
         cfg: KeyboardConfig, keyPlace: KeyPlace,
     ): List<VertexHolder> {
         val result = mutableListOf<VertexHolder>()
@@ -357,14 +358,21 @@ class KeyboardBuilder(
         return result
     }
 
-    private fun createPlate(cfg: KeyboardConfig, walls: Walls): List<VertexHolder> {
+    private fun createPlate(
+        cfg: KeyboardConfig,
+        keyPlace: KeyPlace,
+        thumbKeyPlace: ThumbKeyPlace,
+        wallsSettings: WallsSettings,
+        screwWallPlaces: ScrewWallPlaces,
+    ): List<VertexHolder> {
         val result = mutableListOf<VertexHolder>()
         val startTime = System.currentTimeMillis()
 
-        val plate = Plate(cfg, walls).create()
+        val bottomPoints = BottomPoints(cfg, keyPlace, thumbKeyPlace, wallsSettings)
+        val plate = Plate(cfg, bottomPoints, screwWallPlaces, ScrewBase(cfg)).create()
 
         result.addAll(plate.vertexHolders)
-        //saveModel("controller_holder.stl", controllerHolder.model)
+        saveModel(cfg, "plate.stl", plate.model)
 
         val delta = System.currentTimeMillis() - startTime
         println("createPlate : $delta")

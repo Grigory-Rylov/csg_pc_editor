@@ -35,6 +35,7 @@ import java.awt.event.MouseWheelListener
 import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
 import java.io.File
+import javax.swing.BoxLayout
 import javax.swing.JButton
 import javax.swing.JCheckBox
 import javax.swing.JFrame
@@ -122,8 +123,6 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         // Создаем панель управления
         val controlPanel = createControlPanel()
 
-
-
         // Создаем панель навигации по debug командам
         createDebugNavigationPanel()
 
@@ -161,11 +160,15 @@ class Main(title: String?) : JFrame(title), GLEventListener {
     }
 
     private fun createControlPanel(): JPanel {
+        // Создаем основную панель с вертикальным BoxLayout
         val controlPanel = JPanel()
-        controlPanel.layout = FlowLayout(FlowLayout.LEFT)
-        controlPanel.preferredSize = Dimension(800, 40)
+        controlPanel.layout = BoxLayout(controlPanel, BoxLayout.Y_AXIS)
 
-        // Добавляем переключатели
+        // Создаем две панели для строк
+        val row1 = JPanel(FlowLayout(FlowLayout.LEFT))
+        val row2 = JPanel(FlowLayout(FlowLayout.LEFT))
+
+        // Создаем кнопки (код создания кнопок остается прежним)
         val keysButton = createToggleButton("Клавиши", settingsHolder.settingsShowCaps) {
             settingsHolder.settingsShowCaps = it
             rebuildConfigAndRequestRendering(plugins, emptySet())
@@ -203,22 +206,18 @@ class Main(title: String?) : JFrame(title), GLEventListener {
                 settingsHolder.showControllerHolder = it
                 rebuildConfigAndRequestRendering(plugins, emptySet())
             }
-
         val showControllerButton = createToggleButton("Контроллера", settingsHolder.showController) {
             settingsHolder.showController = it
             rebuildConfigAndRequestRendering(plugins, emptySet())
         }
-
         val showAmoebaButton = createToggleButton("Амебы", settingsHolder.showAmoeba) {
             settingsHolder.showAmoeba = it
             rebuildConfigAndRequestRendering(plugins, emptySet())
         }
-
         val debugButton = createToggleButton("Debug", showDebugInfo) {
             showDebugInfo = it
             if (!it) {
                 debugVisualizer.clearVisualization()
-                //debugCommands.clear()
             } else {
                 addDebugCommands()
                 updateDebugDisplay()
@@ -226,24 +225,38 @@ class Main(title: String?) : JFrame(title), GLEventListener {
             updateDebugNavigationState()
         }
 
-        controlPanel.add(keysButton)
-        controlPanel.add(caseButton)
-        controlPanel.add(matrixButton)
-        controlPanel.add(plateButton)
-        controlPanel.add(wristRestButton)
-        controlPanel.add(trackballButton)
-        controlPanel.add(trackballSensorButton)
-        controlPanel.add(trackballSensorCapButton)
-        controlPanel.add(showControllerHolderButton)
-        controlPanel.add(showControllerButton)
-        controlPanel.add(showAmoebaButton)
-
         val configButton = JButton("Конфигурации")
         configButton.addActionListener {
             showConfigDialog()
         }
-        controlPanel.add(configButton)
-        controlPanel.add(debugButton)
+
+        // --- Распределяем кнопки по строкам ---
+        // Вы можете изменить это распределение в зависимости от того, какие кнопки вам
+        // нужны чаще и должны быть на верхнем ряду.
+
+        // Верхний ряд (row1)
+        row1.add(configButton)
+        row1.add(keysButton)
+        row1.add(caseButton)
+        row1.add(matrixButton)
+        row1.add(plateButton)
+        row1.add(wristRestButton)
+        row1.add(trackballButton)
+        row1.add(trackballSensorButton)
+        // row1.add(trackballSensorCapButton) // Можно перенести на вторую строку, если не помещается
+
+        // Нижний ряд (row2)
+        // Добавим оставшиеся кнопки на вторую строку
+        row2.add(trackballSensorCapButton) // Перенесли сюда
+        row2.add(showControllerHolderButton)
+        row2.add(showControllerButton)
+        row2.add(showAmoebaButton)
+
+        row2.add(debugButton)
+
+        // Добавляем строки на основную панель
+        controlPanel.add(row1)
+        controlPanel.add(row2)
         return controlPanel
     }
 
@@ -329,7 +342,6 @@ class Main(title: String?) : JFrame(title), GLEventListener {
             it.requestModels(
                 settingsHolder.settings, modifiedKeyboardParts, object : ResultListener {
                     override fun onReady(result: List<VertexHolder>) {
-                        // TODO: remove
                         vertexHolderList.clear()
                         vertexHolderList.addAll(result)
                     }
@@ -371,8 +383,16 @@ class Main(title: String?) : JFrame(title), GLEventListener {
 
     private fun createToggleButton(text: String, initialState: Boolean, onChanged: (Boolean) -> Unit): JCheckBox {
         val button = JCheckBox(text, initialState)
-        button.addActionListener { e: ActionEvent? -> onChanged(button.isSelected) }
-        button.preferredSize = Dimension(100, 30)
+        button.addActionListener { onChanged(button.isSelected) }
+
+        // Автоматический расчет ширины на основе текста
+        val metrics = button.getFontMetrics(button.font)
+        val textWidth = metrics.stringWidth(text)
+        val preferredWidth = minOf(textWidth + 40, 300) // Максимум 300px
+
+        button.preferredSize = Dimension(preferredWidth, 30)
+        button.minimumSize = Dimension(100, 30)
+
         return button
     }
 

@@ -39,6 +39,8 @@ data class KeyboardConfig(
     val modifiedKeyboardParts: Set<KeyboardPart>,
     val thumbClusterSettings: ThumbClusterSettings,
     val screwNutHoleDiameter: Double,
+    val screwHeadDiameter: Double = 6.0,
+    val screwHeadHeight: Double = 1.7,
     val screwHolderWallhickness: Double,
     val screwBoltDiameter: Double = 3.0,
     val isSkeletonMode: Boolean,

@@ -103,7 +103,7 @@ class SettingsHolder(
             rowCurvature = 20.1,
             tentingAngle = 8.0,
             columnCurvature = 12.1,
-            plateThickness = 3.0,
+            plateThickness = 2.0,
             saProfileKeyHeight = LOW_PROFILE_KEYCAP_HEIGHT,
             centerRow = 1,
             centerCol = 2,

@@ -20,11 +20,17 @@ class ScrewBase(private val cfg: KeyboardConfig) {
         return Cylinder(holeHeight, Radius.fromDiameter(cfg.screwNutHoleDiameter)).moveZ(holeHeight / 2.0)
     }
 
+    /**
+     * Болт для отверстий в нижней крышке.
+     */
     fun plateScrewHolder(): Abstract3dModel {
         return Union(
-            Cylinder(holeHeight, Radius.fromDiameter(cfg.screwNutHoleDiameter)),
-            // head diameter TODO:
-            Cylinder(holeHeight, Radius.fromDiameter(cfg.screwNutHoleDiameter)),
+            Cylinder(cfg.plateThickness + 1, Radius.fromDiameter(cfg.screwBoltDiameter)),
+
+            Cylinder(cfg.screwHeadHeight,
+                Radius.fromDiameter(cfg.screwHeadDiameter + 0.2),
+                Radius.fromDiameter(cfg.screwBoltDiameter),
+            ).moveZ(-holeHeight/2 + cfg.screwHeadHeight/2),
         )
     }
 

@@ -85,6 +85,13 @@ public class Abstract2d {
 		return dx*dx+dy*dy;
     }
 
+	public double dist(Abstract2d p) {
+		double dx = x-p.getX();
+		double dy = y-p.getY();
+		return Math.sqrt(dx*dx+dy*dy);
+	}
+
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
