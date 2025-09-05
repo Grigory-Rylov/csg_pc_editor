@@ -191,6 +191,8 @@ class ControllerWallBuilder(
 
         models.add(
             Hull(
+                sphere.move(backControllerRight),
+                sphere.move(backControllerLeft),
                 bottomBorderObject().move(backControllerRight.projectionZ(cfg.borderThickness)),
                 bottomBorderObject().move(backControllerLeft.projectionZ(cfg.borderThickness))
             )
@@ -220,26 +222,56 @@ class ControllerWallBuilder(
             )
         )
 
+        val right = keyPlace.place(
+            1, 0, KeyPlaceholder.placeHolderBackRight().move(0.0, cfg.outerVerticalOffset, cfg.outerBorderZOffset)
+        )
+
         //mid - back top controller
         models.add(
             Hull(
                 mid,
+                sphere.move(backControllerRight),
+                sphere.move(backControllerMid),
+            )
+        )
+        models.add(
+            Hull(
+                mid,
+                right,
+                sphere.move(backControllerRight),
+            )
+        )
+
+        // column 0 back
+
+        val outEdgeCol0R = keyPlace.place(
+            0, 0, KeyPlaceholder.placeHolderBackRight().move(0.0, cfg.outerVerticalOffset, cfg.outerBorderZOffset)
+        )
+        val outEdgeCol0L = keyPlace.place(
+            0, 0, KeyPlaceholder.placeHolderBackLeft().move(0.0, cfg.outerVerticalOffset, cfg.outerBorderZOffset)
+        )
+
+        models.add(
+            Hull(
+                mid,
+                outEdgeCol0R,
+                outEdgeCol0L,
+            )
+        )
+
+        models.add(
+            Hull(
+                mid,
+                outEdgeCol0L,
                 sphere.move(backControllerMid),
             )
         )
 
-        //mid left - back top controller
         models.add(
             Hull(
-                midLeft,
+                outEdgeCol0L,
+                sphere.move(backControllerMid),
                 sphere.move(backControllerMidLeft),
-            )
-        )
-
-        models.add(
-            Hull(
-                bottomBorderObject().move(backControllerLeft.projectionZ(cfg.borderThickness)),
-                bottomEdgePatcher.leftPoint(left),
             )
         )
 
@@ -250,7 +282,7 @@ class ControllerWallBuilder(
 
         models.add(
             Hull(
-                centerLeft,
+               // centerLeft,
                 bottomEdgePatcher.backPoint(centerLeft),
             )
         )
