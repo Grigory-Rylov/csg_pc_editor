@@ -9,6 +9,7 @@ import com.github.grishberg.cad3d.keyboard.casebody.matrix.InnerBordersBuilder
 import com.github.grishberg.cad3d.keyboard.casebody.matrix.InnerCorners
 import com.github.grishberg.cad3d.keyboard.casebody.wall.ControllerHolderWall
 import com.github.grishberg.cad3d.keyboard.casebody.wall.ControllerWallBuilder
+import com.github.grishberg.cad3d.keyboard.casebody.wall.OuterBackRightWallsBuilder
 import com.github.grishberg.cad3d.keyboard.casebody.wall.OuterCornersWallBuilder
 import com.github.grishberg.cad3d.keyboard.casebody.wall.OuterWallsBuilder
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
@@ -103,6 +104,15 @@ class Walls(
             ), isWallMode = true
         )
 
+        backWallsFrom2To6(
+            OuterBackRightWallsBuilder(
+                isSkeletonMode = cfg.isSkeletonMode,
+                topEdgeOffsetZ = topEdgeOffsetZ,
+                cfg = wallsSettings,
+                bottomEdgePatcher = bottomEdgePatcher
+            )
+        )
+
         thumbWalls(
             OuterWallsBuilder(
                 isSkeletonMode = cfg.isSkeletonMode,
@@ -122,6 +132,19 @@ class Walls(
         )
 
         return Utils.union(models)
+    }
+
+    private fun backWallsFrom2To6(wallsBuilder: OuterBackRightWallsBuilder) {
+        models.add(wallsBuilder.backWall(
+            keyPlace = { obj -> keyPlace.place(2, 0, obj) },
+        ))
+        for (column in 3 until cfg.columnsCount) {
+            // back columns
+            models.add(wallsBuilder.backMidWall(
+                    keyPlace = { obj -> keyPlace.place(column, 0, obj) },
+                    leftPlace = { obj -> keyPlace.place(column - 1, 0, obj) },
+            ))
+        }
     }
 
     private fun matrixBorders(
@@ -153,10 +176,8 @@ class Walls(
         })
 
         for (column in 0 until cfg.columnsCount) {
-
             // back columns
-            val onlyBorder = isWallMode && column < 2
-            models.add(wallsBuilder.backWall(onlyBorder) { obj ->
+            models.add(wallsBuilder.backWall(onlyBorder = true) { obj ->
                 keyPlace.place(
                     column, 0, obj
                 )
@@ -177,10 +198,9 @@ class Walls(
         }
         for (column in 0 until cfg.columnsCount - 1) {
             // back diagonals
-            val onlyBorder = isWallMode && column < 2
             models.add(
                 wallsBuilder.backMidWall(
-                    onlyBorder = onlyBorder,
+                    onlyBorder = true,
                     leftPlace = { obj -> keyPlace.place(column, 0, obj) },
                     rightPlace = { obj -> keyPlace.place(column + 1, 0, obj) },
                 )
@@ -464,9 +484,7 @@ class Walls(
         val borderZOffset = -2.0
 
         val a = keyPlace.place(
-            0,
-            cfg.lastRow,
-            KeyPlaceholder.placeHolderFrontLeft().move(leftOffset, 0.0, borderZOffset)
+            0, cfg.lastRow, KeyPlaceholder.placeHolderFrontLeft().move(leftOffset, 0.0, borderZOffset)
         ).move
         val b = keyPlace.place(0, cfg.lastRow, KeyPlaceholder.placeHolderFrontLeft()).move
         val c = keyPlace.place(0, cfg.lastRow, KeyPlaceholder.placeHolderFrontRight()).move
@@ -481,7 +499,8 @@ class Walls(
         val i = keyPlace.place(0, cfg.lastRow, KeyPlaceholder.placeHolderFrontRight().moveY(-verticalOffset)).move
 
         val j = keyPlace.place(1, cfg.lastRow, KeyPlaceholder.placeHolderFrontLeft().moveY(-defaultVerticalOffset)).move
-        val k = keyPlace.place(1, cfg.lastRow, KeyPlaceholder.placeHolderFrontRight().moveY(-defaultVerticalOffset)).move
+        val k =
+            keyPlace.place(1, cfg.lastRow, KeyPlaceholder.placeHolderFrontRight().moveY(-defaultVerticalOffset)).move
 
         val l = keyPlace.place(2, cfg.lastRow, KeyPlaceholder.placeHolderFrontLeft().moveY(-verticalOffset)).move
         val m = keyPlace.place(2, cfg.lastRow, KeyPlaceholder.placeHolderFrontRight().moveY(-verticalOffset)).move
@@ -512,7 +531,6 @@ class Walls(
         val u = thumbKeyPlace.placeL(
             KeyPlaceholder.placeHolderBackRight().move(0.0, verticalOffset, borderZOffset)
         ).move
-
 
         // col 0 front edge
         models.add(

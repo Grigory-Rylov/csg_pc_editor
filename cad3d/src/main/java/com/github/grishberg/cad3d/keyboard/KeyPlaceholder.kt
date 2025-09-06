@@ -152,4 +152,9 @@ object KeyPlaceholder {
             CORNER_OFFSET + WALL_THICKNESS, -CORNER_OFFSET - WALL_THICKNESS, CORNER_PLACEHOLDER_TOP_OFFSET
         )
     }
+
+    @JvmStatic
+    fun placeSingleCorner(): Abstract3dModel {
+        return cube(WALL_THICKNESS, WALL_THICKNESS, TOP_THICKNESS).moveZ(CORNER_PLACEHOLDER_TOP_OFFSET)
+    }
 }

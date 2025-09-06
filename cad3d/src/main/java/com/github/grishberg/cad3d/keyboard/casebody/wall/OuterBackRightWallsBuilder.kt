@@ -1,0 +1,110 @@
+package com.github.grishberg.cad3d.keyboard.casebody.wall
+
+import com.github.grishberg.cad3d.keyboard.KeyPlaceholder
+import com.github.grishberg.cad3d.keyboard.Utils
+import com.github.grishberg.cad3d.keyboard.Utils.hull
+import com.github.grishberg.cad3d.keyboard.casebody.DefaultBottomEdgePatcher
+import com.github.grishberg.cad3d.keyboard.casebody.WallBottomEdgePatcher
+import com.github.grishberg.cad3d.keyboard.cfg.WallsSettings
+import eu.printingin3d.javascad.coords.V3d
+import eu.printingin3d.javascad.models.Abstract3dModel
+import eu.printingin3d.javascad.tranzitions.Union
+
+class OuterBackRightWallsBuilder(
+    private val isSkeletonMode: Boolean,
+    private val topEdgeOffsetZ: Double,
+    private val cfg: WallsSettings,
+
+    private val bottomEdgePatcher: WallBottomEdgePatcher = DefaultBottomEdgePatcher(
+        cfg.borderThickness, cfg.bottomBorderHeight
+    ),
+) {
+
+    fun backWall(
+        keyPlace: (Abstract3dModel) -> Abstract3dModel,
+    ): Abstract3dModel {
+        val leftTop =
+            keyPlace(KeyPlaceholder.placeHolderBackLeft().move(0.0, cfg.outerVerticalOffset, cfg.outerBorderZOffset))
+        val rightTop =
+            keyPlace(KeyPlaceholder.placeHolderBackRight().move(0.0, cfg.outerVerticalOffset, cfg.outerBorderZOffset))
+
+        val border = hull(
+            leftTop, rightTop,
+
+            verticalCube(
+                keyPlace(
+                    KeyPlaceholder.placeHolderBackLeft().move(0.0, cfg.verticalOffset, cfg.borderZOffset)
+                )
+            ),
+
+            verticalCube(
+                keyPlace(
+                    KeyPlaceholder.placeHolderBackRight().move(0.0, cfg.verticalOffset, cfg.borderZOffset)
+                )
+            )
+        )
+
+        val wall = hull(
+            leftTop, rightTop, bottomEdgePatcher.backPoint(leftTop), bottomEdgePatcher.backPoint(rightTop)
+        )
+        return Union(border, wall)
+    }
+
+    fun backMidWall(
+        count: Int = 10,
+        keyPlace: (Abstract3dModel) -> Abstract3dModel, leftPlace: (Abstract3dModel) -> Abstract3dModel
+    ): Abstract3dModel {
+        val leftTop =
+            keyPlace(KeyPlaceholder.placeHolderBackLeft().move(0.0, cfg.outerVerticalOffset, cfg.outerBorderZOffset))
+        val rightTop =
+            keyPlace(KeyPlaceholder.placeHolderBackRight().move(0.0, cfg.outerVerticalOffset, cfg.outerBorderZOffset))
+
+        val rightPrevTop =
+            leftPlace(KeyPlaceholder.placeHolderBackRight().move(0.0, cfg.outerVerticalOffset, cfg.outerBorderZOffset))
+
+
+        val start = rightPrevTop.move
+        val end = rightTop.move
+
+        var lastTop = rightPrevTop
+        var lastBottom = bottomEdgePatcher.backPoint(rightPrevTop)
+
+        val models = mutableListOf<Abstract3dModel>()
+
+        // Генерируем промежуточные точки
+        for (i in 0..count) {
+            val t: Double = i.toDouble() / count
+            val intermediatePoint: V3d = start.lerp(end, t)
+            val topObject = KeyPlaceholder.placeSingleCorner().move(intermediatePoint).moveZ(-2)
+            val bottomObject = bottomEdgePatcher.backPoint(topObject)
+            models.add(hull(topObject, bottomObject, lastTop, lastBottom))
+            lastTop = topObject
+            lastBottom = bottomObject
+        }
+
+        // last hull
+        models.add(hull(rightTop,  bottomEdgePatcher.backPoint(rightTop), lastTop, lastBottom))
+
+        val border = hull(
+            rightPrevTop,
+            leftTop,
+            rightTop,
+        )
+
+        models.add(border)
+
+        return Union(models)
+    }
+
+    private fun verticalCube(obj: Abstract3dModel): Abstract3dModel {
+        return borderObject(cfg.borderThickness, cfg.borderHeight).moveZ(topEdgeOffsetZ).move(obj.move)
+    }
+
+    private fun verticalCube(point: V3d): Abstract3dModel {
+        return borderObject(cfg.borderThickness, cfg.borderHeight).moveZ(topEdgeOffsetZ).move(point)
+    }
+
+    private fun borderObject(thickness: Double, height: Double): Abstract3dModel {
+        return Utils.cylinder(thickness, height)
+    }
+}
