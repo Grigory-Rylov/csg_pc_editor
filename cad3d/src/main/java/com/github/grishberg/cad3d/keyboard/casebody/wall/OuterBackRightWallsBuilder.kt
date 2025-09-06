@@ -75,7 +75,7 @@ class OuterBackRightWallsBuilder(
         for (i in 0..count) {
             val t: Double = i.toDouble() / count
             val intermediatePoint: V3d = start.lerp(end, t)
-            val topObject = KeyPlaceholder.placeSingleCorner().move(intermediatePoint).moveZ(-2)
+            val topObject = topBorderObj().move(intermediatePoint)
             val bottomObject = bottomEdgePatcher.backPoint(topObject)
             models.add(hull(topObject, bottomObject, lastTop, lastBottom))
             lastTop = topObject
@@ -83,12 +83,12 @@ class OuterBackRightWallsBuilder(
         }
 
         // last hull
-        models.add(hull(rightTop,  bottomEdgePatcher.backPoint(rightTop), lastTop, lastBottom))
+        models.add(hull(topBorderObj(rightTop),  bottomEdgePatcher.backPoint(rightTop), topBorderObj(lastTop), lastBottom))
 
         val border = hull(
-            rightPrevTop,
-            leftTop,
-            rightTop,
+            topBorderObj(rightPrevTop),
+            topBorderObj(leftTop),
+            topBorderObj(rightTop),
         )
 
         models.add(border)
@@ -106,5 +106,12 @@ class OuterBackRightWallsBuilder(
 
     private fun borderObject(thickness: Double, height: Double): Abstract3dModel {
         return Utils.cylinder(thickness, height)
+    }
+
+    private fun topBorderObj(obj: Abstract3dModel): Abstract3dModel  {
+        return Utils.sphere(cfg.borderThickness).move(obj.move)
+    }
+    private fun topBorderObj(): Abstract3dModel  {
+        return Utils.sphere(cfg.borderThickness)
     }
 }
