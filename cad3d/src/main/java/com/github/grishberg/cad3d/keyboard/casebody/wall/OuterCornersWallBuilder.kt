@@ -184,17 +184,20 @@ class OuterCornersWallBuilder(
     }
 
     override fun frontRightToMatrix(
-        keyPlace: (Abstract3dModel) -> Abstract3dModel,
+        ThumbR: (Abstract3dModel) -> Abstract3dModel,
         matrixOuterPlace: (Abstract3dModel) -> Abstract3dModel,
         matrixInnerPlace: (Abstract3dModel) -> Abstract3dModel,
     ): Abstract3dModel {
-        val thumbVertex = keyPlace(
-            KeyPlaceholder.placeHolderFrontRight().move(2.0, 0.0, cfg.outerBorderZOffset)
+        val thumbFrontRight = ThumbR(
+            KeyPlaceholder.placeHolderFrontRight().move(2.0, 0.0, cfg.borderZOffset)
         )
-        val thumbVertexFront = keyPlace(
+        val thumbBackRight = ThumbR(
+            KeyPlaceholder.placeHolderBackRight().move(2.0, -3.0, cfg.borderZOffset)
+        )
+        val thumbVertexFront = ThumbR(
             KeyPlaceholder.placeHolderFrontRight().move(0.0, -cfg.verticalOffset, cfg.borderZOffset)
         )
-        val frontOuter = keyPlace(
+        val frontOuter = ThumbR(
             KeyPlaceholder.placeHolderFrontRight().move(0.0, -cfg.outerVerticalOffset, cfg.outerBorderZOffset)
         )
 
@@ -211,7 +214,8 @@ class OuterCornersWallBuilder(
         )
 
         val wall1 = hull(
-            verticalCube(thumbVertex),
+            verticalCube(thumbFrontRight),
+            verticalCube(thumbBackRight),
             verticalCube(innerLeft),
             verticalCube(outerLeft),
         )
@@ -223,7 +227,7 @@ class OuterCornersWallBuilder(
         )
 
         val topBorder = hull(
-            verticalCube(thumbVertex),
+            verticalCube(thumbFrontRight),
             verticalCube(thumbVertexFront),
             frontOuter,
             bottomEdgePatcher.projection(frontOuter),
