@@ -11,7 +11,6 @@ import eu.printingin3d.javascad.models.Abstract3dModel
 import eu.printingin3d.javascad.tranzitions.Union
 
 class OuterBackRightWallsBuilder(
-    private val isSkeletonMode: Boolean,
     private val topEdgeOffsetZ: Double,
     private val cfg: WallsSettings,
 

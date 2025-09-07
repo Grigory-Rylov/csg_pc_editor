@@ -106,7 +106,6 @@ class Walls(
 
         backWallsFrom2To6(
             OuterBackRightWallsBuilder(
-                isSkeletonMode = cfg.isSkeletonMode,
                 topEdgeOffsetZ = topEdgeOffsetZ,
                 cfg = wallsSettings,
                 bottomEdgePatcher = bottomEdgePatcher
@@ -123,6 +122,7 @@ class Walls(
                 isSkeletonMode = cfg.isSkeletonMode,
                 topEdgeOffsetZ = topEdgeOffsetZ,
                 cfg = wallsSettings,
+                isThumb = true,
             ),
             verticalOffset = wallVerticalOffset,
             leftOffset = wallHorizontalOffset,
@@ -160,14 +160,13 @@ class Walls(
             })
         }
 
-        //left front
-        //models.add(cornerWallBuilder.frontLeft { obj -> keyPlace.place(0, cfg.lastRow, obj) })
         // right back
         models.add(cornerWallBuilder.backRight { obj ->
             keyPlace.place(
                 cfg.lastCol, 0, obj
             )
         })
+
         // right front
         models.add(cornerWallBuilder.frontRight { obj ->
             keyPlace.place(
