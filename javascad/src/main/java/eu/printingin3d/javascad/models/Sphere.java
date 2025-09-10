@@ -1,11 +1,7 @@
 package eu.printingin3d.javascad.models;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import eu.printingin3d.javascad.basic.Angle;
 import eu.printingin3d.javascad.basic.Radius;
-import eu.printingin3d.javascad.context.IColorGenerationContext;
 import eu.printingin3d.javascad.coords.Boundaries3d;
 import eu.printingin3d.javascad.coords.Boundary;
 import eu.printingin3d.javascad.coords.V3d;
@@ -13,6 +9,8 @@ import eu.printingin3d.javascad.exceptions.IllegalValueException;
 import eu.printingin3d.javascad.vrl.CSG;
 import eu.printingin3d.javascad.vrl.FacetGenerationContext;
 import eu.printingin3d.javascad.vrl.Polygon;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Represents a sphere. It is a descendant of {@link Abstract3dModel}, which means you
@@ -39,11 +37,6 @@ public class Sphere extends Atomic3dModel {
 	 */
 	public Sphere(double r) throws IllegalValueException {
 		this(Radius.fromRadius(r));
-	}
-
-	@Override
-	protected SCAD innerToScad(IColorGenerationContext context) {
-		return new SCAD("sphere(r="+r+");\n");
 	}
 
 	@Override

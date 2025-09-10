@@ -1,16 +1,13 @@
 package eu.printingin3d.javascad.tranzitions2d;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
-import eu.printingin3d.javascad.context.IColorGenerationContext;
 import eu.printingin3d.javascad.coords2d.Boundaries2d;
 import eu.printingin3d.javascad.coords2d.Coords2d;
-import eu.printingin3d.javascad.models.SCAD;
 import eu.printingin3d.javascad.models2d.Abstract2dModel;
 import eu.printingin3d.javascad.models2d.Area2d;
 import eu.printingin3d.javascad.vrl.FacetGenerationContext;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * <p>Represents an union of models. It is a descendant of {@link Abstract2dModel}, which means you
@@ -36,30 +33,6 @@ public class Union extends Abstract2dModel {
 	 */
 	public Union(List<Abstract2dModel> models) {
 		this(models, Coords2d.ZERO);
-	}
-	
-	@Override
-	protected SCAD innerToScad(IColorGenerationContext context) {
-		List<SCAD> scads = new ArrayList<>();
-		for (Abstract2dModel model : models) {
-			SCAD scad = model.toScad(context);
-			if (!scad.isEmpty()) {
-				scads.add(scad);
-			}
-		}
-		
-		switch (scads.size()) {
-		case 0:
-			return SCAD.EMPTY;
-		case 1:
-			return scads.get(0);
-		default:
-			SCAD result = new SCAD("union() {\n");
-			for (SCAD scad : scads) {
-				result = result.append(scad);
-			}
-			return result.append("}\n");
-		}
 	}
 
 	@Override

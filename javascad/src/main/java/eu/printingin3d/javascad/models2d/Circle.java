@@ -1,18 +1,15 @@
 package eu.printingin3d.javascad.models2d;
 
+import eu.printingin3d.javascad.basic.Angle;
+import eu.printingin3d.javascad.basic.Radius;
+import eu.printingin3d.javascad.coords.Boundary;
+import eu.printingin3d.javascad.coords2d.Boundaries2d;
+import eu.printingin3d.javascad.coords2d.Coords2d;
+import eu.printingin3d.javascad.vrl.FacetGenerationContext;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-
-import eu.printingin3d.javascad.basic.Angle;
-import eu.printingin3d.javascad.basic.Radius;
-import eu.printingin3d.javascad.context.IColorGenerationContext;
-import eu.printingin3d.javascad.coords.Boundary;
-import eu.printingin3d.javascad.coords2d.Boundaries2d;
-import eu.printingin3d.javascad.coords2d.Coords2d;
-import eu.printingin3d.javascad.models.SCAD;
-import eu.printingin3d.javascad.vrl.FacetGenerationContext;
 
 /**
  * Represents a 2D circle.
@@ -43,11 +40,6 @@ public class Circle extends Abstract2dModel {
 	@Deprecated
 	public Circle(double radius) {
 		this(Radius.fromRadius(radius));
-	}
-
-	@Override
-	protected SCAD innerToScad(IColorGenerationContext context) {
-		return new SCAD("circle(r="+radius+", center=true);\n");
 	}
 
 	@Override

@@ -28,7 +28,7 @@ class OuterBackRightWallsBuilder(
             keyPlace(KeyPlaceholder.placeHolderBackRight().move(0.0, cfg.outerVerticalOffset, cfg.outerBorderZOffset))
 
         val border = hull(
-            leftTop, rightTop,
+            topBorderObj(leftTop), topBorderObj(rightTop),
 
             verticalCube(
                 keyPlace(
@@ -44,14 +44,16 @@ class OuterBackRightWallsBuilder(
         )
 
         val wall = hull(
-            leftTop, rightTop, bottomEdgePatcher.backPoint(leftTop), bottomEdgePatcher.backPoint(rightTop)
+            topBorderObj(leftTop), topBorderObj(rightTop),
+            bottomEdgePatcher.backPoint(leftTop), bottomEdgePatcher.backPoint(rightTop)
         )
-        return Union(border, wall)
+        return Union(
+            border,
+            wall)
     }
 
     fun backMidWall(
-        count: Int = 10,
-        keyPlace: (Abstract3dModel) -> Abstract3dModel, leftPlace: (Abstract3dModel) -> Abstract3dModel
+        count: Int = 10, keyPlace: (Abstract3dModel) -> Abstract3dModel, leftPlace: (Abstract3dModel) -> Abstract3dModel
     ): Abstract3dModel {
         val leftTop =
             keyPlace(KeyPlaceholder.placeHolderBackLeft().move(0.0, cfg.outerVerticalOffset, cfg.outerBorderZOffset))
@@ -61,11 +63,10 @@ class OuterBackRightWallsBuilder(
         val rightPrevTop =
             leftPlace(KeyPlaceholder.placeHolderBackRight().move(0.0, cfg.outerVerticalOffset, cfg.outerBorderZOffset))
 
-
         val start = rightPrevTop.move
         val end = rightTop.move
 
-        var lastTop = rightPrevTop
+        var lastTop = topBorderObj(rightPrevTop)
         var lastBottom = bottomEdgePatcher.backPoint(rightPrevTop)
 
         val models = mutableListOf<Abstract3dModel>()
@@ -82,7 +83,14 @@ class OuterBackRightWallsBuilder(
         }
 
         // last hull
-        models.add(hull(topBorderObj(rightTop),  bottomEdgePatcher.backPoint(rightTop), topBorderObj(lastTop), lastBottom))
+        models.add(
+            hull(
+                topBorderObj(rightTop),
+                bottomEdgePatcher.backPoint(rightTop),
+                topBorderObj(lastTop),
+                lastBottom
+            )
+        )
 
         val border = hull(
             topBorderObj(rightPrevTop),
@@ -107,10 +115,11 @@ class OuterBackRightWallsBuilder(
         return Utils.cylinder(thickness, height)
     }
 
-    private fun topBorderObj(obj: Abstract3dModel): Abstract3dModel  {
-        return Utils.sphere(cfg.borderThickness).move(obj.move)
+    private fun topBorderObj(obj: Abstract3dModel): Abstract3dModel {
+        return Utils.sphere(cfg.borderThickness / 2.0).move(obj.move)
     }
-    private fun topBorderObj(): Abstract3dModel  {
-        return Utils.sphere(cfg.borderThickness)
+
+    private fun topBorderObj(): Abstract3dModel {
+        return Utils.sphere(cfg.borderThickness / 2.0)
     }
 }

@@ -1,21 +1,18 @@
 package eu.printingin3d.javascad.tranzitions;
 
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
-import eu.printingin3d.javascad.context.IColorGenerationContext;
 import eu.printingin3d.javascad.context.IScadGenerationContext;
 import eu.printingin3d.javascad.coords.Boundaries3d;
 import eu.printingin3d.javascad.exceptions.NotImplementedException;
 import eu.printingin3d.javascad.models.Abstract3dModel;
 import eu.printingin3d.javascad.models.Complex3dModel;
-import eu.printingin3d.javascad.models.SCAD;
 import eu.printingin3d.javascad.utils.ListUtils;
 import eu.printingin3d.javascad.vrl.CSG;
 import eu.printingin3d.javascad.vrl.FacetGenerationContext;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * <p>Represents a hull of models. It is a descendant of {@link Abstract3dModel}, which means you
@@ -41,30 +38,6 @@ public class Hull extends Complex3dModel {
 	 */
 	public Hull(Abstract3dModel... models) {
 		this(Arrays.asList(models));
-	}
-
-	@Override
-	protected SCAD innerToScad(IColorGenerationContext context) {
-		List<SCAD> scads = new ArrayList<>();
-		for (Abstract3dModel model : models) {
-			SCAD scad = model.toScad(context);
-			if (!scad.isEmpty()) {
-				scads.add(scad);
-			}
-		}
-		
-		switch (scads.size()) {
-		case 0:
-			return SCAD.EMPTY;
-		case 1:
-			return scads.get(0);
-		default:
-			SCAD result = new SCAD("hull() {\n");
-			for (SCAD scad : scads) {
-				result = result.append(scad);
-			}
-			return result.append("}\n");
-		}
 	}
 
 	@Override

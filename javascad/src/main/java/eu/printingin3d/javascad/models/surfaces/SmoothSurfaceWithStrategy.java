@@ -1,15 +1,16 @@
 package eu.printingin3d.javascad.models.surfaces;
 
-import eu.printingin3d.javascad.context.IColorGenerationContext;
 import eu.printingin3d.javascad.coords.Boundaries3d;
 import eu.printingin3d.javascad.coords.Boundary;
 import eu.printingin3d.javascad.coords.V3d;
-import eu.printingin3d.javascad.models.*;
+import eu.printingin3d.javascad.models.Abstract3dModel;
+import eu.printingin3d.javascad.models.Atomic3dModel;
+import eu.printingin3d.javascad.models.EdgeType;
+import eu.printingin3d.javascad.models.SurfaceStrategy;
 import eu.printingin3d.javascad.utils.Color;
 import eu.printingin3d.javascad.vrl.CSG;
 import eu.printingin3d.javascad.vrl.FacetGenerationContext;
 import eu.printingin3d.javascad.vrl.Polygon;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -354,11 +355,6 @@ public class SmoothSurfaceWithStrategy extends Atomic3dModel {
             backEdgeType,
             rightEdgeType
         );
-    }
-
-    @Override
-    protected SCAD innerToScad(IColorGenerationContext context) {
-        return null;
     }
 
 

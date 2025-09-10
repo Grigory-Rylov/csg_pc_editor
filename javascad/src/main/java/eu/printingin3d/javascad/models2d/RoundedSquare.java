@@ -1,21 +1,15 @@
 package eu.printingin3d.javascad.models2d;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import eu.printingin3d.javascad.basic.Angle;
 import eu.printingin3d.javascad.basic.Radius;
-import eu.printingin3d.javascad.context.IColorGenerationContext;
 import eu.printingin3d.javascad.coords2d.Coords2d;
 import eu.printingin3d.javascad.coords2d.Dims2d;
-import eu.printingin3d.javascad.models.SCAD;
 import eu.printingin3d.javascad.utils.AssertValue;
 import eu.printingin3d.javascad.vrl.FacetGenerationContext;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Represents a 2D rounded square - the corners of the square will be rounded by the given radius.
@@ -55,39 +49,6 @@ public class RoundedSquare extends Square {
 	@Deprecated
 	public RoundedSquare(Dims2d size, double radius) {
 		this(size, Radius.fromRadius(radius));
-	}
-		
-	@Override
-	protected SCAD innerToScad(IColorGenerationContext context) {
-		SCAD result = SCAD.EMPTY;
-		
-		int numberOfItems = 0;
-		double straightX = size.getX()-radius.getDiameter();
-		double straightY = size.getY()-radius.getDiameter();
-		if (straightX>0.0) {
-			result = result.append(new Square(new Dims2d(straightX, size.getY())).toScad(context));
-			numberOfItems++;
-		}
-		if (straightY>0.0) {
-			result = result.append(new Square(new Dims2d(size.getX(), straightY)).toScad(context));
-			numberOfItems++;
-		}
-		
-		Set<Coords2d> coordsSet = new HashSet<>(Arrays.asList(
-				new Coords2d(+straightX/2.0, +straightY/2.0),
-				new Coords2d(+straightX/2.0, -straightY/2.0),
-				new Coords2d(-straightX/2.0, +straightY/2.0),
-				new Coords2d(-straightX/2.0, -straightY/2.0)
-			));
-		for (Coords2d c : coordsSet) {
-			result = result.append(new Circle(radius).move(c).toScad(context));
-			numberOfItems++;
-		}
-
-		if (numberOfItems>1) {
-			return result.prepend("union() {").append("}");
-		}
-		return result;
 	}
 	
 	@Override

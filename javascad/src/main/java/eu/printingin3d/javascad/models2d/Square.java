@@ -1,16 +1,13 @@
 package eu.printingin3d.javascad.models2d;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-
-import eu.printingin3d.javascad.context.IColorGenerationContext;
 import eu.printingin3d.javascad.coords.Boundary;
 import eu.printingin3d.javascad.coords2d.Boundaries2d;
 import eu.printingin3d.javascad.coords2d.Coords2d;
 import eu.printingin3d.javascad.coords2d.Dims2d;
-import eu.printingin3d.javascad.models.SCAD;
 import eu.printingin3d.javascad.vrl.FacetGenerationContext;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 
 /**
  * Represents a 2D square object.
@@ -31,11 +28,6 @@ public class Square extends Abstract2dModel {
 	 */
 	public Square(Dims2d size) {
 		this(Coords2d.ZERO, size);
-	}
-	
-	@Override
-	protected SCAD innerToScad(IColorGenerationContext context) {
-		return new SCAD("square("+size+", center=true);\n");
 	}
 
 	@Override

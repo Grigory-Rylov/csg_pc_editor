@@ -1,10 +1,8 @@
 package eu.printingin3d.javascad.models2d;
 
-import eu.printingin3d.javascad.context.IColorGenerationContext;
 import eu.printingin3d.javascad.coords.Boundary;
 import eu.printingin3d.javascad.coords2d.Boundaries2d;
 import eu.printingin3d.javascad.coords2d.Coords2d;
-import eu.printingin3d.javascad.models.SCAD;
 import eu.printingin3d.javascad.utils.AssertValue;
 import eu.printingin3d.javascad.vrl.FacetGenerationContext;
 import java.util.ArrayList;
@@ -41,22 +39,6 @@ public class Polygon2d extends Abstract2dModel {
 
 	public List<Coords2d> getCoords() {
 		return new ArrayList<>(coords);
-	}
-
-	@Override
-	protected SCAD innerToScad(IColorGenerationContext context) {
-		SCAD result = new SCAD("polygon([");
-		
-		boolean first = true;
-		for (Coords2d c : coords) {
-			if (first) {
-				first = false;
-			} else {
-				result = result.append(",");
-			}
-			result = result.append(c.toString());
-		}
-		return result.append("]);");
 	}
 
 	@Override

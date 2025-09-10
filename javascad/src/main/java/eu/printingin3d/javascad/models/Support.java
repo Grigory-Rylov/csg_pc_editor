@@ -1,18 +1,16 @@
 package eu.printingin3d.javascad.models;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import eu.printingin3d.javascad.context.IColorGenerationContext;
 import eu.printingin3d.javascad.coords.Boundaries3d;
 import eu.printingin3d.javascad.coords.Boundary;
-import eu.printingin3d.javascad.coords.V3d;
 import eu.printingin3d.javascad.coords.Dims3d;
+import eu.printingin3d.javascad.coords.V3d;
 import eu.printingin3d.javascad.enums.AlignType;
 import eu.printingin3d.javascad.enums.Side;
 import eu.printingin3d.javascad.tranzitions.Difference;
 import eu.printingin3d.javascad.vrl.CSG;
 import eu.printingin3d.javascad.vrl.FacetGenerationContext;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * <p>Represents support material to hold the above objects. This helps when the object cannot be printed
@@ -118,11 +116,6 @@ public class Support extends Atomic3dModel {
 		}
 		
 		return new Difference(base, slices);
-	}
-
-	@Override
-	protected SCAD innerToScad(IColorGenerationContext context) {
-		return getModel().toScad(context);
 	}
 
 	@Override

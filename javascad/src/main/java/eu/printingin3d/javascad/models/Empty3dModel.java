@@ -1,6 +1,5 @@
 package eu.printingin3d.javascad.models;
 
-import eu.printingin3d.javascad.context.IColorGenerationContext;
 import eu.printingin3d.javascad.coords.Boundaries3d;
 import eu.printingin3d.javascad.vrl.CSG;
 import eu.printingin3d.javascad.vrl.FacetGenerationContext;
@@ -24,11 +23,6 @@ public class Empty3dModel extends Atomic3dModel {
 	@Override
 	protected Abstract3dModel innerCloneModel() {
 		return new Empty3dModel();
-	}
-
-	@Override
-	protected SCAD innerToScad(IColorGenerationContext context) {
-		return SCAD.EMPTY;
 	}
 
 	@Override

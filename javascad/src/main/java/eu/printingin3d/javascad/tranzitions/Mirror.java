@@ -1,20 +1,17 @@
 package eu.printingin3d.javascad.tranzitions;
 
-import java.util.Collections;
-import java.util.List;
-
-import eu.printingin3d.javascad.context.IColorGenerationContext;
 import eu.printingin3d.javascad.context.IScadGenerationContext;
 import eu.printingin3d.javascad.coords.Boundaries3d;
 import eu.printingin3d.javascad.exceptions.IllegalValueException;
 import eu.printingin3d.javascad.models.Abstract3dModel;
 import eu.printingin3d.javascad.models.Complex3dModel;
-import eu.printingin3d.javascad.models.SCAD;
 import eu.printingin3d.javascad.tranform.ITransformation;
 import eu.printingin3d.javascad.tranform.TransformationFactory;
 import eu.printingin3d.javascad.utils.AssertValue;
 import eu.printingin3d.javascad.vrl.CSG;
 import eu.printingin3d.javascad.vrl.FacetGenerationContext;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Mirrors a model. The plane of the mirroring could only be the X, Y and Z plane, to make it easier 
@@ -61,11 +58,6 @@ public final class Mirror extends Complex3dModel {
 		
 		this.model = model;
 		this.direction = direction;
-	}
-
-	@Override
-	protected SCAD innerToScad(IColorGenerationContext context) {
-		return new SCAD("mirror("+direction.getCoords()+")").append(model.toScad(context));
 	}
 
 	@Override

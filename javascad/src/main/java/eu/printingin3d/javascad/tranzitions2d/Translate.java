@@ -1,16 +1,13 @@
 package eu.printingin3d.javascad.tranzitions2d;
 
-import java.util.Collection;
-
-import eu.printingin3d.javascad.context.IColorGenerationContext;
 import eu.printingin3d.javascad.coords2d.Boundaries2d;
 import eu.printingin3d.javascad.coords2d.Coords2d;
 import eu.printingin3d.javascad.exceptions.IllegalValueException;
-import eu.printingin3d.javascad.models.SCAD;
 import eu.printingin3d.javascad.models2d.Abstract2dModel;
 import eu.printingin3d.javascad.models2d.Area2d;
 import eu.printingin3d.javascad.utils.AssertValue;
 import eu.printingin3d.javascad.vrl.FacetGenerationContext;
+import java.util.Collection;
 
 /**
  * This represents a move transition, but used rarely, because the convenient
@@ -46,11 +43,6 @@ public class Translate extends Abstract2dModel {
 			return "";
 		}
 		return "translate("+move+")";
-	}
-
-	@Override
-	protected SCAD innerToScad(IColorGenerationContext context) {
-		return new SCAD(getTranslate(move)).append(model.toScad(context));
 	}
 
 	@Override

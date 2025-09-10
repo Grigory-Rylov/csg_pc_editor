@@ -1,12 +1,10 @@
 package eu.printingin3d.javascad.models.surfaces;
 
-import eu.printingin3d.javascad.context.IColorGenerationContext;
 import eu.printingin3d.javascad.coords.Boundaries3d;
 import eu.printingin3d.javascad.coords.Boundary;
 import eu.printingin3d.javascad.coords.V3d;
 import eu.printingin3d.javascad.models.Abstract3dModel;
 import eu.printingin3d.javascad.models.Atomic3dModel;
-import eu.printingin3d.javascad.models.SCAD;
 import eu.printingin3d.javascad.utils.Color;
 import eu.printingin3d.javascad.vrl.CSG;
 import eu.printingin3d.javascad.vrl.FacetGenerationContext;
@@ -175,11 +173,6 @@ public class SurfaceBuilder extends Atomic3dModel {
     @Override
     protected Abstract3dModel innerCloneModel() {
         return new SurfaceBuilder(points, thickness);
-    }
-
-    @Override
-    protected SCAD innerToScad(IColorGenerationContext context) {
-        return null;
     }
 
     @Override

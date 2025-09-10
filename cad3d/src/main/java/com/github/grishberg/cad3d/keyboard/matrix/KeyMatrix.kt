@@ -44,9 +44,10 @@ class KeyMatrix(
             borderHeight = borderHeigth, bottomBorderHeight = 4.0
 
         )
-        val borders = Walls(cfg, wallsSettings, keyPlace, thumbKeyPlace, topEdgeOffsetZ = 0.0).createBorders(
+        val bordersModels = Walls(cfg, wallsSettings, keyPlace, thumbKeyPlace, topEdgeOffsetZ = 0.0).createBorders(
             1.5, borderHeigth
-        ).subtractModel(screws).subtractModel(amoebaHoles)
+        )
+        val borders = Union(bordersModels).subtractModel(screws).subtractModel(amoebaHoles)
 
         return ModelHolder(
             borders,

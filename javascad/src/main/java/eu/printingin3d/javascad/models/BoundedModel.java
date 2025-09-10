@@ -1,14 +1,12 @@
 package eu.printingin3d.javascad.models;
 
-import java.util.Collections;
-import java.util.List;
-
-import eu.printingin3d.javascad.context.IColorGenerationContext;
 import eu.printingin3d.javascad.context.IScadGenerationContext;
 import eu.printingin3d.javascad.coords.Boundaries3d;
 import eu.printingin3d.javascad.utils.AssertValue;
 import eu.printingin3d.javascad.vrl.CSG;
 import eu.printingin3d.javascad.vrl.FacetGenerationContext;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * <p>There are cases, when we want to have an object, which boundaries differ from the calculated ones.
@@ -39,11 +37,6 @@ public class BoundedModel extends Complex3dModel {
 	@Override
 	protected Abstract3dModel innerCloneModel() {
 		return new BoundedModel(baseModel, boundaries3d);
-	}
-
-	@Override
-	protected SCAD innerToScad(IColorGenerationContext context) {
-		return baseModel.toScad(context);
 	}
 
 	@Override

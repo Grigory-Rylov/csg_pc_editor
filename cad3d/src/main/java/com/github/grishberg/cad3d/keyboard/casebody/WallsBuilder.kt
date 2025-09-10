@@ -9,6 +9,8 @@ interface WallsBuilder {
         keyPlace:(Abstract3dModel) -> Abstract3dModel): Abstract3dModel
     fun backMidWall(
         onlyBorder: Boolean = false,
+        leftOffset: Double = 0.0,
+        rightOffset: Double = 0.0,
         leftPlace: (Abstract3dModel) -> Abstract3dModel,
         rightPlace: (Abstract3dModel) -> Abstract3dModel,
     ): Abstract3dModel

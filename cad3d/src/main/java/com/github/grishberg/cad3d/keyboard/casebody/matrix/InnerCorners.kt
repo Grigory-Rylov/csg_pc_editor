@@ -22,11 +22,13 @@ class InnerCorners(
         )
     }
 
-    override fun backRight(keyPlace: (Abstract3dModel) -> Abstract3dModel): Abstract3dModel {
-        return Utils.hull(
-            verticalCube(keyPlace(KeyPlaceholder.placeHolderBackRight().move(0.0, verticalOffset, borderZOffset))),
-            verticalCube(keyPlace(KeyPlaceholder.placeHolderBackRight().move(rightOffset, 0.0, borderZOffset))),
-            keyPlace(KeyPlaceholder.placeHolderBackRight())
+    override fun backRight(keyPlace: (Abstract3dModel) -> Abstract3dModel): List<Abstract3dModel> {
+        return listOf(
+            Utils.hull(
+                verticalCube(keyPlace(KeyPlaceholder.placeHolderBackRight().move(0.0, verticalOffset, borderZOffset))),
+                verticalCube(keyPlace(KeyPlaceholder.placeHolderBackRight().move(rightOffset, 0.0, borderZOffset))),
+                keyPlace(KeyPlaceholder.placeHolderBackRight())
+            )
         )
     }
 

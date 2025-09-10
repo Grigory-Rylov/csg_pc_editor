@@ -39,7 +39,10 @@ class InnerBordersBuilder(
 
     override fun backMidWall(
         onlyBorder: Boolean,
-        leftPlace: (Abstract3dModel) -> Abstract3dModel, rightPlace: (Abstract3dModel) -> Abstract3dModel
+        leftOffset: Double,
+        rightOffset: Double,
+        leftPlace: (Abstract3dModel) -> Abstract3dModel,
+        rightPlace: (Abstract3dModel) -> Abstract3dModel
     ): Abstract3dModel {
         return Utils.hull(
             leftPlace.invoke(KeyPlaceholder.placeHolderBackRight()),
@@ -47,12 +50,12 @@ class InnerBordersBuilder(
 
             verticalCube(
                 leftPlace.invoke(
-                    KeyPlaceholder.placeHolderBackRight().move(0.0, verticalOffset, borderZOffset)
+                    KeyPlaceholder.placeHolderBackRight().move(leftOffset, verticalOffset, borderZOffset)
                 )
             ),
             verticalCube(
                 rightPlace.invoke(
-                    KeyPlaceholder.placeHolderBackLeft().move(0.0, verticalOffset, borderZOffset)
+                    KeyPlaceholder.placeHolderBackLeft().move(rightOffset, verticalOffset, borderZOffset)
                 )
             )
         )

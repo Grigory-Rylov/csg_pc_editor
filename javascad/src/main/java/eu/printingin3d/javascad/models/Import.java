@@ -1,5 +1,6 @@
 package eu.printingin3d.javascad.models;
 
+import eu.printingin3d.javascad.coords.Triangle3d;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -8,9 +9,6 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.List;
-
-import eu.printingin3d.javascad.context.IColorGenerationContext;
-import eu.printingin3d.javascad.coords.Triangle3d;
 
 /**
  * <p>Represents an import operation in OpenSCAD. Although OpenSCAD supports several formats
@@ -76,8 +74,4 @@ public class Import extends Polyhedron {
 		return new Import(file, triangles);
 	}
 
-	@Override
-	protected SCAD innerToScad(IColorGenerationContext context) {
-		return new SCAD("import(\""+file.getAbsolutePath().replace("\\", "\\\\")+"\", convexity=10);");
-	}
 }

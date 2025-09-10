@@ -17,7 +17,7 @@ object KeyPlaceholder {
     private const val KEY_HOLE_OUTER_WIDTH = 14.7
     private const val KEY_HOLE_INNER_WIDTH = 14.0
     private const val KEY_HOLE_HEIGHT = 14.0
-    private const val WALL_THICKNESS = 1.5
+    const val WALL_THICKNESS = 1.5
     private const val HORIZONTAL_WALL_HEIGHT = 4.0
     private const val VERTICAL_WALL_HEIGHT = 3.2
     private const val TOP_THICKNESS = 4.0

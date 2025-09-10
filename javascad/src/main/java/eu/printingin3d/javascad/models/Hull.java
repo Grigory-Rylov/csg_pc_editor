@@ -2,7 +2,6 @@ package eu.printingin3d.javascad.models;
 
 import com.github.quickhull3d.Point3d;
 import com.github.quickhull3d.QuickHull3D;
-import eu.printingin3d.javascad.context.IColorGenerationContext;
 import eu.printingin3d.javascad.coords.Boundaries3d;
 import eu.printingin3d.javascad.coords.V3d;
 import eu.printingin3d.javascad.vrl.CSG;
@@ -41,11 +40,6 @@ public class Hull extends Atomic3dModel {
     @Override
     protected Abstract3dModel innerCloneModel() {
         return new Hull(models);
-    }
-
-    @Override
-    protected SCAD innerToScad(IColorGenerationContext context) {
-        return null;
     }
 
     @Override

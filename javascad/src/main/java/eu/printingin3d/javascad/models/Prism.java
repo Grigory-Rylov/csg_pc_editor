@@ -1,10 +1,8 @@
 package eu.printingin3d.javascad.models;
 
 import eu.printingin3d.javascad.basic.Radius;
-import eu.printingin3d.javascad.context.IColorGenerationContext;
 import eu.printingin3d.javascad.exceptions.IllegalValueException;
 import eu.printingin3d.javascad.utils.AssertValue;
-import eu.printingin3d.javascad.utils.DoubleUtils;
 
 /**
  * Represents a prism or a pyramid.
@@ -74,19 +72,6 @@ public class Prism extends Cylinder {
 	@Deprecated
 	public Prism(double length, double r1, double r2, int numberOfSides) throws IllegalValueException {
 		this(length, Radius.fromRadius(r1), Radius.fromRadius(r2), numberOfSides);
-	}
-
-	@Override
-	protected SCAD innerToScad(IColorGenerationContext context) {
-		if (bottomRadius.equals(topRadius)) {
-			return new SCAD("cylinder(h="+DoubleUtils.formatDouble(length)+
-					", r="+bottomRadius+
-					", $fn="+numberOfSides+", center=true);\n");
-		}
-		return new SCAD("cylinder(h="+DoubleUtils.formatDouble(length)+
-				", r1="+bottomRadius+
-				", r2="+topRadius+
-				", $fn="+numberOfSides+", center=true);\n");
 	}
 
 	@Override

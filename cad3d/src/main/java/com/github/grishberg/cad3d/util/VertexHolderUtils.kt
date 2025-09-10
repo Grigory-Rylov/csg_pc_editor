@@ -2,6 +2,7 @@ package com.github.grishberg.cad3d.util
 
 import com.github.grishberg.cad3d.plugin.VertexHolder
 import com.github.grishberg.javascad.Triangulator
+import eu.printingin3d.javascad.models.Abstract3dModel
 import eu.printingin3d.javascad.models.IModel
 import eu.printingin3d.javascad.utils.Color
 import eu.printingin3d.javascad.vrl.ColorFacetGenerationContext
@@ -11,6 +12,13 @@ import eu.printingin3d.javascad.vrl.Polygon
 
 fun fromModel(model: IModel, color: Color, fn: Int): VertexHolder {
     val context: FacetGenerationContext = ColorFacetGenerationContext(color)
+    context.setFn(fn)
+    val csg = model.toCSG(context)
+    return getVerticesAndColorsAsFloatArray(csg.toFacets())
+}
+
+fun fromModel(model: Abstract3dModel, fn: Int): VertexHolder {
+    val context: FacetGenerationContext = ColorFacetGenerationContext(model.color)
     context.setFn(fn)
     val csg = model.toCSG(context)
     return getVerticesAndColorsAsFloatArray(csg.toFacets())

@@ -65,9 +65,9 @@ class OuterCornersWallBuilder(
         return Union(border, wall)
     }
 
-    override fun backRight(keyPlace: (Abstract3dModel) -> Abstract3dModel): Abstract3dModel {
+    override fun backRight(keyPlace: (Abstract3dModel) -> Abstract3dModel): List<Abstract3dModel> {
         if (isThumb) {
-            return backRightThumb(keyPlace)
+            return listOf(backRightThumb(keyPlace))
         }
         val count: Int = 10
         val back =
@@ -75,10 +75,10 @@ class OuterCornersWallBuilder(
         val right =
             keyPlace(KeyPlaceholder.placeHolderBackRight().move(cfg.outerRightOffset, 0.0, cfg.outerBorderZOffset))
 
-        val start = back.move
-        val end = right.move
+        val start = right.move
+        val end = back.move
 
-        var lastTop = bottomEdgePatcher.backPoint(back)
+        var lastTop = bottomEdgePatcher.backPoint(right)
         var lastBottom = bottomEdgePatcher.rightPoint(right)
 
         val models = mutableListOf<Abstract3dModel>()
@@ -106,8 +106,16 @@ class OuterCornersWallBuilder(
         )
         models.add(border)
 
+        models.add(
+            hull(
+                topBorderObj(right),
+                bottomCylinder(right.move),
+                bottomEdgePatcher.backPoint(right),
+            )
+        )
+
         if (isSkeletonMode) {
-            return Union(
+            return listOf(
                 border,
                 hull(
                     right,
@@ -119,10 +127,7 @@ class OuterCornersWallBuilder(
                 hull(bottomEdgePatcher.backPoint(back), bottomEdgePatcher.rightPoint(right))
             )
         }
-        val wall = hull(
-            back, right, bottomEdgePatcher.backPoint(back), bottomEdgePatcher.rightPoint(right)
-        )
-        return Union(models)
+        return models
     }
 
     private fun backRightThumb(keyPlace: (Abstract3dModel) -> Abstract3dModel): Abstract3dModel {
@@ -318,19 +323,22 @@ class OuterCornersWallBuilder(
         return borderObject(cfg.borderThickness, cfg.borderHeight).moveZ(topEdgeOffsetZ).move(obj.move)
     }
 
+    private fun bottomCylinder(point: V3d): Abstract3dModel {
+        return Utils.cylinder(
+            cfg.borderThickness,
+            cfg.bottomBorderHeight
+        ).move(point.projectionZ(cfg.bottomBorderHeight / 2))
+    }
+
     private fun borderObject(thickness: Double, height: Double): Abstract3dModel {
         return Utils.cylinder(thickness, height)
     }
 
     private fun topBorderObj(obj: Abstract3dModel): Abstract3dModel {
-        return Utils.sphere(cfg.borderThickness).move(obj.move)
+        return Utils.sphere(cfg.borderThickness / 2.0).move(obj.move)
     }
 
     private fun topBorderObj(point: V3d): Abstract3dModel {
-        return Utils.sphere(cfg.borderThickness).move(point)
-    }
-
-    private fun topBorderObj(): Abstract3dModel {
-        return Utils.sphere(cfg.borderThickness)
+        return Utils.sphere(cfg.borderThickness / 2.0).move(point)
     }
 }

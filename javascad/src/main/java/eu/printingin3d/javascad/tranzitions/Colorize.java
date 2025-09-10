@@ -1,19 +1,16 @@
 package eu.printingin3d.javascad.tranzitions;
 
-import eu.printingin3d.javascad.utils.Color;
-import java.util.Collections;
-import java.util.List;
-
-import eu.printingin3d.javascad.context.IColorGenerationContext;
 import eu.printingin3d.javascad.context.IScadGenerationContext;
 import eu.printingin3d.javascad.coords.Boundaries3d;
 import eu.printingin3d.javascad.models.Abstract3dModel;
 import eu.printingin3d.javascad.models.Complex3dModel;
-import eu.printingin3d.javascad.models.SCAD;
 import eu.printingin3d.javascad.utils.AssertValue;
+import eu.printingin3d.javascad.utils.Color;
 import eu.printingin3d.javascad.utils.DoubleUtils;
 import eu.printingin3d.javascad.vrl.CSG;
 import eu.printingin3d.javascad.vrl.FacetGenerationContext;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Colors the object it contains. Please pay attention: colors are only supported in the 
@@ -38,11 +35,6 @@ public class Colorize extends Complex3dModel {
 		
 		this.color = color;
 		this.baseModel = model;
-	}
-
-	@Override
-	protected SCAD innerToScad(IColorGenerationContext context) {
-		return baseModel.toScad(context).prepend(getStringRepresentation(color));
 	}
 
 	@Override

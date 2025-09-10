@@ -1,13 +1,7 @@
 package eu.printingin3d.javascad.models;
 
-import eu.printingin3d.javascad.utils.Color;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import eu.printingin3d.javascad.basic.Angle;
 import eu.printingin3d.javascad.basic.Radius;
-import eu.printingin3d.javascad.context.IColorGenerationContext;
 import eu.printingin3d.javascad.coords.Boundaries3d;
 import eu.printingin3d.javascad.coords.Boundary;
 import eu.printingin3d.javascad.coords.V3d;
@@ -17,10 +11,13 @@ import eu.printingin3d.javascad.coords2d.LineSegment2d;
 import eu.printingin3d.javascad.enums.PointRelation;
 import eu.printingin3d.javascad.models2d.Abstract2dModel;
 import eu.printingin3d.javascad.models2d.Area2d;
-import eu.printingin3d.javascad.utils.DoubleUtils;
+import eu.printingin3d.javascad.utils.Color;
 import eu.printingin3d.javascad.vrl.CSG;
 import eu.printingin3d.javascad.vrl.FacetGenerationContext;
 import eu.printingin3d.javascad.vrl.Polygon;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Linear extrude the given 2D model to create a 3D object.
@@ -60,15 +57,6 @@ public class LinearExtrude extends Atomic3dModel {
 	@Override
 	protected Abstract3dModel innerCloneModel() {
 		return new LinearExtrude(model, height, twist, scale);
-	}
-
-	@Override
-	protected SCAD innerToScad(IColorGenerationContext context) {
-		return new SCAD("linear_extrude(height="+DoubleUtils.formatDouble(height)
-					+ ", center=true, convexity=10, "
-					+ "twist="+twist
-					+ ",scale="+DoubleUtils.formatDouble(scale)+")")
-				.append(model.toScad(context));
 	}
 
 	@Override

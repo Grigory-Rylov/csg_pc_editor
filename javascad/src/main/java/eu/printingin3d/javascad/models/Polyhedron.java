@@ -1,19 +1,17 @@
 package eu.printingin3d.javascad.models;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import eu.printingin3d.javascad.context.IColorGenerationContext;
 import eu.printingin3d.javascad.coords.Boundaries3d;
-import eu.printingin3d.javascad.coords.V3d;
 import eu.printingin3d.javascad.coords.Triangle3d;
+import eu.printingin3d.javascad.coords.V3d;
 import eu.printingin3d.javascad.exceptions.IllegalValueException;
 import eu.printingin3d.javascad.utils.AssertValue;
 import eu.printingin3d.javascad.vrl.CSG;
 import eu.printingin3d.javascad.vrl.FacetGenerationContext;
 import eu.printingin3d.javascad.vrl.Polygon;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * <p>
@@ -75,48 +73,6 @@ public class Polyhedron extends Atomic3dModel {
 	@Override
 	protected Abstract3dModel innerCloneModel() {
 		return new Polyhedron(triangles);
-	}
-
-	@Override
-	protected SCAD innerToScad(IColorGenerationContext context) {
-		List<V3d> points = getPoints();
-
-		SCAD b = new SCAD("polyhedron(");
-		b = addPoints(b, points)
-				.append(",");
-		b = addTriangles(b, points)
-				.append("\n);");
-		return b;
-	}
-
-	private SCAD addPoints(SCAD b, List<V3d> points) {
-		StringBuilder sb = new StringBuilder();
-		sb.append("\n  points=[");
-		boolean first = true;
-		for (V3d c : points) {
-			if (first) {
-				first = false;
-			} else {
-				sb.append(", ");
-			}
-			sb.append(c.toString());
-		}
-		return b.append(sb.append(']').toString());
-	}
-
-	private SCAD addTriangles(SCAD b, List<V3d> points) {
-		StringBuilder sb = new StringBuilder();
-		sb.append("\n  faces=[");
-		boolean first = true;
-		for (Triangle3d c : triangles) {
-			if (first) {
-				first = false;
-			} else {
-				sb.append(", ");
-			}
-			sb.append(c.toTriangleString(points));
-		}
-		return b.append(sb.append(']').toString());
 	}
 
 	@Override

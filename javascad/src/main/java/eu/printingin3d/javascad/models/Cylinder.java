@@ -3,21 +3,18 @@ package eu.printingin3d.javascad.models;
 import static eu.printingin3d.javascad.utils.AssertValue.isNotNegative;
 import static eu.printingin3d.javascad.utils.AssertValue.isNotNull;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import eu.printingin3d.javascad.basic.Angle;
 import eu.printingin3d.javascad.basic.Radius;
-import eu.printingin3d.javascad.context.IColorGenerationContext;
 import eu.printingin3d.javascad.coords.Boundaries3d;
 import eu.printingin3d.javascad.coords.Boundary;
 import eu.printingin3d.javascad.coords.V3d;
 import eu.printingin3d.javascad.exceptions.IllegalValueException;
-import eu.printingin3d.javascad.utils.DoubleUtils;
 import eu.printingin3d.javascad.vrl.CSG;
 import eu.printingin3d.javascad.vrl.FacetGenerationContext;
 import eu.printingin3d.javascad.vrl.Polygon;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Represents a cylinder, a truncated cone or a cone. It is a descendant of {@link Abstract3dModel}, 
@@ -89,17 +86,6 @@ public class Cylinder extends Atomic3dModel {
 	@Deprecated
 	public Cylinder(double length, double r) throws IllegalValueException {
 		this(length, Radius.fromRadius(r));
-	}
-
-	@Override
-	protected SCAD innerToScad(IColorGenerationContext context) {
-		if (bottomRadius.equals(topRadius)) {
-			return new SCAD("cylinder(h="+DoubleUtils.formatDouble(length)+
-						", r="+bottomRadius+", center=true);\n");
-		}
-		return new SCAD("cylinder(h="+DoubleUtils.formatDouble(length)+
-					", r1="+bottomRadius+
-					", r2="+topRadius+", center=true);\n");
 	}
 
 	@Override

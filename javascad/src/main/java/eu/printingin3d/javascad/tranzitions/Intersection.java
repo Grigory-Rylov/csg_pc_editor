@@ -1,18 +1,15 @@
 package eu.printingin3d.javascad.tranzitions;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import eu.printingin3d.javascad.context.IColorGenerationContext;
 import eu.printingin3d.javascad.context.IScadGenerationContext;
 import eu.printingin3d.javascad.coords.Boundaries3d;
 import eu.printingin3d.javascad.models.Abstract3dModel;
 import eu.printingin3d.javascad.models.Complex3dModel;
-import eu.printingin3d.javascad.models.SCAD;
 import eu.printingin3d.javascad.utils.ListUtils;
 import eu.printingin3d.javascad.vrl.CSG;
 import eu.printingin3d.javascad.vrl.FacetGenerationContext;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Intersection operation. The result of this operation is the common part of the child models.
@@ -43,24 +40,6 @@ public class Intersection extends Complex3dModel {
 	@Override
 	protected Abstract3dModel innerCloneModel() {
 		return new Intersection(new ArrayList<Abstract3dModel>(models));
-	}
-
-	@Override
-	protected SCAD innerToScad(IColorGenerationContext context) {
-		switch (models.size()) {
-		case 0:
-			return SCAD.EMPTY;
-		case 1:
-			return models.get(0).toScad(context);
-		default:
-			SCAD result = new SCAD("intersection()");
-			
-			result = result.append("{\n");
-			for (Abstract3dModel model : models) {
-				result = result.append(model.toScad(context));
-			}
-			return result.append("}\n");
-		}
 	}
 
 	@Override

@@ -1,11 +1,5 @@
 package eu.printingin3d.javascad.tranzitions;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
-import eu.printingin3d.javascad.context.IColorGenerationContext;
 import eu.printingin3d.javascad.context.IScadGenerationContext;
 import eu.printingin3d.javascad.coords.Boundaries3d;
 import eu.printingin3d.javascad.coords.Boundary;
@@ -13,11 +7,14 @@ import eu.printingin3d.javascad.exceptions.IllegalValueException;
 import eu.printingin3d.javascad.models.Abstract3dModel;
 import eu.printingin3d.javascad.models.Complex3dModel;
 import eu.printingin3d.javascad.models.Cube;
-import eu.printingin3d.javascad.models.SCAD;
 import eu.printingin3d.javascad.utils.AssertValue;
 import eu.printingin3d.javascad.utils.ListUtils;
 import eu.printingin3d.javascad.vrl.CSG;
 import eu.printingin3d.javascad.vrl.FacetGenerationContext;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Difference operation. It subtracts from the first model all the others.
@@ -43,6 +40,7 @@ public class Difference extends Complex3dModel {
 		
 		this.model1 = model1;
 		this.model2 = model2==null ? Collections.<Abstract3dModel>emptyList() : ListUtils.removeNulls(model2);
+		this.color = model1.getColor();
 	}
 	
 	/**
@@ -57,25 +55,6 @@ public class Difference extends Complex3dModel {
 	 */
 	public Difference(Abstract3dModel model1, Abstract3dModel... model2) throws IllegalValueException {
 		this(model1, Arrays.asList(model2));
-	}
-	
-	@Override
-	protected SCAD innerToScad(IColorGenerationContext context) {
-		SCAD baseModel = model1.toScad(context);
-		if (baseModel.isEmpty()) {
-			return SCAD.EMPTY;
-		}
-		
-		if (model2.isEmpty()) {
-			return baseModel;
-		}
-		
-		SCAD result = new SCAD("difference()");
-		result = result.append("{").append(baseModel);
-		for (Abstract3dModel model : model2) {
-			result = result.append(model.toScad(context));
-		}
-		return result.append("}");
 	}
 
 	@Override

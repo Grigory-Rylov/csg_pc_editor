@@ -1,18 +1,16 @@
 package eu.printingin3d.javascad.models;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import eu.printingin3d.javascad.context.IColorGenerationContext;
 import eu.printingin3d.javascad.coords.Boundaries3d;
 import eu.printingin3d.javascad.coords.Boundary;
-import eu.printingin3d.javascad.coords.V3d;
 import eu.printingin3d.javascad.coords.Dims3d;
+import eu.printingin3d.javascad.coords.V3d;
 import eu.printingin3d.javascad.enums.AlignType;
 import eu.printingin3d.javascad.enums.Side;
 import eu.printingin3d.javascad.vrl.CSG;
 import eu.printingin3d.javascad.vrl.FacetGenerationContext;
 import eu.printingin3d.javascad.vrl.Polygon;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Represents a cuboid. 
@@ -56,11 +54,6 @@ public class Cube extends Atomic3dModel {
 	public Cube(double size) {
 		super();
 		this.size = new Dims3d(size, size, size);
-	}
-
-	@Override
-	protected SCAD innerToScad(IColorGenerationContext context) {
-		return new SCAD("cube("+size+",center=true);\n");
 	}
 
 	@Override

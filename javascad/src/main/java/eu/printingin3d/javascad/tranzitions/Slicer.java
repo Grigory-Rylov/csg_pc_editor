@@ -1,21 +1,18 @@
 package eu.printingin3d.javascad.tranzitions;
 
-import eu.printingin3d.javascad.context.IColorGenerationContext;
+import static eu.printingin3d.javascad.vrl.Const.EPSILON;
+
 import eu.printingin3d.javascad.context.IScadGenerationContext;
 import eu.printingin3d.javascad.coords.Boundaries3d;
 import eu.printingin3d.javascad.coords.Boundary;
 import eu.printingin3d.javascad.models.Abstract3dModel;
 import eu.printingin3d.javascad.models.Complex3dModel;
-import eu.printingin3d.javascad.models.SCAD;
 import eu.printingin3d.javascad.tranzitions.slicer.CoverFactory;
 import eu.printingin3d.javascad.utils.AssertValue;
 import eu.printingin3d.javascad.vrl.CSG;
 import eu.printingin3d.javascad.vrl.FacetGenerationContext;
-
 import java.util.Collections;
 import java.util.List;
-
-import static eu.printingin3d.javascad.vrl.Const.EPSILON;
 
 /**
  * <p>Slice a model into pieces; the result is one of the slices. It is very useful if the model
@@ -89,11 +86,6 @@ public class Slicer extends Complex3dModel {
             CoverFactory.createCover(model, direction, lowRate, true),
             CoverFactory.createCover(model, direction, highRate, false)
         );
-    }
-
-    @Override
-    protected SCAD innerToScad(IColorGenerationContext context) {
-        return new Difference(model, sliceModel()).toScad(context);
     }
 
     @Override

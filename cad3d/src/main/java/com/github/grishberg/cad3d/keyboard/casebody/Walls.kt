@@ -16,6 +16,7 @@ import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
 import com.github.grishberg.cad3d.keyboard.cfg.WallsSettings
 import eu.printingin3d.javascad.coords.V3d
 import eu.printingin3d.javascad.models.Abstract3dModel
+import eu.printingin3d.javascad.utils.Color
 
 class Walls(
     private val cfg: KeyboardConfig,
@@ -33,7 +34,7 @@ class Walls(
     val thumbOuterRightOffset = 7.0
     private val thumbConnectionOffset = 1.0
 
-    fun createBorders(borderThickness: Double = 1.5, borderHeight: Double): Abstract3dModel {
+    fun createBorders(borderThickness: Double = 1.5, borderHeight: Double): List<Abstract3dModel> {
         models.clear()
 
         val borderOffset = 2.0
@@ -61,12 +62,12 @@ class Walls(
 
         betweenThumbAndMatrixBorders(borderThickness, borderHeight)
 
-        return Utils.union(models)
+        return models
     }
 
     fun createWalls(
         bottomBorderHeight: Double,
-    ): Abstract3dModel {
+    ): List<Abstract3dModel> {
         models.clear()
 
         val bottomEdgePatcher = CircleBottomEdgePatcher(
@@ -86,17 +87,16 @@ class Walls(
             bottomEdgePatcher = bottomEdgePatcher,
         )
 
-        models.add(
-            controllerWallBuilder.createWall()
-        )
+        models.addAll(controllerWallBuilder.createWall())
 
+        val wallsBuilder = OuterWallsBuilder(
+            isSkeletonMode = cfg.isSkeletonMode,
+            topEdgeOffsetZ = topEdgeOffsetZ,
+            cfg = wallsSettings,
+            bottomEdgePatcher = bottomEdgePatcher
+        )
         matrixBorders(
-            OuterWallsBuilder(
-                isSkeletonMode = cfg.isSkeletonMode,
-                topEdgeOffsetZ = topEdgeOffsetZ,
-                cfg = wallsSettings,
-                bottomEdgePatcher = bottomEdgePatcher
-            ), OuterCornersWallBuilder(
+            wallsBuilder, OuterCornersWallBuilder(
                 isSkeletonMode = cfg.isSkeletonMode,
                 topEdgeOffsetZ = topEdgeOffsetZ,
                 cfg = wallsSettings,
@@ -104,11 +104,19 @@ class Walls(
             ), isWallMode = true
         )
 
+        models.add(
+            wallsBuilder.backMidWall(
+                onlyBorder = true,
+                leftOffset = -2.0,
+                rightOffset = -1.0,
+                leftPlace = { obj -> keyPlace.place(1, 0, obj) },
+                rightPlace = { obj -> keyPlace.place(2, 0, obj) },
+            ).withColor(Color.MAGENTA)
+        )
+
         backWallsFrom2To6(
             OuterBackRightWallsBuilder(
-                topEdgeOffsetZ = topEdgeOffsetZ,
-                cfg = wallsSettings,
-                bottomEdgePatcher = bottomEdgePatcher
+                topEdgeOffsetZ = topEdgeOffsetZ, cfg = wallsSettings, bottomEdgePatcher = bottomEdgePatcher
             )
         )
 
@@ -131,19 +139,23 @@ class Walls(
             bottomEdgePatcher = bottomEdgePatcher,
         )
 
-        return Utils.union(models)
+        return models
     }
 
     private fun backWallsFrom2To6(wallsBuilder: OuterBackRightWallsBuilder) {
-        models.add(wallsBuilder.backWall(
-            keyPlace = { obj -> keyPlace.place(2, 0, obj) },
-        ))
+        models.add(
+            wallsBuilder.backWall(
+                keyPlace = { obj -> keyPlace.place(2, 0, obj) },
+            )
+        )
         for (column in 3 until cfg.columnsCount) {
             // back columns
-            models.add(wallsBuilder.backMidWall(
+            models.add(
+                wallsBuilder.backMidWall(
                     keyPlace = { obj -> keyPlace.place(column, 0, obj) },
                     leftPlace = { obj -> keyPlace.place(column - 1, 0, obj) },
-            ))
+                )
+            )
         }
     }
 
@@ -161,7 +173,7 @@ class Walls(
         }
 
         // right back
-        models.add(cornerWallBuilder.backRight { obj ->
+        models.addAll(cornerWallBuilder.backRight { obj ->
             keyPlace.place(
                 cfg.lastCol, 0, obj
             )
@@ -197,13 +209,15 @@ class Walls(
         }
         for (column in 0 until cfg.columnsCount - 1) {
             // back diagonals
-            models.add(
-                wallsBuilder.backMidWall(
-                    onlyBorder = true,
-                    leftPlace = { obj -> keyPlace.place(column, 0, obj) },
-                    rightPlace = { obj -> keyPlace.place(column + 1, 0, obj) },
+            if (!isWallMode || column != 1) {
+                models.add(
+                    wallsBuilder.backMidWall(
+                        onlyBorder = true,
+                        leftPlace = { obj -> keyPlace.place(column, 0, obj) },
+                        rightPlace = { obj -> keyPlace.place(column + 1, 0, obj) },
+                    )
                 )
-            )
+            }
             if (column < 2) {
                 continue
             }
@@ -311,7 +325,7 @@ class Walls(
         models.add(cornerWallBuilder.frontLeft { obj -> thumbKeyPlace.placeL(obj) })
 
         // right back
-        models.add(cornerWallBuilder.backRight { obj -> thumbKeyPlace.placeR(obj) })
+        models.addAll(cornerWallBuilder.backRight { obj -> thumbKeyPlace.placeR(obj) })
         // right front
         models.add(cornerWallBuilder.frontRight { obj -> thumbKeyPlace.placeR(obj) })
 

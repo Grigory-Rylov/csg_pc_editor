@@ -457,7 +457,7 @@ class KeyboardBuilder(
                 models.add(keyPlace.place(column, row, model))
             }
         }
-        val result = Union(models)
+        val result = Union(color, models)
         return ModelHolder(result, fromModel(result, color, 20))
     }
 
@@ -480,7 +480,7 @@ class KeyboardBuilder(
         )
 
         val holeBorderHeight = 2.0
-        val holeBorders = Walls(
+        val holeBordersModels = Walls(
             cfg,
             wallsSettings,
             keyPlace,
@@ -489,7 +489,8 @@ class KeyboardBuilder(
             isPlateMode = false,
         ).createBorders(
             borderThickness = holeBorderHeight, borderHeight = borderHeight + holeVerticalExtra
-        ).moveZ(holeBorderHeight - 1.7)
+        )
+        val holeBorders = Union(holeBordersModels).moveZ(holeBorderHeight - 1.7)
 
         val screwBase = ScrewBase(cfg)
         val matrixWallScrewHolder = ScrewsMatrixHolder(cfg, screwBase).create()
@@ -504,19 +505,20 @@ class KeyboardBuilder(
 
         val bottomEdgeHeight = if (cfg.isSkeletonMode) 4.0 else 2.0
 
-        val wallsModel = walls.createWalls(
+        val wallsModels = walls.createWalls(
             bottomBorderHeight = bottomEdgeHeight
-        ).subtractModel(holeBorders).subtractModel(Cube(300.0, 300.0, 50.0).move(0.0, 0.0, -25.0))
+        )
 
+        val wallsModel = Union(wallsModels).subtractModel(holeBorders).subtractModel(Cube(300.0, 300.0, 50.0).move(0.0, 0.0, -25.0))
+
+        val wallModelsWithHoles = wallsModels
         return ModelHolder(
+            cfg,
             wallsModel.addModel(screwMatrixHolders).addModel(wallScrews).subtractModel(screwMatrixHoldersHoles),
-            createVertexHolder(cfg, wallsModel.subtractModel(screwMatrixHoldersHoles), Color.gray),
-            createVertexHolder(cfg, wallScrews, Color.yellow),
+            wallModelsWithHoles,
+            wallScrews.withColor(Color.yellow),
             //createVertexHolder(holeBorders, Color.PINK),
-            createVertexHolder(
-                cfg, screwMatrixHolders.subtractModel(Cube(300.0, 300.0, 50.0).move(0.0, 0.0, -25.0)), Color.CYAN
-            )
-
+            screwMatrixHolders.subtractModel(Cube(300.0, 300.0, 50.0).move(0.0, 0.0, -25.0)).withColor(Color.CYAN),
         )
     }
 

@@ -6,9 +6,4 @@ package eu.printingin3d.javascad.models;
  * @author Ivan
  */
 public abstract class Complex3dModel extends Abstract3dModel {
-
-	@Override
-	protected final boolean isPrimitive() {
-		return false;
-	}
 }
