@@ -402,9 +402,8 @@ class Walls(
         //left front
         models.add(cornerWallBuilder.frontLeft { obj -> thumbKeyPlace.placeL(obj) })
         // right front
-        models.add(
+        models.addAll(
             cornerWallBuilder.frontRightToMatrix(
-
                 keyPlace = { obj -> thumbKeyPlace.placeR(obj) },
                 matrixOuterPlace = { o -> keyPlace.place(4, cfg.lastRow, o) },
                 matrixInnerPlace = { o -> keyPlace.place(3, cfg.lastRow, o) },
@@ -438,26 +437,26 @@ class Walls(
 
         models.add(
             hull(
-                verticalCube(
+                topBorderObj(
                     thumbKeyPlace.placeL(
                         KeyPlaceholder.placeHolderBackRight().move(0.0, outerVerticalOffset, outerBorderZOffset)
-                    ), borderThickness, borderHeight
+                    )
                 ),
-                verticalCube(
+                topBorderObj(
                     thumbKeyPlace.placeL(
                         KeyPlaceholder.placeHolderBackLeft().move(0.0, outerVerticalOffset, outerBorderZOffset)
-                    ), borderThickness, borderHeight
+                    )
                 ),
-                thumbKeyPlace.placeL(
+                topBorderObj(thumbKeyPlace.placeL(
                     KeyPlaceholder.placeHolderBackLeft().move(0.0, outerVerticalOffset, outerBorderZOffset)
-                ),
+                )),
 
                 verticalCube(
                     topInnerPoint, borderThickness, borderHeight
                 ),
 
                 topOuterPoint,
-            )
+            ).withColor(Color.ORANGE)
         )
 
         models.add(
@@ -473,7 +472,7 @@ class Walls(
                         KeyPlaceholder.placeHolderBackRight().move(0.0, verticalOffset + 2, borderZOffset)
                     ), borderThickness, borderHeight
                 ),
-            )
+            ).withColor(Color.DARK_RED)
         )
 
         models.add(
@@ -619,5 +618,9 @@ class Walls(
 
     private fun borderObject(thickness: Double, height: Double): Abstract3dModel {
         return Utils.cylinder(thickness, height)
+    }
+
+    private fun topBorderObj(obj: Abstract3dModel): Abstract3dModel {
+        return Utils.sphere(wallsSettings.borderThickness / 2.0).move(obj.move)
     }
 }

@@ -13,7 +13,7 @@ interface CornerWallBuilder {
         keyPlace: (Abstract3dModel) -> Abstract3dModel,
         matrixOuterPlace: (Abstract3dModel) -> Abstract3dModel,
         matrixInnerPlace: (Abstract3dModel) -> Abstract3dModel,
-    ): Abstract3dModel {
-        return frontRight(keyPlace)
+    ): List<Abstract3dModel> {
+        return listOf(frontRight(keyPlace))
     }
 }

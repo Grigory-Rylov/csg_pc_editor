@@ -20,6 +20,7 @@ import eu.printingin3d.javascad.models.surfaces.S12x3
 import eu.printingin3d.javascad.models.surfaces.SmoothSurface
 import eu.printingin3d.javascad.models.surfaces.VoronoiSurface
 import eu.printingin3d.javascad.tranzitions.Union
+import eu.printingin3d.javascad.utils.Color
 import java.util.Random
 
 class OuterWallsBuilder(
@@ -227,7 +228,7 @@ class OuterWallsBuilder(
         )
 
         val border = hull(
-            left, right,
+            topBorderObj(left), topBorderObj(right),
             verticalCube(
                 keyPlace(
                     KeyPlaceholder.placeHolderFrontLeft().move(leftOffset, -cfg.verticalOffset, cfg.borderZOffset)
@@ -253,10 +254,13 @@ class OuterWallsBuilder(
         }
 
         val wall = hull(
-            left, right, bottomEdgePatcher.frontPoint(left), bottomEdgePatcher.frontPoint(right)
+            topBorderObj(left),
+            topBorderObj(right),
+            bottomEdgePatcher.frontPoint(left),
+            bottomEdgePatcher.frontPoint(right)
         )
 
-        return Union(border, wall)
+        return Union(border, wall).withColor(Color.PINK)
     }
 
     override fun frontMidWall(
@@ -273,8 +277,8 @@ class OuterWallsBuilder(
         )
 
         val border = hull(
-            left,
-            right,
+            topBorderObj(left),
+            topBorderObj(right),
             verticalCube(
                 leftPlace(
                     KeyPlaceholder.placeHolderFrontRight().move(leftOffset, -cfg.verticalOffset, cfg.borderZOffset)
@@ -297,12 +301,12 @@ class OuterWallsBuilder(
         }
 
         val wall = hull(
-            left, right,
+            topBorderObj(left), topBorderObj(right),
             bottomEdgePatcher.frontPoint(left),
             bottomEdgePatcher.frontPoint(right),
         )
 
-        return Union(border, wall)
+        return Union(border, wall).withColor(Color.RED)
     }
 
     override fun rightWall(
@@ -396,7 +400,7 @@ class OuterWallsBuilder(
         )
 
         val border = hull(
-            left, right,
+            topBorderObj(left), topBorderObj(right),
             verticalCube(
                 leftPlace(
                     KeyPlaceholder.placeHolderFrontRight().move(0.0, -cfg.verticalOffset, cfg.borderZOffset)
@@ -419,7 +423,7 @@ class OuterWallsBuilder(
         }
 
         val wall = hull(
-            left, right,
+            topBorderObj(left), topBorderObj(right),
             bottomEdgePatcher.projection(left),
             bottomEdgePatcher.projection(right),
         )

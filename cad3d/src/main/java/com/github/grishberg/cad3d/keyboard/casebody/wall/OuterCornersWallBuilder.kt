@@ -3,7 +3,6 @@ package com.github.grishberg.cad3d.keyboard.casebody.wall
 import com.github.grishberg.cad3d.keyboard.KeyPlaceholder
 import com.github.grishberg.cad3d.keyboard.Utils
 import com.github.grishberg.cad3d.keyboard.Utils.hull
-import com.github.grishberg.cad3d.keyboard.Utils.union
 import com.github.grishberg.cad3d.keyboard.casebody.CornerWallBuilder
 import com.github.grishberg.cad3d.keyboard.casebody.DefaultBottomEdgePatcher
 import com.github.grishberg.cad3d.keyboard.casebody.WallBottomEdgePatcher
@@ -11,6 +10,7 @@ import com.github.grishberg.cad3d.keyboard.cfg.WallsSettings
 import eu.printingin3d.javascad.coords.V3d
 import eu.printingin3d.javascad.models.Abstract3dModel
 import eu.printingin3d.javascad.tranzitions.Union
+import eu.printingin3d.javascad.utils.Color
 
 class OuterCornersWallBuilder(
     private val isSkeletonMode: Boolean,
@@ -36,8 +36,8 @@ class OuterCornersWallBuilder(
                 )
             ),
             verticalCube(keyPlace(KeyPlaceholder.placeHolderBackLeft().move(-cfg.leftOffset, 0.0, cfg.borderZOffset))),
-            back,
-            left,
+            topBorderObj(back),
+            topBorderObj(left),
         )
 
         if (isSkeletonMode) {
@@ -58,7 +58,7 @@ class OuterCornersWallBuilder(
         }
 
         val wall = hull(
-            left, back,
+            topBorderObj(left), topBorderObj(back),
             bottomEdgePatcher.leftPoint(left),
             bottomEdgePatcher.backPoint(back),
         )
@@ -144,8 +144,8 @@ class OuterCornersWallBuilder(
                 )
             ),
             verticalCube(keyPlace(KeyPlaceholder.placeHolderBackRight().move(cfg.rightOffset, 0.0, cfg.borderZOffset))),
-            back,
-            right,
+            topBorderObj(back),
+            topBorderObj(right),
         )
         if (isSkeletonMode) {
             return Union(
@@ -161,7 +161,10 @@ class OuterCornersWallBuilder(
             )
         }
         val wall = hull(
-            back, right, bottomEdgePatcher.backPoint(back), bottomEdgePatcher.rightPoint(right)
+            topBorderObj(back),
+            topBorderObj(right),
+            bottomEdgePatcher.backPoint(back),
+            bottomEdgePatcher.rightPoint(right)
         )
         return Union(border, wall)
     }
@@ -184,8 +187,8 @@ class OuterCornersWallBuilder(
                     KeyPlaceholder.placeHolderFrontLeft().move(-cfg.leftOffset, 0.0, cfg.borderZOffset)
                 )
             ),
-            front,
-            left,
+            topBorderObj(front),
+            topBorderObj(left),
         )
 
         if (isSkeletonMode) {
@@ -201,7 +204,7 @@ class OuterCornersWallBuilder(
         }
 
         val wall = hull(
-            left, front,
+            topBorderObj(left), topBorderObj(front),
             bottomEdgePatcher.leftPoint(left),
             bottomEdgePatcher.frontPoint(front),
         )
@@ -226,8 +229,8 @@ class OuterCornersWallBuilder(
                     KeyPlaceholder.placeHolderFrontRight().move(cfg.rightOffset, 0.0, cfg.borderZOffset)
                 )
             ),
-            front,
-            right,
+            topBorderObj(front),
+            topBorderObj(right),
         )
 
         if (isSkeletonMode) {
@@ -243,7 +246,7 @@ class OuterCornersWallBuilder(
         }
 
         val wall = hull(
-            front, right,
+            topBorderObj(front), topBorderObj(right),
             bottomEdgePatcher.frontPoint(front),
             bottomEdgePatcher.rightPoint(right),
         )
@@ -254,7 +257,7 @@ class OuterCornersWallBuilder(
         ThumbR: (Abstract3dModel) -> Abstract3dModel,
         matrixOuterPlace: (Abstract3dModel) -> Abstract3dModel,
         matrixInnerPlace: (Abstract3dModel) -> Abstract3dModel,
-    ): Abstract3dModel {
+    ): List<Abstract3dModel> {
         val thumbFrontRight = ThumbR(
             KeyPlaceholder.placeHolderFrontRight().move(2.0, 0.0, cfg.borderZOffset)
         )
@@ -285,26 +288,25 @@ class OuterCornersWallBuilder(
             verticalCube(thumbBackRight),
             verticalCube(innerLeft),
             verticalCube(outerLeft),
-        )
+        ).withColor(Color.PINK)
 
         val bottomBorder = hull(
             verticalCube(innerLeft),
             verticalCube(innerRight),
             verticalCube(outerLeft),
-        )
+        ).withColor(Color.BROWN)
 
         val topBorder = hull(
             verticalCube(thumbFrontRight),
             verticalCube(thumbVertexFront),
-            frontOuter,
+            topBorderObj(frontOuter),
             bottomEdgePatcher.projection(frontOuter),
             bottomEdgePatcher.projection(outerLeft),
             verticalCube(outerLeft),
-        )
-
+        ).withColor(Color.RED)
 
         if (isSkeletonMode) {
-            return union(
+            return listOf(
                 topBorder, hull(
                     bottomEdgePatcher.projection(frontOuter),
                     bottomEdgePatcher.projection(outerLeft),
@@ -312,7 +314,7 @@ class OuterCornersWallBuilder(
             )
         }
 
-        return Union(
+        return listOf(
             wall1,
             bottomBorder,
             topBorder,
@@ -325,8 +327,7 @@ class OuterCornersWallBuilder(
 
     private fun bottomCylinder(point: V3d): Abstract3dModel {
         return Utils.cylinder(
-            cfg.borderThickness,
-            cfg.bottomBorderHeight
+            cfg.borderThickness, cfg.bottomBorderHeight
         ).move(point.projectionZ(cfg.bottomBorderHeight / 2))
     }
 
