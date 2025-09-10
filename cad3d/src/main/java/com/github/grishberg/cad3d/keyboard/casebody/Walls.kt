@@ -236,7 +236,7 @@ class Walls(
 
         for (row in 0 until cfg.rowsCount) {
             //left
-            models.add(wallsBuilder.leftWall { obj ->
+            models.addAll(wallsBuilder.leftWall { obj ->
                 keyPlace.place(
                     0, row, obj
                 )
@@ -291,11 +291,11 @@ class Walls(
                 val bottomOffset = 0.0
 
                 //left
-                models.add(wallsBuilder.leftWall(topOffset = topOffset, bottomOffset = bottomOffset) { obj ->
+                models.addAll(wallsBuilder.leftWall(topOffset = topOffset, bottomOffset = bottomOffset) { obj ->
                     keyPlace.place(0, 0, obj)
                 })
 
-                models.add(wallsBuilder.leftWall(topOffset = topOffset, bottomOffset = bottomOffset) { obj ->
+                models.addAll(wallsBuilder.leftWall(topOffset = topOffset, bottomOffset = bottomOffset) { obj ->
                     keyPlace.place(0, cfg.lastRow, obj)
                 })
 
@@ -338,7 +338,7 @@ class Walls(
         models.add(wallsBuilder.frontWall { o -> thumbKeyPlace.placeM(o) })
         models.add(wallsBuilder.frontWall { o -> thumbKeyPlace.placeL(o) })
 
-        models.add(wallsBuilder.leftWall { o -> thumbKeyPlace.placeL(o) })
+        models.addAll(wallsBuilder.leftWall { o -> thumbKeyPlace.placeL(o) })
         models.add(wallsBuilder.rightWall { o -> thumbKeyPlace.placeR(o) })
 
         models.add(
@@ -416,7 +416,7 @@ class Walls(
         //models.add(wallsBuilder.frontWall { o -> ThumbKeyPlace.placeM(o) })
         models.add(wallsBuilder.frontWall { o -> thumbKeyPlace.placeL(o) })
 
-        models.add(wallsBuilder.leftWall { o -> thumbKeyPlace.placeL(o) })
+        models.addAll(wallsBuilder.leftWall { o -> thumbKeyPlace.placeL(o) })
 
 
         models.add(
@@ -428,11 +428,14 @@ class Walls(
         )
 
         val topInnerPoint = keyPlace.place(
-            0, cfg.lastRow, KeyPlaceholder.placeHolderFrontLeft().move(-leftOffset, 0.0, borderZOffset)
+            0, cfg.lastRow, KeyPlaceholder.placeHolderFrontLeft().move(-leftOffset, 0.0, wallsSettings.borderZOffset)
         )
 
         val topOuterPoint = keyPlace.place(
-            0, cfg.lastRow, KeyPlaceholder.placeHolderFrontLeft().move(-outerLeftOffset, 0.0, outerBorderZOffset)
+            0,
+            cfg.lastRow,
+            KeyPlaceholder.placeHolderFrontLeft()
+                .move(-wallsSettings.outerHorizontalOffset, 0.0, wallsSettings.outerBorderZOffset)
         )
 
         models.add(
@@ -447,21 +450,27 @@ class Walls(
                         KeyPlaceholder.placeHolderBackLeft().move(0.0, outerVerticalOffset, outerBorderZOffset)
                     )
                 ),
-                topBorderObj(thumbKeyPlace.placeL(
-                    KeyPlaceholder.placeHolderBackLeft().move(0.0, outerVerticalOffset, outerBorderZOffset)
-                )),
-
-                verticalCube(
-                    topInnerPoint, borderThickness, borderHeight
+                topBorderObj(
+                    thumbKeyPlace.placeL(
+                        KeyPlaceholder.placeHolderBackLeft().move(0.0, outerVerticalOffset, outerBorderZOffset)
+                    )
                 ),
 
-                topOuterPoint,
-            ).withColor(Color.ORANGE)
+                verticalCube(
+                    topInnerPoint
+                ),
+
+                topBorderObj(
+                    topOuterPoint,
+                ),
+            ).withColor(Color.YELLOW_GREEN)
         )
 
         models.add(
             hull(
-                topInnerPoint,
+                verticalCube(
+                    topInnerPoint
+                ),
 
                 thumbKeyPlace.placeL(
                     KeyPlaceholder.placeHolderBackRight().move(0.0, outerVerticalOffset, outerBorderZOffset)
@@ -470,21 +479,19 @@ class Walls(
                 verticalCube(
                     thumbKeyPlace.placeL(
                         KeyPlaceholder.placeHolderBackRight().move(0.0, verticalOffset + 2, borderZOffset)
-                    ), borderThickness, borderHeight
+                    )
                 ),
             ).withColor(Color.DARK_RED)
         )
 
         models.add(
             hull(
-                topOuterPoint,
-                bottomEdgePatcher.projection(topOuterPoint),
-                bottomEdgePatcher.projection(
+                topBorderObj(topOuterPoint), bottomEdgePatcher.projection(topOuterPoint), bottomEdgePatcher.projection(
                     thumbKeyPlace.placeL(
                         KeyPlaceholder.placeHolderBackLeft().move(0.0, outerVerticalOffset, outerBorderZOffset)
                     ),
-                ),
-            )
+                )
+            ).withColor(Color.BURLY_WOOD)
         )
     }
 
@@ -612,8 +619,9 @@ class Walls(
         return Utils.cube(1.5, 1.5, 4.0).move(p)
     }
 
-    private fun verticalCube(obj: Abstract3dModel, borderThickness: Double, borderHeight: Double): Abstract3dModel {
-        return borderObject(borderThickness, borderHeight).move(obj.move)
+    private fun verticalCube(obj: Abstract3dModel): Abstract3dModel {
+        return borderObject(wallsSettings.borderThickness, wallsSettings.borderHeight).moveZ(topEdgeOffsetZ)
+            .move(obj.move)
     }
 
     private fun borderObject(thickness: Double, height: Double): Abstract3dModel {

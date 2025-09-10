@@ -53,7 +53,7 @@ class OuterBackRightWallsBuilder(
     }
 
     fun backMidWall(
-        count: Int = 10, keyPlace: (Abstract3dModel) -> Abstract3dModel, leftPlace: (Abstract3dModel) -> Abstract3dModel
+        count: Int = 20, keyPlace: (Abstract3dModel) -> Abstract3dModel, leftPlace: (Abstract3dModel) -> Abstract3dModel
     ): Abstract3dModel {
         val leftTop =
             keyPlace(KeyPlaceholder.placeHolderBackLeft().move(0.0, cfg.outerVerticalOffset, cfg.outerBorderZOffset))

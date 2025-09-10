@@ -63,19 +63,21 @@ class InnerBordersBuilder(
 
     override fun leftWall(
         topOffset: Double, bottomOffset: Double, keyPlace: (Abstract3dModel) -> Abstract3dModel
-    ): Abstract3dModel {
-        return Utils.hull(
-            keyPlace(KeyPlaceholder.placeHolderLeft()),
-            verticalCube(
-                keyPlace(
-                    KeyPlaceholder.placeHolderBackLeft().move(leftOffset, 0.0, borderZOffset)
-                )
-            ),
-            verticalCube(
-                keyPlace(
-                    KeyPlaceholder.placeHolderFrontLeft().move(leftOffset, 0.0, borderZOffset)
-                )
-            ),
+    ): List<Abstract3dModel> {
+        return listOf(
+            Utils.hull(
+                keyPlace(KeyPlaceholder.placeHolderLeft()),
+                verticalCube(
+                    keyPlace(
+                        KeyPlaceholder.placeHolderBackLeft().move(leftOffset, 0.0, borderZOffset)
+                    )
+                ),
+                verticalCube(
+                    keyPlace(
+                        KeyPlaceholder.placeHolderFrontLeft().move(leftOffset, 0.0, borderZOffset)
+                    )
+                ),
+            )
         )
     }
 

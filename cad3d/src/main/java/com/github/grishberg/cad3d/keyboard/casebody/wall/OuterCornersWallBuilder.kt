@@ -69,7 +69,7 @@ class OuterCornersWallBuilder(
         if (isThumb) {
             return listOf(backRightThumb(keyPlace))
         }
-        val count: Int = 10
+        val count: Int = 20
         val back =
             keyPlace(KeyPlaceholder.placeHolderBackRight().move(0.0, cfg.outerVerticalOffset, cfg.outerBorderZOffset))
         val right =

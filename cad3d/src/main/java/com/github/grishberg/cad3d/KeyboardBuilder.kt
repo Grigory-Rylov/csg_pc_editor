@@ -479,7 +479,8 @@ class KeyboardBuilder(
             bottomBorderHeight = if (cfg.isSkeletonMode) 4.0 else 2.0
         )
 
-        val holeBorderHeight = 2.0
+        val holeBorderThikness = 2.0
+        val holeBorderHeight = 3.0
         val holeBordersModels = Walls(
             cfg,
             wallsSettings,
@@ -488,9 +489,9 @@ class KeyboardBuilder(
             topEdgeOffsetZ = holeVerticalExtra / 2,
             isPlateMode = false,
         ).createBorders(
-            borderThickness = holeBorderHeight, borderHeight = borderHeight + holeVerticalExtra
+            borderThickness = holeBorderThikness, borderHeight = holeBorderHeight
         )
-        val holeBorders = Union(holeBordersModels).moveZ(holeBorderHeight - 1.7)
+        val holeBorders = Union(holeBordersModels).moveZ((holeBorderHeight - 2.0)/2.0 + 0.3)
 
         val screwBase = ScrewBase(cfg)
         val matrixWallScrewHolder = ScrewsMatrixHolder(cfg, screwBase).create()
@@ -511,12 +512,13 @@ class KeyboardBuilder(
 
         val wallsModel = Union(wallsModels).subtractModel(holeBorders).subtractModel(Cube(300.0, 300.0, 50.0).move(0.0, 0.0, -25.0))
 
-        val wallModelsWithHoles = wallsModels
+        val wallModelsWithHoles = Union(wallsModels).subtractModel(holeBorders)
         return ModelHolder(
             cfg,
             wallsModel.addModel(screwMatrixHolders).addModel(wallScrews).subtractModel(screwMatrixHoldersHoles),
             wallModelsWithHoles,
             wallScrews.withColor(Color.yellow),
+            //holeBorders.withColor(Color.PURPLE),
             //createVertexHolder(holeBorders, Color.PINK),
             screwMatrixHolders.subtractModel(Cube(300.0, 300.0, 50.0).move(0.0, 0.0, -25.0)).withColor(Color.CYAN),
         )

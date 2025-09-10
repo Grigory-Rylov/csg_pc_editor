@@ -134,16 +134,16 @@ class OuterWallsBuilder(
 
     override fun leftWall(
         topOffset: Double, bottomOffset: Double, keyPlace: (Abstract3dModel) -> Abstract3dModel
-    ): Abstract3dModel {
-        val top = keyPlace(
+    ): List<Abstract3dModel> {
+        val back = keyPlace(
             KeyPlaceholder.placeHolderBackLeft().move(-cfg.outerHorizontalOffset, topOffset, cfg.outerBorderZOffset)
         )
-        val bottom = keyPlace(
+        val front = keyPlace(
             KeyPlaceholder.placeHolderFrontLeft().move(-cfg.outerHorizontalOffset, bottomOffset, cfg.outerBorderZOffset)
         )
 
         val border = hull(
-            topBorderObj(top), topBorderObj(bottom),
+            topBorderObj(back), topBorderObj(front),
             verticalCube(
                 keyPlace(
                     KeyPlaceholder.placeHolderBackLeft().move(-cfg.leftOffset, 0.0, cfg.borderZOffset)
@@ -153,23 +153,23 @@ class OuterWallsBuilder(
                 keyPlace(
                     KeyPlaceholder.placeHolderFrontLeft().move(-cfg.leftOffset, 0.0, cfg.borderZOffset)
                 )
-            ),
+            ).withColor(Color.CORN_SILK),
         )
 
         if (isSkeletonMode) {
-            return union(
+            return listOf(
                 border, hull(
-                    bottomEdgePatcher.leftPoint(top), bottomEdgePatcher.leftPoint(bottom)
+                    bottomEdgePatcher.leftPoint(back), bottomEdgePatcher.leftPoint(front)
                 )
             )
         }
 
         val wall = hull(
-            topBorderObj(top), topBorderObj(bottom),
-            bottomEdgePatcher.leftPoint(top),
-            bottomEdgePatcher.leftPoint(bottom),
+            topBorderObj(back), topBorderObj(front),
+            bottomEdgePatcher.leftPoint(back),
+            bottomEdgePatcher.leftPoint(front),
         )
-        return Union(border, wall)
+        return listOf(border, wall)
     }
 
     override fun leftMidWall(

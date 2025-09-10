@@ -18,7 +18,7 @@ interface WallsBuilder {
     fun leftWall(
         topOffset: Double = 0.0,
         bottomOffset: Double = 0.0,
-        keyPlace:(Abstract3dModel) -> Abstract3dModel): Abstract3dModel
+        keyPlace:(Abstract3dModel) -> Abstract3dModel): List<Abstract3dModel>
     fun leftMidWall(
         leftPlace: (Abstract3dModel) -> Abstract3dModel,
         rightPlace: (Abstract3dModel) -> Abstract3dModel,
