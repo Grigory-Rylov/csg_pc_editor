@@ -142,7 +142,7 @@ class OuterWallsBuilder(
         )
 
         val border = hull(
-            top, bottom,
+            topBorderObj(top), topBorderObj(bottom),
             verticalCube(
                 keyPlace(
                     KeyPlaceholder.placeHolderBackLeft().move(-cfg.leftOffset, 0.0, cfg.borderZOffset)
@@ -164,7 +164,7 @@ class OuterWallsBuilder(
         }
 
         val wall = hull(
-            top, bottom,
+            topBorderObj(top), topBorderObj(bottom),
             bottomEdgePatcher.leftPoint(top),
             bottomEdgePatcher.leftPoint(bottom),
         )
@@ -182,8 +182,8 @@ class OuterWallsBuilder(
         )
 
         val border = hull(
-            top,
-            bottom,
+            topBorderObj(top),
+            topBorderObj(bottom),
             verticalCube(
                 leftPlace(
                     KeyPlaceholder.placeHolderFrontLeft().move(-cfg.leftOffset, 0.0, cfg.borderZOffset)
@@ -205,7 +205,10 @@ class OuterWallsBuilder(
         }
 
         val wall = hull(
-            top, bottom, bottomEdgePatcher.leftPoint(top), bottomEdgePatcher.leftPoint(bottom)
+            topBorderObj(top),
+            topBorderObj(bottom),
+            bottomEdgePatcher.leftPoint(top),
+            bottomEdgePatcher.leftPoint(bottom)
         )
 
         return Union(border, wall)
