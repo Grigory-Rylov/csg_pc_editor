@@ -117,7 +117,7 @@ class KeyboardBuilder(
             }
 
             createIfNeeded(resultsChannel, KeyboardPart.Case, visibleModels) {
-                createCase(cfg, keyPlace, thumbKeyPlace, screwWallPlaces, walls)
+                createCase(cfg, keyPlace, thumbKeyPlace, screwWallPlaces, walls, controllerPlace, controllerFactory)
             }
             createIfNeeded(resultsChannel, KeyboardPart.KeyCaps, visibleModels) {
                 createKeyCaps(cfg, keyPlace, thumbKeyPlace)
@@ -229,19 +229,23 @@ class KeyboardBuilder(
         thumbKeyPlace: ThumbKeyPlace,
         screwWallPlaces: ScrewWallPlaces,
         walls: Walls,
+        controllerPlace: ControllerPlace,
+        controllerFactory: ControllerFactory,
     ): List<VertexHolder> {
         val result = mutableListOf<VertexHolder>()
 
         val startTime = System.currentTimeMillis()
 
         var tbHolder: Abstract3dModel? = null
-        val caseWalls = createCaseModel(cfg, keyPlace, thumbKeyPlace, screwWallPlaces, walls)
+        val caseWalls =
+            createCaseModel(cfg, keyPlace, thumbKeyPlace, screwWallPlaces, walls, controllerPlace, controllerFactory)
         if (cfg.trackball.mode != TrackballMode.None) {
             val trackBallHolder = Trackball(cfg, keyPlace).createTrackballHolder()
             tbHolder = trackBallHolder.model
             result.addAll(trackBallHolder.vertexHolders)
 
         }
+
         result.addAll(caseWalls.vertexHolders)
         val resultCase = if (tbHolder != null) caseWalls.model.addModel(tbHolder) else caseWalls.model
         saveModel(cfg, "case.stl", resultCase)
@@ -251,7 +255,7 @@ class KeyboardBuilder(
     }
 
     private fun createKeyCaps(
-        cfg: KeyboardConfig, keyPlace: KeyPlace, thumbKeyPlace: ThumbKeyPlace
+        cfg: KeyboardConfig, keyPlace: KeyPlace, thumbKeyPlace: ThumbKeyPlace,
     ): List<VertexHolder> {
         val result = mutableListOf<VertexHolder>()
         val startTime = System.currentTimeMillis()
@@ -467,6 +471,8 @@ class KeyboardBuilder(
         thumbKeyPlace: ThumbKeyPlace,
         screwWallPlaces: ScrewWallPlaces,
         walls: Walls,
+        controllerPlace: ControllerPlace,
+        controllerFactory: ControllerFactory,
     ): ModelHolder {
         val holeVerticalExtra = -3.0
 
@@ -491,8 +497,11 @@ class KeyboardBuilder(
         ).createBorders(
             borderThickness = holeBorderThikness, borderHeight = holeBorderHeight
         )
-        val holeBorders = Union(holeBordersModels).moveZ((holeBorderHeight - 2.0)/2.0 + 0.3)
+        val holeBorders = Union(holeBordersModels).moveZ((holeBorderHeight - 2.0) / 2.0 + 0.3)
 
+        val controller = controllerFactory.createController()
+        val usbPortHole = controller.placeUsbPort(controllerFactory.createUsbPortHole())
+        val usbPortHoleCase = controller.placeUsbPort(controllerFactory.createUsbPortCase())
         val screwBase = ScrewBase(cfg)
         val matrixWallScrewHolder = ScrewsMatrixHolder(cfg, screwBase).create()
         val matrixWallNutHole = ScrewsMatrixHolder(cfg, screwBase).createNutHole()
@@ -510,14 +519,20 @@ class KeyboardBuilder(
             bottomBorderHeight = bottomEdgeHeight
         )
 
-        val wallsModel = Union(wallsModels).subtractModel(holeBorders).subtractModel(Cube(300.0, 300.0, 50.0).move(0.0, 0.0, -25.0))
+        val wallsModel =
+            Union(wallsModels).subtractModel(holeBorders)
+                .subtractModel(usbPortHole)
+                .addModel(usbPortHoleCase)
+                .subtractModel(Cube(300.0, 300.0, 50.0).move(0.0, 0.0, -25.0))
 
-        val wallModelsWithHoles = Union(wallsModels).subtractModel(holeBorders)
+        val wallModelsWithHoles = Union(wallsModels).subtractModel(holeBorders).subtractModel(usbPortHole)
         return ModelHolder(
             cfg,
             wallsModel.addModel(screwMatrixHolders).addModel(wallScrews).subtractModel(screwMatrixHoldersHoles),
             wallModelsWithHoles,
             wallScrews.withColor(Color.yellow),
+//            usbPortHole.withColor(Color.PURPLE),
+            usbPortHoleCase.withColor(Color.GREEN),
             //holeBorders.withColor(Color.PURPLE),
             //createVertexHolder(holeBorders, Color.PINK),
             screwMatrixHolders.subtractModel(Cube(300.0, 300.0, 50.0).move(0.0, 0.0, -25.0)).withColor(Color.CYAN),

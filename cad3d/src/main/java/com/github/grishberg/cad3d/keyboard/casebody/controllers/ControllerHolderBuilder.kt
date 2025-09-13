@@ -58,7 +58,7 @@ class ControllerHolderBuilder(
     }
 
     private fun placeBatteryHolder(o: Abstract3dModel): Abstract3dModel {
-        return controllerPlace.place(o.rotate(Angles3d.zOnly(25.0))).move(5.0, -battery.depth + 20.7, -4.0)
+        return controllerPlace.place(o.rotate(Angles3d.zOnly(25.0))).move(7.0, -battery.depth + 20.7, -4.0)
     }
 
     private fun createControllerModel(): Abstract3dModel {
