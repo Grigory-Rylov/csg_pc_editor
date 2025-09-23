@@ -1,128 +1,124 @@
-package com.github.grishberg.javascad;
+package com.github.grishberg.javascad
 
-import com.github.grishberg.javascad.optimizator.PolygonValidatorMultithreading;
-import com.github.grishberg.javascad.optimizator.ProgressObserver;
-import eu.printingin3d.javascad.coords.Triangle3d;
-import eu.printingin3d.javascad.coords.V3d;
-import eu.printingin3d.javascad.vrl.Facet;
-import eu.printingin3d.javascad.vrl.Polygon;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.channels.FileChannel;
-import java.nio.channels.WritableByteChannel;
-import java.util.ArrayList;
-import java.util.List;
+import com.github.grishberg.javascad.optimizator.PolygonValidatorMultithreading
+import com.github.grishberg.javascad.optimizator.ProgressObserver
+import eu.printingin3d.javascad.coords.Triangle3d
+import eu.printingin3d.javascad.coords.V3d
+import eu.printingin3d.javascad.vrl.Facet
+import eu.printingin3d.javascad.vrl.Polygon
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
+import java.nio.channels.WritableByteChannel
 
+object StlExporter {
 
-public class StlExporter {
+    private const val X = 0
+    private const val Y = 0
+    private const val Z = 0
 
-    private static final int X = 0;
-    private static final int Y = 0;
-    private static final int Z = 0;
+    fun saveStl(polygons: List<Polygon>, fileName: String) {
+        println(
+            "saveStl: Start generating polygons from: " + polygons.size + " " + fileName
+        )
 
+        val file = File(fileName)
+        val startTime = System.currentTimeMillis()
 
-    public static void saveStl(List<Polygon> polygons, String fileName) {
-        System.out.println(
-            "saveStl: Start generating polygons from: " + polygons.size() + " " + fileName);
+        println(
+            "saveStl to bin: " + fileName + " fix polygons completed, takes " + (System.currentTimeMillis() - startTime) + " ms"
+        )
 
-        File file = new File(fileName);
-        long startTime = System.currentTimeMillis();
-
-        System.out.println("saveStl to bin: " + fileName + " fix polygons completed, takes " +
-            (System.currentTimeMillis() - startTime) + " ms");
-
-        List<Polygon> fixPolygons = new PolygonValidatorMultithreading().fixPolygons(
-            polygons,
-            new ProgressObserver() {
-                @Override
-                public void onProgress(int progress) {
-                    System.out.println(file.getName() + " : progress = " + progress);
+        val fixPolygons = PolygonValidatorMultithreading().fixPolygons(
+            polygons, object : ProgressObserver {
+                override fun onProgress(progress: Int) {
+                    println(file.getName() + " : progress = " + progress)
                 }
-            }
-        );
+            })
 
-        System.out.println("saveStl: " + fileName + " fix polygons completed, takes " +
-            (System.currentTimeMillis() - startTime) + " ms");
+        println(
+            "saveStl: " + fileName + " fix polygons completed, takes " + (System.currentTimeMillis() - startTime) + " ms"
+        )
 
-        long triangulationStartTime = System.currentTimeMillis();
-        List<Facet> facetsFromPolygons = new ArrayList<>();
-        for (Polygon p : fixPolygons) {
-            List<Triangle3d> triangles = Triangulator.triangulate(p.getVertices(), p.getNormal());
-            for (Triangle3d t : triangles) {
-                ArrayList<V3d> rounded = new ArrayList<>();
-                for(V3d trianglePoint: t.getPoints()){
-                    rounded.add(trianglePoint.roundedToEpsilon());
+        val triangulationStartTime = System.currentTimeMillis()
+        val facetsFromPolygons: MutableList<Facet> = ArrayList<Facet>()
+        for (p in fixPolygons) {
+            val triangles = Triangulator.triangulate(p.getVertices(), p.getNormal())
+            for (t in triangles) {
+                val rounded = ArrayList<V3d?>()
+                for (trianglePoint in t.getPoints()) {
+                    rounded.add(trianglePoint.roundedToEpsilon())
                 }
-                //facetsFromPolygons.add(new Facet(t, p.getNormal(), p.getColor()));
-                Triangle3d newT = new Triangle3d(rounded.get(0), rounded.get(1), rounded.get(2));
-                facetsFromPolygons.add(new Facet(newT, p.getNormal(), p.getColor()));
+                facetsFromPolygons.add(Facet(t, p.getNormal(), p.getColor()))
+                val newT = Triangle3d(rounded.get(0), rounded.get(1), rounded.get(2))
+                //facetsFromPolygons.add(new Facet(newT, p.getNormal(), p.getColor()));
             }
         }
 
-        System.out.println("saveStl: " + fileName + " triangulation completed, takes " +
-            (System.currentTimeMillis() - triangulationStartTime) + " ms");
+        println(
+            "saveStl: " + fileName + " triangulation completed, takes " + (System.currentTimeMillis() - triangulationStartTime) + " ms"
+        )
 
-        try (FileChannel channel = new FileOutputStream(fileName).getChannel()) {
-            StlExporter.writeBinaryStl(facetsFromPolygons, channel);
-            System.out.println("Export to " + fileName + " is done.");
-        } catch (IOException e) {
-            e.printStackTrace();
+        try {
+            FileOutputStream(fileName).getChannel().use { channel ->
+                writeBinaryStl(facetsFromPolygons, channel)
+                println("Export to " + fileName + " is done.")
+            }
+        } catch (e: IOException) {
+            e.printStackTrace()
         }
-
     }
 
-    public static void writeBinaryStl(
-        List<Facet> facets,
-        String fileName
+    fun writeBinaryStl(
+        facets: MutableList<Facet>, fileName: String
     ) {
-        try (FileChannel channel = new FileOutputStream(fileName).getChannel()) {
-            StlExporter.writeBinaryStl(facets, channel);
-            System.out.println("Export to " + fileName + " is done.");
-        } catch (IOException e) {
-            e.printStackTrace();
+        try {
+            FileOutputStream(fileName).getChannel().use { channel ->
+                writeBinaryStl(facets, channel)
+                println("Export to " + fileName + " is done.")
+            }
+        } catch (e: IOException) {
+            e.printStackTrace()
         }
     }
 
-    public static void writeBinaryStl(
-        List<Facet> facets,
-        WritableByteChannel channel
-    ) throws IOException {
-
+    @Throws(IOException::class)
+    fun writeBinaryStl(
+        facets: MutableList<Facet>, channel: WritableByteChannel
+    ) {
         // Заголовок файла (80 байт)
-        byte[] header = new byte[80];
-        ByteBuffer buffer = ByteBuffer.allocate(84 + 50 * facets.size())
-            .order(ByteOrder.LITTLE_ENDIAN)
-            .put(header);
+
+        val header = ByteArray(80)
+        val buffer = ByteBuffer.allocate(84 + 50 * facets.size).order(ByteOrder.LITTLE_ENDIAN).put(header)
 
         // Количество треугольников (4 байта)
-        buffer.putInt(facets.size());
+        buffer.putInt(facets.size)
 
         // Запись каждого треугольника
-        for (Facet facet : facets) {
-            V3d normal = facet.getNormal();
-            Triangle3d triangle = facet.getTriangle();
-            List<V3d> points = triangle.getPoints();
+        for (facet in facets) {
+            val normal = facet.getNormal()
+            val triangle = facet.getTriangle()
+            val points = triangle.getPoints()
 
             // Нормаль (3 float)
-            buffer.putFloat((float) normal.getX());
-            buffer.putFloat((float) normal.getY());
-            buffer.putFloat((float) normal.getZ());
+            buffer.putFloat(normal.getX().toFloat())
+            buffer.putFloat(normal.getY().toFloat())
+            buffer.putFloat(normal.getZ().toFloat())
 
             // Координаты вершин (3 точки по 3 float)
-            for (V3d point : points) {
-                buffer.putFloat((float) point.getX());
-                buffer.putFloat((float) point.getY());
-                buffer.putFloat((float) point.getZ());
+            for (point in points) {
+                buffer.putFloat(point.getX().toFloat())
+                buffer.putFloat(point.getY().toFloat())
+                buffer.putFloat(point.getZ().toFloat())
             }
 
             // Атрибуты (2 байта)
-            buffer.putShort((short) 0);
+            buffer.putShort(0.toShort())
         }
 
-        buffer.flip();
-        channel.write(buffer);
+        buffer.flip()
+        channel.write(buffer)
     }
 }

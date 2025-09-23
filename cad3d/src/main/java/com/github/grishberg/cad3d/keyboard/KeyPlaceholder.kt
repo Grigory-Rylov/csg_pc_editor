@@ -21,6 +21,7 @@ object KeyPlaceholder {
     private const val HORIZONTAL_WALL_HEIGHT = 4.0
     private const val VERTICAL_WALL_HEIGHT = 3.2
     private const val TOP_THICKNESS = 4.0
+    private const val KEY_PLACE_TOP_THICKNESS = 3.0
     private const val CORNER_PLACEHOLDER_TOP_OFFSET = 2.0
     private const val BASE_TOP_OFFSET = 1.5 + 0.5
     private const val VERTICAL_TOP_OFFSET = BASE_TOP_OFFSET - VERTICAL_WALL_HEIGHT / 2 + 2.6 / 2
@@ -41,10 +42,11 @@ object KeyPlaceholder {
             ).addModel(
                 cornerObject.move(-KEY_HOLE_INNER_WIDTH / 2, KEY_HOLE_INNER_WIDTH / 2, cornerCubeHeight / 2)
             ).moveZ(0.4)
-        val placeholder = cube(OUTER_WIDTH, OUTER_HEIGHT, TOP_THICKNESS).move(0.0, 0.0, BASE_TOP_OFFSET)
 
+        val placeholder = cube(OUTER_WIDTH, OUTER_HEIGHT, KEY_PLACE_TOP_THICKNESS)
+            .move(0.0, 0.0, BASE_TOP_OFFSET)
             .subtractModel(cube(KEY_HOLE_INNER_WIDTH, KEY_HOLE_HEIGHT, 10.0)).subtractModel(
-                cube(KEY_HOLE_OUTER_WIDTH, KEY_HOLE_HEIGHT, TOP_THICKNESS).move(
+                cube(KEY_HOLE_OUTER_WIDTH, KEY_HOLE_HEIGHT, KEY_PLACE_TOP_THICKNESS).move(
                     0.0, 0.0, VERTICAL_TOP_OFFSET - EDGE_HEIGHT
                 )
             ).subtractModel(
@@ -59,11 +61,7 @@ object KeyPlaceholder {
             placeholder.addModel(cornerCubes)
         } else {
             placeholder
-        }.subtractModel(
-            cube(OUTER_HEIGHT, OUTER_WIDTH, 1.0).moveZ(
-                VERTICAL_TOP_OFFSET - 1.4
-            )
-        )
+        }.moveZ((TOP_THICKNESS - KEY_PLACE_TOP_THICKNESS)/2.0)
     }
 
     private fun standardProfilePlaceholder(): Abstract3dModel =
