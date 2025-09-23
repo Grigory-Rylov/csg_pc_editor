@@ -49,6 +49,7 @@ class Plate(
             platePoint(bottomPoints.T0),
             platePoint(bottomPoints.T2),
             platePoint(bottomPoints.B7),
+            platePoint(bottomPoints.B8),
             platePoint(bottomPoints.B6),
             platePoint(bottomPoints.B5),
             platePoint(bottomPoints.B4),
