@@ -23,7 +23,7 @@ class SuperMiniNRF52840(
     override val isWireless: Boolean = true
 
     override fun create(): ModelHolder {
-        val usbPort = createUsb().move(0.0, depth / 2 - 1.0, height / 2)
+        val usbPort = placeUsbPort(createUsb())
         val model = Cube(width, depth, height).moveZ(height / 2)
 
         return ModelHolder(
@@ -31,6 +31,10 @@ class SuperMiniNRF52840(
             fromModel(place(model), Color.CYAN, cfg.fn),
             fromModel(place(usbPort), Color.YELLOW, cfg.fn),
         )
+    }
+
+    override fun placeUsbPort(obj: Abstract3dModel): Abstract3dModel {
+        return obj.move(0.0, depth / 2 - 1.0, height / 2)
     }
 
     private fun createUsb(): Abstract3dModel {
