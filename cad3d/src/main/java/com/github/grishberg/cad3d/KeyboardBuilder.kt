@@ -216,7 +216,7 @@ class KeyboardBuilder(
         result.addAll(borders.vertexHolders)
         result.addAll(placeHolders.vertexHolders)
 
-        val matrix = connections.model.addModel(borders.model).addModel(placeHolders.model)
+        val matrix = placeHolders.model.addModel(connections.model.addModel(borders.model))
 
         saveModel(cfg, "matrix_right.stl", matrix)
 

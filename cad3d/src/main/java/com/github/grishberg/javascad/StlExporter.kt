@@ -47,13 +47,13 @@ object StlExporter {
         for (p in fixPolygons) {
             val triangles = Triangulator.triangulate(p.getVertices(), p.getNormal())
             for (t in triangles) {
-                val rounded = ArrayList<V3d?>()
+                val rounded = ArrayList<V3d>()
                 for (trianglePoint in t.getPoints()) {
                     rounded.add(trianglePoint.roundedToEpsilon())
                 }
-                facetsFromPolygons.add(Facet(t, p.getNormal(), p.getColor()))
+                //facetsFromPolygons.add(Facet(t, p.getNormal(), p.getColor()))
                 val newT = Triangle3d(rounded.get(0), rounded.get(1), rounded.get(2))
-                //facetsFromPolygons.add(new Facet(newT, p.getNormal(), p.getColor()));
+                facetsFromPolygons.add(Facet(newT, p.getNormal(), p.getColor()));
             }
         }
 
