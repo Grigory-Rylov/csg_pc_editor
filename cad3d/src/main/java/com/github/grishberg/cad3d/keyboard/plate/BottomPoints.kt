@@ -39,6 +39,7 @@ class BottomPoints(
     val B5 = backPoints[5]
     val B6 = backPoints[6]
     val B7 = backPoints[7]
+    val B8 = backPoints[8]
 
     val F0 = frontPoints[0]
     val F1 = frontPoints[1]
@@ -102,6 +103,12 @@ class BottomPoints(
 
         }
 
+        val right =
+            keyPlace.place(cfg.lastCol, 0, KeyPlaceholder.placeHolderBackRight().move(cfg.wallsSettings.outerRightOffset, 0.0, cfg.wallsSettings.outerBorderZOffset))
+
+        points.add(
+            bottomEdgePatcher.backPoint(right).move.projectionZ(0.0)
+        )
         return points
     }
 

@@ -1,15 +1,15 @@
 package com.github.grishberg.cad3d.keyboard
 
 import com.github.grishberg.cad3d.keyboard.Utils.cube
-import com.github.grishberg.cad3d.plugin.cfg.KeyPlaceholderType
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
+import com.github.grishberg.cad3d.plugin.cfg.KeyPlaceholderType
 import eu.printingin3d.javascad.basic.Radius
 import eu.printingin3d.javascad.models.Abstract3dModel
 import eu.printingin3d.javascad.models.Cylinder
 
 object KeyPlaceholder {
 
-    const val CORNER_OFFSET = 18.5/2
+    const val CORNER_OFFSET = 18.5 / 2
     const val OFFSET = 6.85
     private const val EDGE_HEIGHT = 1.2
     private const val OUTER_WIDTH = 18.0 + 2
@@ -31,38 +31,39 @@ object KeyPlaceholder {
     }
 
     private fun lowProfilePlaceholder(cfg: KeyboardConfig): Abstract3dModel {
-        val cornerCubeHeight = 2.0
+        val cornerCubeHeight = 1.2
         val cornerObject = Cylinder(cornerCubeHeight, Radius.fromDiameter(4.0))
-        val cornerCubes = cornerObject.move(-KEY_HOLE_INNER_WIDTH/2, -KEY_HOLE_INNER_WIDTH/2, cornerCubeHeight/2)
-            .addModel(
-                cornerObject.move(KEY_HOLE_INNER_WIDTH/2, -KEY_HOLE_INNER_WIDTH/2, cornerCubeHeight/2)
-            )
-            .addModel(
-                cornerObject.move(KEY_HOLE_INNER_WIDTH/2, KEY_HOLE_INNER_WIDTH/2, cornerCubeHeight/2)
-            )
-            .addModel(
-                cornerObject.move(-KEY_HOLE_INNER_WIDTH/2, KEY_HOLE_INNER_WIDTH/2, cornerCubeHeight/2)
-            )
+        val cornerCubes =
+            cornerObject.move(-KEY_HOLE_INNER_WIDTH / 2, -KEY_HOLE_INNER_WIDTH / 2, cornerCubeHeight / 2).addModel(
+                cornerObject.move(KEY_HOLE_INNER_WIDTH / 2, -KEY_HOLE_INNER_WIDTH / 2, cornerCubeHeight / 2)
+            ).addModel(
+                cornerObject.move(KEY_HOLE_INNER_WIDTH / 2, KEY_HOLE_INNER_WIDTH / 2, cornerCubeHeight / 2)
+            ).addModel(
+                cornerObject.move(-KEY_HOLE_INNER_WIDTH / 2, KEY_HOLE_INNER_WIDTH / 2, cornerCubeHeight / 2)
+            ).moveZ(0.4)
         val placeholder = cube(OUTER_WIDTH, OUTER_HEIGHT, TOP_THICKNESS).move(0.0, 0.0, BASE_TOP_OFFSET)
 
-            .subtractModel(cube(KEY_HOLE_INNER_WIDTH, KEY_HOLE_HEIGHT, 10.0))
-            .subtractModel(cube(KEY_HOLE_OUTER_WIDTH, KEY_HOLE_HEIGHT, TOP_THICKNESS).move(
+            .subtractModel(cube(KEY_HOLE_INNER_WIDTH, KEY_HOLE_HEIGHT, 10.0)).subtractModel(
+                cube(KEY_HOLE_OUTER_WIDTH, KEY_HOLE_HEIGHT, TOP_THICKNESS).move(
                     0.0, 0.0, VERTICAL_TOP_OFFSET - EDGE_HEIGHT
                 )
-            )
-            .subtractModel(cube(KEY_HOLE_INNER_WIDTH, KEY_HOLE_HEIGHT, 2.0).move(
+            ).subtractModel(
+                cube(KEY_HOLE_INNER_WIDTH, KEY_HOLE_HEIGHT, 2.0).move(
                     0.0, CORNER_OFFSET, VERTICAL_TOP_OFFSET - 2
                 )
-            )
-            .subtractModel(
+            ).subtractModel(
                 cube(5.0, 15.0, 1.0).moveZ(0.7 + 1.8 - 1.3 + EDGE_HEIGHT)
             )
-            return if (cfg.keyPlaceholderType == KeyPlaceholderType.AmoebaSu120){
-                placeholder.addModel(cornerCubes)
-            } else {
-                placeholder
-            }
 
+        return if (cfg.keyPlaceholderType == KeyPlaceholderType.AmoebaSu120) {
+            placeholder.addModel(cornerCubes)
+        } else {
+            placeholder
+        }.subtractModel(
+            cube(OUTER_HEIGHT, OUTER_WIDTH, 1.0).moveZ(
+                VERTICAL_TOP_OFFSET - 1.4
+            )
+        )
     }
 
     private fun standardProfilePlaceholder(): Abstract3dModel =
@@ -82,7 +83,9 @@ object KeyPlaceholder {
     @JvmStatic
     @JvmOverloads
     fun placeHolderBack(thickness: Double = WALL_THICKNESS): Abstract3dModel {
-        return cube(OUTER_WIDTH, thickness, TOP_THICKNESS).move(0.0, CORNER_OFFSET + thickness, CORNER_PLACEHOLDER_TOP_OFFSET)
+        return cube(OUTER_WIDTH, thickness, TOP_THICKNESS).move(
+            0.0, CORNER_OFFSET + thickness, CORNER_PLACEHOLDER_TOP_OFFSET
+        )
     }
 
     @JvmStatic

@@ -210,13 +210,15 @@ class KeyboardBuilder(
         val borders = keyMatrix.createBordersModel(amoebaHoles)
         val placeHolders = keyMatrix.createPlaceholders()
 
+        saveModel(cfg, "placeHolder.stl", keyMatrix.createPlaceHolder())
+
         result.addAll(connections.vertexHolders)
         result.addAll(borders.vertexHolders)
         result.addAll(placeHolders.vertexHolders)
 
         val matrix = connections.model.addModel(borders.model).addModel(placeHolders.model)
 
-        saveModel(cfg, "matrix.stl", matrix)
+        saveModel(cfg, "matrix_right.stl", matrix)
 
         val delta = System.currentTimeMillis() - startTime
         println("createMatrix : $delta")

@@ -55,17 +55,20 @@ class KeyMatrix(
         )
     }
 
-    fun createPlaceholders(): ModelHolder {
-        val models = mutableListOf<Abstract3dModel>()
-
+    fun createPlaceHolder(): Abstract3dModel {
         val amoeba = Amoeba(cfg)
         val amoebaHole = amoeba.createHoles(height = 7.0, diameter = 0.7).addModel(amoeba.createSimple())
-
-        val placeHolder = if (cfg.keyPlaceholderType == KeyPlaceholderType.AmoebaSu120) {
+        return if (cfg.keyPlaceholderType == KeyPlaceholderType.AmoebaSu120) {
             KeyPlaceholder.placeHolder(cfg).subtractModel(amoebaHole)
         } else {
             KeyPlaceholder.placeHolder(cfg)
         }
+    }
+
+    fun createPlaceholders(): ModelHolder {
+        val models = mutableListOf<Abstract3dModel>()
+
+        val placeHolder = createPlaceHolder()
 
         for (column in 0 until cfg.columnsCount) {
             for (row in 0 until cfg.rowsCount) {
@@ -76,8 +79,6 @@ class KeyMatrix(
         models.add(thumbKeyPlace.thumbPlace(placeHolder))
 
         val allPlaceholders = Union(models)
-
-        //saveModel("placeHolder.stl", placeHolder)
 
         return ModelHolder(
             allPlaceholders,
