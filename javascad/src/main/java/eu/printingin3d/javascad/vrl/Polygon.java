@@ -158,6 +158,24 @@ public final class Polygon {
         return true;
     }
 
+    public static boolean isValid(List<V3d> vertices) {
+        V3d a = vertices.get(0);
+        V3d b = vertices.get(1);
+        V3d c = vertices.get(2);
+        V3d normal = b.add(a.inverse()).cross(c.add(a.inverse())).unit();
+        double dist = normal.dot(vertices.get(0));
+
+        for (V3d v : vertices) {
+            double t = normal.dot(v) - dist;
+            VertexPosition position = VertexPosition.fromSquareDistance(t);
+
+            if (position != VertexPosition.COPLANAR) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     /**
      * Flips this polygon.
      *

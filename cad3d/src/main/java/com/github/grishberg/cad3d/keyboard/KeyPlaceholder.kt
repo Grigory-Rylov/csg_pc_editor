@@ -32,7 +32,9 @@ object KeyPlaceholder {
     }
 
     private fun lowProfilePlaceholder(cfg: KeyboardConfig): Abstract3dModel {
-        val cornerCubeHeight = 1.2
+        val delta = (TOP_THICKNESS - KEY_PLACE_TOP_THICKNESS)/2.0
+
+        val cornerCubeHeight = 0.6
         val cornerObject = Cylinder(cornerCubeHeight, Radius.fromDiameter(4.0))
         val cornerCubes =
             cornerObject.move(-KEY_HOLE_INNER_WIDTH / 2, -KEY_HOLE_INNER_WIDTH / 2, cornerCubeHeight / 2).addModel(
@@ -41,7 +43,7 @@ object KeyPlaceholder {
                 cornerObject.move(KEY_HOLE_INNER_WIDTH / 2, KEY_HOLE_INNER_WIDTH / 2, cornerCubeHeight / 2)
             ).addModel(
                 cornerObject.move(-KEY_HOLE_INNER_WIDTH / 2, KEY_HOLE_INNER_WIDTH / 2, cornerCubeHeight / 2)
-            ).moveZ(0.4)
+            ).moveZ(0.6 + 0.4 - delta)
 
         val placeholder = cube(OUTER_WIDTH, OUTER_HEIGHT, KEY_PLACE_TOP_THICKNESS)
             .move(0.0, 0.0, BASE_TOP_OFFSET)
@@ -51,17 +53,17 @@ object KeyPlaceholder {
                 )
             ).subtractModel(
                 cube(KEY_HOLE_INNER_WIDTH, KEY_HOLE_HEIGHT, 2.0).move(
-                    0.0, CORNER_OFFSET, VERTICAL_TOP_OFFSET - 2
+                    0.0, CORNER_OFFSET, VERTICAL_TOP_OFFSET - 2 - delta
                 )
             ).subtractModel(
-                cube(5.0, 15.0, 1.0).moveZ(0.7 + 1.8 - 1.3 + EDGE_HEIGHT)
+                cube(5.0, 15.0, 1.0).moveZ(0.7 + 1.8 - 1.3 + EDGE_HEIGHT - delta)
             )
 
         return if (cfg.keyPlaceholderType == KeyPlaceholderType.AmoebaSu120) {
             placeholder.addModel(cornerCubes)
         } else {
             placeholder
-        }.moveZ((TOP_THICKNESS - KEY_PLACE_TOP_THICKNESS)/2.0)
+        }.moveZ(delta)
     }
 
     private fun standardProfilePlaceholder(): Abstract3dModel =

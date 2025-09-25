@@ -57,7 +57,7 @@ class KeyMatrix(
 
     fun createPlaceHolder(): Abstract3dModel {
         val amoeba = Amoeba(cfg)
-        val amoebaHole = amoeba.createHoles(height = 7.0, diameter = 0.7).addModel(amoeba.createSimple())
+        val amoebaHole = amoeba.createHoles(height = 8.0, diameter = 0.7).addModel(amoeba.createSimple())
         return if (cfg.keyPlaceholderType == KeyPlaceholderType.AmoebaSu120) {
             KeyPlaceholder.placeHolder(cfg).subtractModel(amoebaHole)
         } else {

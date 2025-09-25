@@ -37,6 +37,7 @@ import com.github.grishberg.cad3d.plugin.cfg.TrackballMode
 import com.github.grishberg.cad3d.trackball.Trackball
 import com.github.grishberg.cad3d.util.fromModel
 import com.github.grishberg.javascad.StlExporter
+import eu.printingin3d.javascad.coords.Angles3d
 import eu.printingin3d.javascad.coords.V3d
 import eu.printingin3d.javascad.models.Abstract3dModel
 import eu.printingin3d.javascad.models.Cube
