@@ -2,6 +2,8 @@ package com.github.grishberg.cad3d.viewer
 
 import com.github.grishberg.cad3d.plugin.cfg.TrackballConfig
 import com.github.grishberg.cad3d.plugin.cfg.AssemblySettings
+import com.github.grishberg.cad3d.plugin.cfg.BatteryType
+import com.github.grishberg.cad3d.plugin.cfg.ControllerType
 import com.github.grishberg.cad3d.plugin.cfg.KeyPlaceholderType
 import com.github.grishberg.cad3d.plugin.cfg.KeyboardSettings
 import com.github.grishberg.cad3d.plugin.cfg.PowerSwitcherType
@@ -114,6 +116,8 @@ class SettingsHolder(
             bordersOffset = 4.0,
             isSkeletonMode = false,
             keyPlaceholderType = KeyPlaceholderType.None,
+            controllerType = ControllerType.SuperMiniNRF52840,
+            batteryType = BatteryType.Bt18650,
         ),
         thumbClusterSettings = ThumbClusterSettings(
             xOffset = 0.0,

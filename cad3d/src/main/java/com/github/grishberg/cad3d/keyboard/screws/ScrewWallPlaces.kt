@@ -1,6 +1,7 @@
 package com.github.grishberg.cad3d.keyboard.screws
 
 import com.github.grishberg.cad3d.keyboard.KeyPlace
+import com.github.grishberg.cad3d.keyboard.KeyPlaceholder
 import com.github.grishberg.cad3d.keyboard.PlacePointType
 import com.github.grishberg.cad3d.keyboard.ThumbKeyPlace
 import com.github.grishberg.cad3d.keyboard.casebody.controllers.ControllerHolderDimensions
@@ -11,6 +12,7 @@ import eu.printingin3d.javascad.coords.V3d
 import eu.printingin3d.javascad.models.Abstract3dModel
 import eu.printingin3d.javascad.models.Cube
 import eu.printingin3d.javascad.tranzitions.Union
+import kotlin.math.max
 
 /**
  * Установка
@@ -59,17 +61,21 @@ class ScrewWallPlaces(
         )
         val wallLeftOffset = calculatePlacePoint.x
         val backWallPoint = V3d(
-            wallLeftOffset + screwOffset, controllerHolderWall.getWallPoint(
+            wallLeftOffset + screwOffset - 3.0,
+            controllerHolderWall.getWallPoint(
                 keyPlace.calculatePlacePoint(
                     0, 0, PlacePointType.BackLeftBottom
                 )
-            ).y - screwOffset, controllerOffsetZ
+            ).y - screwOffset,
+            controllerOffsetZ
         )
 
+        //left back corner
         if (mode == ControllerMode.All || mode == ControllerMode.Back || mode == ControllerMode.Side) {
             models.add(o.move(backWallPoint))
         }
 
+        //  right back
         if (mode == ControllerMode.All || mode == ControllerMode.Back) {
             models.add(
                 o.move(
@@ -78,6 +84,7 @@ class ScrewWallPlaces(
             )
         }
 
+        // left front
         if (mode == ControllerMode.All || mode == ControllerMode.Side) {
             models.add(
                 o.move(

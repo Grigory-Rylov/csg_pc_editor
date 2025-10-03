@@ -142,6 +142,16 @@ class ConfigEditor(
             layout = GridLayout(0, 2)
         }
 
+        addEnumComboBox(panel, "Контроллер:", currentKeyboardSettings.controllerType) {
+            currentKeyboardSettings = currentKeyboardSettings.copy(controllerType = it)
+            fireKeyboardSettingsChanges()
+        }
+
+        addEnumComboBox(panel, "Батарея:", currentKeyboardSettings.batteryType) {
+            currentKeyboardSettings = currentKeyboardSettings.copy(batteryType = it)
+            fireKeyboardSettingsChanges()
+        }
+
 //        addCheckbox(panel, "Низкий профиль:", currentKeyboardSettings.isLowProfile) {
 //            currentKeyboardSettings = currentKeyboardSettings.copy(isLowProfile = it)
 //            fireKeyboardSettingsChanges()

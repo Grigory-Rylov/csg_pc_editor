@@ -1,6 +1,7 @@
 package com.github.grishberg.cad3d.keyboard.casebody.controllers
 
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
+import com.github.grishberg.cad3d.plugin.cfg.ControllerType
 import eu.printingin3d.javascad.basic.Radius
 import eu.printingin3d.javascad.coords.Angles3d
 import eu.printingin3d.javascad.models.Abstract3dModel
@@ -16,15 +17,22 @@ class ControllerFactory(private val cfg: KeyboardConfig, private val controllerP
     private val usbHolderWallWidth = 1.0
 
     fun createController(): Controller {
-        return SuperMiniNRF52840(cfg, controllerPlace)
+        return when (cfg.controllerType){
+            ControllerType.SuperMiniNRF52840 -> SuperMiniNRF52840(cfg, controllerPlace)
+            ControllerType.Rp2040Pink -> RP2040Pink(cfg, controllerPlace)
+            ControllerType.Rp2040Mini-> RP2040Mini(cfg, controllerPlace)
+        }
     }
 
     fun createUsbPortHole(): Abstract3dModel {
-        return place(usbHoleObject())
+        return place(usbHoleObject(), createController())
     }
 
     fun createUsbPortCase(): Abstract3dModel {
-        return place(usbHoleCaseObject().subtractModel(usbHoleObject().moveY(0.5)).subtractModel(createUsb()))
+        return place(
+            usbHoleCaseObject().subtractModel(usbHoleObject().moveY(0.5)).subtractModel(createUsb()),
+            createController()
+        )
     }
 
     private fun usbHoleObject(): Abstract3dModel {
@@ -60,7 +68,7 @@ class ControllerFactory(private val cfg: KeyboardConfig, private val controllerP
         ).moveZ(diameter / 2).moveY(2.0)
     }
 
-    private fun place(o: Abstract3dModel): Abstract3dModel {
-        return controllerPlace.place(o).moveZ(1.5)
+    private fun place(o: Abstract3dModel, controller: Controller): Abstract3dModel {
+        return controllerPlace.place(controller, o).moveZ(1.5)
     }
 }

@@ -105,6 +105,8 @@ data class KeyboardSettings(
     val keyPlaceholderType: KeyPlaceholderType,
     val horizontalExtraSpace: Double = 1.0,
     val verticalExtraSpace: Double = 1.0,
+    val controllerType: ControllerType,
+    val batteryType: BatteryType,
 )
 
 @Serializable

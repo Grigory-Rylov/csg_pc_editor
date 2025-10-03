@@ -11,16 +11,16 @@ import eu.printingin3d.javascad.models.Cylinder
 import eu.printingin3d.javascad.models.Hull
 import eu.printingin3d.javascad.utils.Color
 
-class SuperMiniNRF52840(
+class RP2040Pink(
     private val cfg: KeyboardConfig,
     private val controllerPlace: ControllerPlace,
 ) : Controller {
 
-    override val width = 17.78
-    override val depth = 35.0
-    override val height = 1.7
+    override val width = 20.73
+    override val depth = 55.5
+    override val height = 1.6
 
-    override val isWireless: Boolean = true
+    override val isWireless: Boolean = false
 
     override fun create(): ModelHolder {
         val usbPort = placeUsbPort(createUsb())
@@ -34,7 +34,7 @@ class SuperMiniNRF52840(
     }
 
     override fun placeUsbPort(obj: Abstract3dModel): Abstract3dModel {
-        return obj.move(0.0, depth / 2 - 1.0, height / 2)
+        return obj.move(0.0, depth / 2 - 1.0, height / 2 +0.5)
     }
 
     private fun createUsb(): Abstract3dModel {
