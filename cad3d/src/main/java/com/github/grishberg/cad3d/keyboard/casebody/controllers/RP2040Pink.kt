@@ -17,7 +17,7 @@ class RP2040Pink(
 ) : Controller {
 
     override val width = 20.73
-    override val depth = 55.5
+    override val depth = 55.7
     override val height = 1.6
 
     override val isWireless: Boolean = false

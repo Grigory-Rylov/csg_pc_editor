@@ -116,7 +116,9 @@ class Walls(
 
         backWallsFrom2To6(
             OuterBackRightWallsBuilder(
-                topEdgeOffsetZ = topEdgeOffsetZ, cfg = wallsSettings, bottomEdgePatcher = bottomEdgePatcher
+                topEdgeOffsetZ = topEdgeOffsetZ,
+                cfg = wallsSettings,
+                bottomEdgePatcher = bottomEdgePatcher,
             )
         )
 
@@ -481,16 +483,28 @@ class Walls(
                         KeyPlaceholder.placeHolderBackRight().move(0.0, verticalOffset + 2, borderZOffset)
                     )
                 ),
+
+                verticalCube(
+                    thumbKeyPlace.placeL(
+                        KeyPlaceholder.placeHolderBackRight().move(0.0, verticalOffset, borderZOffset)
+                    )
+                ),
             ).withColor(Color.DARK_RED)
         )
 
         models.add(
             hull(
-                topBorderObj(topOuterPoint), bottomEdgePatcher.projection(topOuterPoint), bottomEdgePatcher.projection(
+                verticalCube(
+                    topInnerPoint
+                ),
+
+                topBorderObj(topOuterPoint),
+                bottomEdgePatcher.projection(topOuterPoint),
+                bottomEdgePatcher.projection(
                     thumbKeyPlace.placeL(
                         KeyPlaceholder.placeHolderBackLeft().move(0.0, outerVerticalOffset, outerBorderZOffset)
                     ),
-                )
+                ),
             ).withColor(Color.BURLY_WOOD)
         )
     }

@@ -88,7 +88,7 @@ class ControllerHolderBuilder(
             .addModel(cylinder.move(offset, depth, 0.0))
             .addModel(cylinder.move(offset, -depth, 0.0))
             .addModel(cylinder.move(-offset, -depth, 0.0))
-            .moveZ(controller.height + 2.0)
+            .moveZ(controller.height + 1.5)
     }
 
     private fun placeSwitcher(o: Abstract3dModel): Abstract3dModel {
