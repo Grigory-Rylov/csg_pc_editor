@@ -73,9 +73,8 @@ class ControllerHolderBuilder(
             placeSwitcher(switcher.createSwitcherHole())
         )
 
-        return model.addModel(controllerPlace.place(controller, verticalWall))
-            .addModel(controllerPlace.place(controller, createHolder())).subtractModel(usbHole())
-            .addModel(controllerPlace.place(controller, createControllerHolderCylinders()))
+        val case = verticalWall.addModel(createHolder()).addModel(createControllerHolderCylinders())
+        return model.addModel(controllerPlace.place(controller, case)).subtractModel(usbHole())
     }
 
     private fun createControllerHolderCylinders(): Abstract3dModel {

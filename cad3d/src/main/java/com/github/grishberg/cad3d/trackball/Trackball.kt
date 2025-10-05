@@ -62,7 +62,7 @@ class Trackball(private val cfg: KeyboardConfig, private val keyPlace: KeyPlace)
 
         return ModelHolder(
             moveTrackball(model),
-            fromModel(moveTrackball(model), Color.GREEN, cfg.fn),
+            fromModel(moveTrackball(model), Color.YELLOW_GREEN, cfg.fn),
         )
     }
 
@@ -99,7 +99,7 @@ class Trackball(private val cfg: KeyboardConfig, private val keyPlace: KeyPlace)
 
     private fun moveTrackball(model: Abstract3dModel): Abstract3dModel {
         return keyPlace.place(
-            1, 0, model.rotate(Angles3d.xOnly(60.0)), V3d(0.0, 23.5, 29.0)
+            1, 0, model.rotate(Angles3d.xOnly(60.0)), V3d(0.0, 26.5, 24.0)
         )
     }
 

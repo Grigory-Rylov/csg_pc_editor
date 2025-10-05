@@ -41,8 +41,8 @@ class ControllerPlace(
         val p = keyPlace.calculateCoordinates(0, 0)
         val targetPoint = V3d(p.x, backEdgePoint, 0.0)
         return obj.move(targetPoint.add(V3d(
-            12.0,
-            -controller.depth/2 - wallsSettings.borderThickness - 2.0,
+            15.0,
+            -controller.depth/2 - wallsSettings.borderThickness - 1.0,
             2.0)))
     }
 }
