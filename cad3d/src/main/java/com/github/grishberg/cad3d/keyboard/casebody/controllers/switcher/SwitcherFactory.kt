@@ -7,6 +7,6 @@ class SwitcherFactory(
 ) {
 
     fun createSwitcher(): Switcher {
-        return RoundSwitcher()
+        return RoundSwitcher(cfg)
     }
 }

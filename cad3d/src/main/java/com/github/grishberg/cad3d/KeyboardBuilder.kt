@@ -15,6 +15,7 @@ import com.github.grishberg.cad3d.keyboard.casebody.controllers.ControllerFactor
 import com.github.grishberg.cad3d.keyboard.casebody.controllers.ControllerHolderBuilder
 import com.github.grishberg.cad3d.keyboard.casebody.controllers.ControllerHolderDimensions
 import com.github.grishberg.cad3d.keyboard.casebody.controllers.ControllerPlace
+import com.github.grishberg.cad3d.keyboard.casebody.controllers.SwitcherPlace
 import com.github.grishberg.cad3d.keyboard.casebody.controllers.battery.BatteryFactory
 import com.github.grishberg.cad3d.keyboard.casebody.controllers.switcher.SwitcherFactory
 import com.github.grishberg.cad3d.keyboard.casebody.wall.ControllerHolderWall
@@ -84,10 +85,14 @@ class KeyboardBuilder(
 
         val keyPlace = KeyPlace(cfg)
         val thumbKeyPlace = ThumbKeyPlace(cfg)
+        val trackball = Trackball(cfg, keyPlace)
 
-        val controllerPlace = ControllerPlace(cfg, keyPlace)
-        val controllerFactory = ControllerFactory(cfg, controllerPlace)
+        val controllerFactory = ControllerFactory(cfg)
         val controller = controllerFactory.createController()
+
+        val controllerPlace = ControllerPlace(cfg, keyPlace, controller)
+        val switcherPlace = SwitcherPlace(controller, controllerPlace)
+        val switcherFactory = SwitcherFactory(cfg)
         val controllerHolderDimensions = ControllerHolderDimensions()
 
         val wallsSettings = WallsSettings(bottomBorderHeight = 4.0)
@@ -116,7 +121,19 @@ class KeyboardBuilder(
             }
 
             createIfNeeded(resultsChannel, KeyboardPart.Case, visibleModels) {
-                createCase(cfg, keyPlace, thumbKeyPlace, screwWallPlaces, walls, controllerPlace, controllerFactory)
+                createCase(
+                    cfg,
+                    keyPlace,
+                    thumbKeyPlace,
+                    screwWallPlaces,
+                    walls,
+                    controllerPlace,
+                    switcherPlace,
+                    controllerFactory,
+                    switcherFactory,
+                    controller,
+                    trackball,
+                )
             }
             createIfNeeded(resultsChannel, KeyboardPart.KeyCaps, visibleModels) {
                 createKeyCaps(cfg, keyPlace, thumbKeyPlace)
@@ -125,7 +142,7 @@ class KeyboardBuilder(
                 createWristRest(cfg)
             }
             createIfNeeded(resultsChannel, KeyboardPart.TrackBallHolder, visibleModels) {
-                createTrackballHolder(cfg, keyPlace)
+                createTrackballHolder(cfg, trackball)
             }
             createIfNeeded(resultsChannel, KeyboardPart.TrackBall, visibleModels) {
                 createTrackBall(cfg, keyPlace)
@@ -137,17 +154,16 @@ class KeyboardBuilder(
                 createTrackballSensorCap(cfg, keyPlace)
             }
             createIfNeeded(resultsChannel, KeyboardPart.Controller, visibleModels) {
-                createController(controllerFactory)
+                createController(controllerFactory, controllerPlace)
             }
             createIfNeeded(resultsChannel, KeyboardPart.ControllerHolder, visibleModels) {
                 createControllerHolder(
                     cfg = cfg,
                     controllerPlace = controllerPlace,
+                    switcherPlace = switcherPlace,
                     controller = controller,
                     controllerHolderDimensions = controllerHolderDimensions,
-                    keyPlace = keyPlace,
                     screwWallPlaces = screwWallPlaces,
-                    controllerHolderWall = controllerHolderWall,
                 )
             }
             createIfNeeded(resultsChannel, KeyboardPart.Plate, visibleModels) {
@@ -237,15 +253,30 @@ class KeyboardBuilder(
         screwWallPlaces: ScrewWallPlaces,
         walls: Walls,
         controllerPlace: ControllerPlace,
+        switcherPlace: SwitcherPlace,
         controllerFactory: ControllerFactory,
+        switcherFactory: SwitcherFactory,
+        controller: Controller,
+        trackball: Trackball,
     ): List<VertexHolder> {
         val result = mutableListOf<VertexHolder>()
 
         val startTime = System.currentTimeMillis()
 
         var tbHolder: Abstract3dModel? = null
-        val caseWalls =
-            createCaseModel(cfg, keyPlace, thumbKeyPlace, screwWallPlaces, walls, controllerPlace, controllerFactory)
+        val caseWalls = createCaseModel(
+            cfg = cfg,
+            keyPlace = keyPlace,
+            thumbKeyPlace = thumbKeyPlace,
+            screwWallPlaces = screwWallPlaces,
+            walls = walls,
+            controllerPlace = controllerPlace,
+            switcherPlace = switcherPlace,
+            controllerFactory = controllerFactory,
+            switcherFactory = switcherFactory,
+            controller = controller,
+            trackball = trackball,
+        )
         if (cfg.trackball.mode != TrackballMode.None) {
             val trackBallHolder = Trackball(cfg, keyPlace).createTrackballHolder()
             tbHolder = trackBallHolder.model
@@ -299,11 +330,11 @@ class KeyboardBuilder(
     }
 
     private fun createTrackballHolder(
-        cfg: KeyboardConfig, keyPlace: KeyPlace,
+        cfg: KeyboardConfig, trackball: Trackball,
     ): List<VertexHolder> {
         val result = mutableListOf<VertexHolder>()
         val startTime = System.currentTimeMillis()
-        val trackball = Trackball(cfg, keyPlace)
+
         val trackBallModelHolder = trackball.create()
         result.addAll(trackBallModelHolder.vertexHolders)
         saveModel(cfg, "trackball.stl", trackBallModelHolder.model)
@@ -332,21 +363,24 @@ class KeyboardBuilder(
 
     private fun createController(
         controllerFactory: ControllerFactory,
+        controllerPlace: ControllerPlace,
     ): List<VertexHolder> {
         val result = mutableListOf<VertexHolder>()
         val startTime = System.currentTimeMillis()
         val controller = controllerFactory.createController()
-        result.addAll(controller.create().vertexHolders)
+        val controllerModel = controller.create(controllerPlace)
+        result.addAll(controllerModel.vertexHolders)
         val delta = System.currentTimeMillis() - startTime
         println("createController : $delta")
         return result
     }
 
     private fun createControllerHolder(
-        cfg: KeyboardConfig, controllerPlace: ControllerPlace, controller: Controller,
-        controllerHolderDimensions: ControllerHolderDimensions, screwWallPlaces: ScrewWallPlaces,
-        keyPlace: KeyPlace,
-        controllerHolderWall: ControllerHolderWall,
+        cfg: KeyboardConfig, controllerPlace: ControllerPlace,
+        controller: Controller,
+        switcherPlace: SwitcherPlace,
+        controllerHolderDimensions: ControllerHolderDimensions,
+        screwWallPlaces: ScrewWallPlaces,
     ): List<VertexHolder> {
         val result = mutableListOf<VertexHolder>()
         val startTime = System.currentTimeMillis()
@@ -355,13 +389,14 @@ class KeyboardBuilder(
         val batteryFactory = BatteryFactory(cfg)
 
         val controllerHolder = ControllerHolderBuilder(
-            cfg,
-            controller,
-            controllerPlace,
-            controllerHolderDimensions,
-            screwWallPlaces,
-            switcherFactory.createSwitcher(),
-            batteryFactory.create(),
+            cfg = cfg,
+            controller = controller,
+            controllerPlace = controllerPlace,
+            controllerHolderDimensions = controllerHolderDimensions,
+            screwWallPlaces = screwWallPlaces,
+            switcherPlace = switcherPlace,
+            switcher = switcherFactory.createSwitcher(),
+            battery = batteryFactory.create(),
         ).create(showPreview = true)
         result.addAll(controllerHolder.vertexHolders)
         saveModel(cfg, "controller_holder.stl", controllerHolder.model)
@@ -481,7 +516,11 @@ class KeyboardBuilder(
         screwWallPlaces: ScrewWallPlaces,
         walls: Walls,
         controllerPlace: ControllerPlace,
+        switcherPlace: SwitcherPlace,
         controllerFactory: ControllerFactory,
+        switcherFactory: SwitcherFactory,
+        controller: Controller,
+        trackball: Trackball,
     ): ModelHolder {
         val holeVerticalExtra = -3.0
 
@@ -506,11 +545,14 @@ class KeyboardBuilder(
         ).createBorders(
             borderThickness = holeBorderThikness, borderHeight = holeBorderHeight
         )
+        val trackballHole = trackball.createTrackballWireHole()
         val holeBorders = Union(holeBordersModels).moveZ((holeBorderHeight - 2.0) / 2.0 + 0.3)
+        val usbPortHole =
+            controllerPlace.place(controller.placeUsbPort(controllerFactory.createUsbPortHole())).moveY(-2.0)
+        val switcherHole = switcherPlace.place(switcherFactory.createSwitcher().createSwitcherHole())
+        val usbPortHoleCase =
+            controllerPlace.place(controller.placeUsbPort(controllerFactory.createUsbPortCase())).moveY(-1.0)
 
-        val controller = controllerFactory.createController()
-        val usbPortHole = controller.placeUsbPort(controllerFactory.createUsbPortHole()).moveY(-2.0)
-        val usbPortHoleCase = controller.placeUsbPort(controllerFactory.createUsbPortCase())
         val screwBase = ScrewBase(cfg)
         val matrixWallScrewHolder = ScrewsMatrixHolder(cfg, screwBase).create()
         val matrixWallNutHole = ScrewsMatrixHolder(cfg, screwBase).createNutHole()
@@ -528,14 +570,15 @@ class KeyboardBuilder(
             bottomBorderHeight = bottomEdgeHeight
         )
 
-        val wallsModel = Union(wallsModels)
-                .subtractModel(holeBorders)
-                .subtractModel(usbPortHole).addModel(usbPortHoleCase)
-                .subtractModel(Cube(300.0, 300.0, 50.0).move(0.0, 0.0, -25.0))
+        val wallsModel =
+            Union(wallsModels).subtractModel(holeBorders).subtractModel(switcherHole).subtractModel(usbPortHole)
+                .addModel(usbPortHoleCase).subtractModel(Cube(300.0, 300.0, 50.0).move(0.0, 0.0, -25.0))
 
-        val wallModelsWithHoles = Union(wallsModels)
-            .subtractModel(holeBorders)
-            .subtractModel(usbPortHole)
+        var wallModelsWithHoles =
+            Union(wallsModels).subtractModel(holeBorders).subtractModel(usbPortHole).subtractModel(switcherHole)
+        if (cfg.trackball.mode == TrackballMode.Back) {
+            wallModelsWithHoles = wallModelsWithHoles.subtractModel(trackballHole)
+        }
 
         return ModelHolder(
             cfg,
@@ -544,6 +587,8 @@ class KeyboardBuilder(
             wallScrews.withColor(Color.yellow),
             //usbPortHole.withColor(Color.PURPLE),
             usbPortHoleCase.withColor(Color.GREEN),
+            //trackballHole.withColor(Color.CHOCOLATE),
+            //switcherHole.withColor(Color.AQUA_MARINE),
             //holeBorders.withColor(Color.PURPLE),
             //createVertexHolder(holeBorders, Color.PINK),
             screwMatrixHolders.subtractModel(Cube(300.0, 300.0, 50.0).move(0.0, 0.0, -25.0)).withColor(Color.CYAN),

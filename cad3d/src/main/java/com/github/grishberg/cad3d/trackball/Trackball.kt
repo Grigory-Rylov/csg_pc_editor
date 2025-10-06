@@ -66,6 +66,13 @@ class Trackball(private val cfg: KeyboardConfig, private val keyPlace: KeyPlace)
         )
     }
 
+    fun createTrackballWireHole(): Abstract3dModel {
+
+        return keyPlace.place(
+            1, 0, Cylinder(12.0, Radius.fromDiameter(5.0)).rotate(Angles3d.xOnly(-75.0)), V3d(0.0, 20.0, -7.0)
+        ).moveY(6.0)
+    }
+
     /**
      * Держалка трекбола
      */

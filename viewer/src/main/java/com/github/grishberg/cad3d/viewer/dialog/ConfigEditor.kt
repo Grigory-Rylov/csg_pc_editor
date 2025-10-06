@@ -4,6 +4,8 @@ import com.github.grishberg.cad3d.plugin.cfg.KeyboardSettings
 import com.github.grishberg.cad3d.plugin.cfg.SettingsContainer
 import com.github.grishberg.cad3d.plugin.cfg.ThumbClusterSettings
 import com.github.grishberg.cad3d.plugin.cfg.TrackballConfig
+import java.awt.BorderLayout
+import java.awt.Dimension
 import java.awt.GridLayout
 import javax.swing.BorderFactory
 import javax.swing.BoxLayout
@@ -12,11 +14,13 @@ import javax.swing.JComboBox
 import javax.swing.JDialog
 import javax.swing.JLabel
 import javax.swing.JPanel
+import javax.swing.JScrollPane
 import javax.swing.JSpinner
+import javax.swing.ScrollPaneConstants
 import javax.swing.SpinnerNumberModel
 
 class ConfigEditor(
-    private val initialSettingsContainer: SettingsContainer,
+    initialSettingsContainer: SettingsContainer,
     private val onKeyboardSettingsChanged: (KeyboardSettings) -> Unit,
     private val onThumbClusterSettingsChanged: (ThumbClusterSettings) -> Unit,
     private val onTrackballSettingsChanged: (TrackballConfig) -> Unit,
@@ -29,21 +33,35 @@ class ConfigEditor(
     init {
         title = "Конфигурация клавиатуры"
         isModal = false
-        layout = BoxLayout(contentPane, BoxLayout.Y_AXIS)
         defaultCloseOperation = DISPOSE_ON_CLOSE
 
-        createKeyCountPanel()
-        createAnglesPanel()
-        createDimensionsPanel()
-        createAdditionalConfigPanel()
-        createThumbClusterConfigPanel()
-        createTrackballConfigPanel()
+        // Создаем основной контейнер с прокруткой
+        val mainPanel = JPanel().apply {
+            layout = BoxLayout(this, BoxLayout.Y_AXIS)
+        }
+
+        createKeyCountPanel(mainPanel)
+        createAnglesPanel(mainPanel)
+        createDimensionsPanel(mainPanel)
+        createAdditionalConfigPanel(mainPanel)
+        createThumbClusterConfigPanel(mainPanel)
+        createTrackballConfigPanel(mainPanel)
+
+        // Создаем панель прокрутки
+        val scrollPane = JScrollPane(mainPanel).apply {
+            verticalScrollBarPolicy = ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED
+            horizontalScrollBarPolicy = ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED
+            preferredSize = Dimension(600, 600) // Устанавливаем предпочтительный размер
+        }
+
+        contentPane.layout = BorderLayout()
+        contentPane.add(scrollPane, BorderLayout.CENTER)
 
         pack()
         setLocationRelativeTo(null)
     }
 
-    private fun createKeyCountPanel() {
+    private fun createKeyCountPanel(parent: JPanel) {
         val panel = JPanel().apply {
             border = BorderFactory.createTitledBorder("Количество клавиш")
             layout = GridLayout(0, 2)
@@ -59,10 +77,10 @@ class ConfigEditor(
             fireKeyboardSettingsChanges()
         }
 
-        add(panel)
+        parent.add(panel)
     }
 
-    private fun createAnglesPanel() {
+    private fun createAnglesPanel(parent: JPanel) {
         val panel = JPanel().apply {
             border = BorderFactory.createTitledBorder("Углы")
             layout = GridLayout(0, 2)
@@ -83,10 +101,10 @@ class ConfigEditor(
             fireKeyboardSettingsChanges()
         }
 
-        add(panel)
+        parent.add(panel)
     }
 
-    private fun createDimensionsPanel() {
+    private fun createDimensionsPanel(parent: JPanel) {
         val panel = JPanel().apply {
             border = BorderFactory.createTitledBorder("Размеры и отступы")
             layout = GridLayout(0, 2)
@@ -133,10 +151,10 @@ class ConfigEditor(
             fireKeyboardSettingsChanges()
         }
 
-        add(panel)
+        parent.add(panel)
     }
 
-    private fun createAdditionalConfigPanel() {
+    private fun createAdditionalConfigPanel(parent: JPanel) {
         val panel = JPanel().apply {
             border = BorderFactory.createTitledBorder("Дополнительная конфигурация")
             layout = GridLayout(0, 2)
@@ -185,10 +203,10 @@ class ConfigEditor(
             fireKeyboardSettingsChanges()
         }
 
-        add(panel)
+        parent.add(panel)
     }
 
-    private fun createThumbClusterConfigPanel() {
+    private fun createThumbClusterConfigPanel(parent: JPanel) {
         val panel = JPanel().apply {
             border = BorderFactory.createTitledBorder("Кластер большого пальца")
             layout = GridLayout(0, 2)
@@ -253,10 +271,10 @@ class ConfigEditor(
             fireChanges()
         }
         */
-        add(panel)
+        parent.add(panel)
     }
 
-    private fun createTrackballConfigPanel() {
+    private fun createTrackballConfigPanel(parent: JPanel) {
         val panel = JPanel().apply {
             border = BorderFactory.createTitledBorder("Трекбол")
             layout = GridLayout(0, 2)
@@ -277,7 +295,7 @@ class ConfigEditor(
             fireTrackballSettingsChanges()
         }
 
-        add(panel)
+        parent.add(panel)
     }
 
     private fun addIntSpinner(

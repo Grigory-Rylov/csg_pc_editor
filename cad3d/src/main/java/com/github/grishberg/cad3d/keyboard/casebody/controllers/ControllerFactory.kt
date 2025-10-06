@@ -8,7 +8,7 @@ import eu.printingin3d.javascad.models.Abstract3dModel
 import eu.printingin3d.javascad.models.Cylinder
 import eu.printingin3d.javascad.models.Hull
 
-class ControllerFactory(private val cfg: KeyboardConfig, private val controllerPlace: ControllerPlace) {
+class ControllerFactory(private val cfg: KeyboardConfig) {
 
     private val usbHoleWidth = 13.0
     private val usbHoleHeight = 9.0
@@ -18,20 +18,19 @@ class ControllerFactory(private val cfg: KeyboardConfig, private val controllerP
 
     fun createController(): Controller {
         return when (cfg.controllerType){
-            ControllerType.SuperMiniNRF52840 -> SuperMiniNRF52840(cfg, controllerPlace)
-            ControllerType.Rp2040Pink -> RP2040Pink(cfg, controllerPlace)
-            ControllerType.Rp2040Mini-> RP2040Mini(cfg, controllerPlace)
+            ControllerType.SuperMiniNRF52840 -> SuperMiniNRF52840(cfg)
+            ControllerType.Rp2040Pink -> RP2040Pink(cfg)
+            ControllerType.Rp2040Mini-> RP2040Mini(cfg)
         }
     }
 
     fun createUsbPortHole(): Abstract3dModel {
-        return place(usbHoleObject(), createController())
+        return place(usbHoleObject())
     }
 
     fun createUsbPortCase(): Abstract3dModel {
         return place(
             usbHoleCaseObject().subtractModel(usbHoleObject().moveY(0.5)).subtractModel(createUsb()),
-            createController()
         )
     }
 
@@ -53,8 +52,7 @@ class ControllerFactory(private val cfg: KeyboardConfig, private val controllerP
         val cylinder = Cylinder(cfg.wallsSettings.borderThickness *2, Radius.fromDiameter(diameter)).rotate(Angles3d.xOnly(90.0))
         return Hull(
             cylinder.moveX(-width / 2 + diameter / 2), cylinder.moveX(width / 2 - diameter / 2)
-        ).moveY(4.5)
-            .moveZ(( usbPortHeight) / 2)
+        ).moveY(4.5).moveZ((usbPortHeight) / 2)
     }
 
     private fun createUsb(): Abstract3dModel {
@@ -68,7 +66,7 @@ class ControllerFactory(private val cfg: KeyboardConfig, private val controllerP
         ).moveZ(diameter / 2).moveY(2.0)
     }
 
-    private fun place(o: Abstract3dModel, controller: Controller): Abstract3dModel {
-        return controllerPlace.place(controller, o).moveZ(1.5)
+    private fun place(o: Abstract3dModel): Abstract3dModel {
+        return o.moveZ(1.5)
     }
 }

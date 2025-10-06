@@ -13,13 +13,12 @@ import kotlin.math.max
 class ControllerPlace(
     private val cfg: KeyboardConfig,
     private val keyPlace: KeyPlace,
+    private val controller: Controller,
 ) {
 
     fun place(
-        controller: Controller,
         obj: Abstract3dModel,
     ): Abstract3dModel {
-
         val wallsSettings = cfg.wallsSettings
         val left = keyPlace.place(
             2,

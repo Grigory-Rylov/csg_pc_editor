@@ -13,7 +13,6 @@ import eu.printingin3d.javascad.utils.Color
 
 class SuperMiniNRF52840(
     private val cfg: KeyboardConfig,
-    private val controllerPlace: ControllerPlace,
 ) : Controller {
 
     override val width = 17.78
@@ -22,14 +21,14 @@ class SuperMiniNRF52840(
 
     override val isWireless: Boolean = true
 
-    override fun create(): ModelHolder {
+    override fun create(controllerPlace: ControllerPlace): ModelHolder {
         val usbPort = placeUsbPort(createUsb())
         val model = Cube(width, depth, height).moveZ(height / 2)
 
         return ModelHolder(
             model.addModel(usbPort),
-            fromModel(place(model), Color.CYAN, cfg.fn),
-            fromModel(place(usbPort), Color.YELLOW, cfg.fn),
+            fromModel(place(controllerPlace, model), Color.CYAN, cfg.fn),
+            fromModel(place(controllerPlace, usbPort), Color.YELLOW, cfg.fn),
         )
     }
 
@@ -47,7 +46,7 @@ class SuperMiniNRF52840(
         ).moveZ(diameter / 2)
     }
 
-    private fun place(o: Abstract3dModel): Abstract3dModel {
-        return controllerPlace.place(this, o).moveZ(1.5)
+    private fun place(controllerPlace: ControllerPlace, o: Abstract3dModel): Abstract3dModel {
+        return controllerPlace.place(o).moveZ(1.5)
     }
 }

@@ -23,6 +23,7 @@ class ControllerHolderBuilder(
     private val cfg: KeyboardConfig,
     private val controller: Controller,
     private val controllerPlace: ControllerPlace,
+    private val switcherPlace: SwitcherPlace,
     private val controllerHolderDimensions: ControllerHolderDimensions,
     private val screwWallPlaces: ScrewWallPlaces,
     private val switcher: Switcher,
@@ -59,7 +60,7 @@ class ControllerHolderBuilder(
     }
 
     private fun placeBatteryHolder(o: Abstract3dModel): Abstract3dModel {
-        return controllerPlace.place(controller, o.rotate(Angles3d.zOnly(25.0))).move(7.0, -battery.depth + 20.7, -4.0)
+        return controllerPlace.place(o.rotate(Angles3d.zOnly(25.0))).move(7.0, -battery.depth + 20.7, -4.0)
     }
 
     private fun createControllerModel(): Abstract3dModel {
@@ -69,12 +70,12 @@ class ControllerHolderBuilder(
         val height = 10.0
         val screwOffset = cfg.screwHolderWallhickness + cfg.screwNutHoleDiameter / 2
         val panelWidth = controllerHolderDimensions.distanceBetweenControllerHolderMountX - 2 * screwOffset - 2.0
-        val verticalWall = Cube(panelWidth, 1.5, height).move(-5.5, depth / 2.0, 4.5).subtractModel(
-            placeSwitcher(switcher.createSwitcherHole())
-        )
+        val verticalWall = Cube(panelWidth, 1.5, height).move(-5.5, depth / 2.0, 4.5)
+
 
         val case = verticalWall.addModel(createHolder()).addModel(createControllerHolderCylinders())
-        return model.addModel(controllerPlace.place(controller, case)).subtractModel(usbHole())
+        return model.addModel(controllerPlace.place(case)).subtractModel(usbHole())
+            .subtractModel(switcherPlace.place(switcher.createSwitcherHole()))
     }
 
     private fun createControllerHolderCylinders(): Abstract3dModel {
@@ -83,15 +84,9 @@ class ControllerHolderBuilder(
         val cylinder = Cylinder(length, Radius.fromDiameter(diam)).rotate(Angles3d.yOnly(90.0))
         val offset = 7.0
         val depth = (controller.depth - 1.0) / 2.0
-        return cylinder.move(-offset, depth, 0.0)
-            .addModel(cylinder.move(offset, depth, 0.0))
-            .addModel(cylinder.move(offset, -depth, 0.0))
-            .addModel(cylinder.move(-offset, -depth, 0.0))
+        return cylinder.move(-offset, depth, 0.0).addModel(cylinder.move(offset, depth, 0.0))
+            .addModel(cylinder.move(offset, -depth, 0.0)).addModel(cylinder.move(-offset, -depth, 0.0))
             .moveZ(controller.height + 1.5)
-    }
-
-    private fun placeSwitcher(o: Abstract3dModel): Abstract3dModel {
-        return o.move(-19.0, controller.depth / 2.0, 4.5)
     }
 
     private fun usbHole(): Abstract3dModel {
@@ -102,7 +97,7 @@ class ControllerHolderBuilder(
         val usb = Hull(
             cylinder.moveX(-width / 2 + diameter / 2), cylinder.moveX(width / 2 - diameter / 2)
         ).moveZ(diameter / 2 + 1.4)
-        return controllerPlace.place(controller, controller.placeUsbPort(usb))
+        return controllerPlace.place(controller.placeUsbPort(usb))
     }
 
     private fun createHolder(): Abstract3dModel {

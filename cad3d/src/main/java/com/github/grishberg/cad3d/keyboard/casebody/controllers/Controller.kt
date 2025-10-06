@@ -11,7 +11,7 @@ interface Controller {
 
     val isWireless: Boolean
 
-    fun create(): ModelHolder
+    fun create(controllerPlace: ControllerPlace): ModelHolder
 
     fun placeUsbPort(obj: Abstract3dModel): Abstract3dModel
 }
