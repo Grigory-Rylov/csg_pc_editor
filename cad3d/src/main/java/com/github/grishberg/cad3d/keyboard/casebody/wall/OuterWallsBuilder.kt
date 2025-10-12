@@ -526,6 +526,51 @@ class OuterWallsBuilder(
         return Union(holes)
     }
 
+    override fun rightDiagonal(
+        backKeyPlace: (Abstract3dModel) -> Abstract3dModel,
+        frontKeyPlace: (Abstract3dModel) -> Abstract3dModel
+    ): Abstract3dModel {
+        val topOffset = 0.0
+        val bottomOffset = 0.0
+        val offset = 1.0
+        val back = backKeyPlace(
+            KeyPlaceholder.placeHolderFrontRight().move(offset, 0.0, cfg.borderZOffset)
+        )
+        val front = frontKeyPlace(
+            KeyPlaceholder.placeHolderFrontRight().move(offset, bottomOffset, cfg.borderZOffset)
+        )
+
+        val border = hull(
+            topBorderObj(back), topBorderObj(front),
+            /*
+            verticalCube(
+                frontKeyPlace(
+                    KeyPlaceholder.placeHolderFrontRight().move(cfg.rightOffset, 0.0, cfg.borderZOffset)
+                )
+            ),
+            verticalCube(backKeyPlace(KeyPlaceholder.placeHolderFrontRight().move(cfg.rightOffset, 0.0, cfg.borderZOffset))),
+
+             */
+        )
+
+        if (isSkeletonMode) {
+            return union(
+                border, hull(
+                    bottomEdgePatcher.rightPoint(back),
+                    bottomEdgePatcher.rightPoint(front),
+                )
+            )
+        }
+
+        val wall = hull(
+            topBorderObj(back), topBorderObj(front),
+            bottomEdgePatcher.rightPoint(back),
+            bottomEdgePatcher.rightPoint(front),
+        )
+
+        return Union(border, wall)
+    }
+
     private fun verticalCube(obj: Abstract3dModel): Abstract3dModel {
         return borderObject(cfg.borderThickness, cfg.borderHeight).moveZ(topEdgeOffsetZ).move(obj.move)
     }

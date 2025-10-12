@@ -9,6 +9,7 @@ import com.github.grishberg.cad3d.keyboard.ModelHolder
 import com.github.grishberg.cad3d.keyboard.ThumbKeyPlace
 import com.github.grishberg.cad3d.keyboard.Utils
 import com.github.grishberg.cad3d.keyboard.amoeba.Amoeba
+import com.github.grishberg.cad3d.keyboard.casebody.DefaultBottomEdgePatcher
 import com.github.grishberg.cad3d.keyboard.casebody.Walls
 import com.github.grishberg.cad3d.keyboard.casebody.controllers.Controller
 import com.github.grishberg.cad3d.keyboard.casebody.controllers.ControllerFactory
@@ -18,7 +19,17 @@ import com.github.grishberg.cad3d.keyboard.casebody.controllers.ControllerPlace
 import com.github.grishberg.cad3d.keyboard.casebody.controllers.SwitcherPlace
 import com.github.grishberg.cad3d.keyboard.casebody.controllers.battery.BatteryFactory
 import com.github.grishberg.cad3d.keyboard.casebody.controllers.switcher.SwitcherFactory
+import com.github.grishberg.cad3d.keyboard.casebody.thumb.SingleColumn3ButtonsThumbWalls
+import com.github.grishberg.cad3d.keyboard.casebody.thumb.SingleColumn3ButtonsThumbsBordersBuilder
+import com.github.grishberg.cad3d.keyboard.casebody.thumb.ThumbBorders
+import com.github.grishberg.cad3d.keyboard.casebody.thumb.ThumbPoints
+import com.github.grishberg.cad3d.keyboard.casebody.thumb.ThumbWalls
+import com.github.grishberg.cad3d.keyboard.casebody.thumb.TwoRows5ButtonsThumbWalls
+import com.github.grishberg.cad3d.keyboard.casebody.thumb.TwoRows5ButtonsMatrixThumbsBordersBuilder
 import com.github.grishberg.cad3d.keyboard.casebody.wall.ControllerHolderWall
+import com.github.grishberg.cad3d.keyboard.casebody.wall.FrontRightToMatrixWallBuilder
+import com.github.grishberg.cad3d.keyboard.casebody.wall.SingleRow3ButtonsFrontRightToMatrixWallBuilder
+import com.github.grishberg.cad3d.keyboard.casebody.wall.TwoRowsButtonsFrontRightToMatrixWallBuilder
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
 import com.github.grishberg.cad3d.keyboard.cfg.WallsSettings
 import com.github.grishberg.cad3d.keyboard.matrix.KeyMatrix
@@ -33,6 +44,7 @@ import com.github.grishberg.cad3d.plugin.ResultListener
 import com.github.grishberg.cad3d.plugin.VertexHolder
 import com.github.grishberg.cad3d.plugin.cfg.KeyPlaceholderType
 import com.github.grishberg.cad3d.plugin.cfg.KeyboardPart
+import com.github.grishberg.cad3d.plugin.cfg.ThumbClusterMode
 import com.github.grishberg.cad3d.plugin.cfg.TrackballMode
 import com.github.grishberg.cad3d.trackball.Trackball
 import com.github.grishberg.cad3d.util.fromModel
@@ -102,22 +114,38 @@ class KeyboardBuilder(
         )
 
         val topEdgeOffsetZ = -2.0
+
+        val thumbPoints = ThumbPoints(cfg, keyPlace, thumbKeyPlace)
+        val bottomEdgePatcher = DefaultBottomEdgePatcher(
+            wallsSettings.borderThickness, wallsSettings.bottomBorderHeight
+        )
+        val frontRightToMatrixWallBuilder: FrontRightToMatrixWallBuilder =  when (cfg.thumbClusterSettings.type) {
+            ThumbClusterMode.SingleColumn3Buttons -> SingleRow3ButtonsFrontRightToMatrixWallBuilder(cfg, bottomEdgePatcher, topEdgeOffsetZ)
+            ThumbClusterMode.SingleColumn4Buttons -> SingleRow3ButtonsFrontRightToMatrixWallBuilder(cfg, bottomEdgePatcher, topEdgeOffsetZ)
+            ThumbClusterMode.TwoRows5Buttons -> TwoRowsButtonsFrontRightToMatrixWallBuilder(cfg, bottomEdgePatcher, topEdgeOffsetZ, thumbPoints)
+        }
+
+        val thumbBorders = when (cfg.thumbClusterSettings.type) {
+            ThumbClusterMode.SingleColumn3Buttons -> SingleColumn3ButtonsThumbsBordersBuilder(thumbKeyPlace)
+            ThumbClusterMode.SingleColumn4Buttons -> SingleColumn3ButtonsThumbsBordersBuilder(thumbKeyPlace)
+            ThumbClusterMode.TwoRows5Buttons -> TwoRows5ButtonsMatrixThumbsBordersBuilder(thumbKeyPlace)
+        }
+
+        val thumbWalls: ThumbWalls = when (cfg.thumbClusterSettings.type) {
+            ThumbClusterMode.SingleColumn3Buttons -> SingleColumn3ButtonsThumbWalls(cfg, keyPlace, thumbKeyPlace, frontRightToMatrixWallBuilder)
+            ThumbClusterMode.SingleColumn4Buttons -> SingleColumn3ButtonsThumbWalls(cfg, keyPlace, thumbKeyPlace, frontRightToMatrixWallBuilder)
+            ThumbClusterMode.TwoRows5Buttons -> TwoRows5ButtonsThumbWalls(cfg, keyPlace, thumbKeyPlace, thumbPoints, frontRightToMatrixWallBuilder)
+        }
         val walls = Walls(
             cfg, wallsSettings, keyPlace, thumbKeyPlace, topEdgeOffsetZ = topEdgeOffsetZ,
-        )
-
-        val wallsForPlate = Walls(
-            cfg,
-            wallsSettings.copy(
-                borderThickness = cfg.plateThickness, borderHeight = cfg.plateThickness
-            ),
-            keyPlace, thumbKeyPlace, topEdgeOffsetZ = topEdgeOffsetZ,
+            thumbBorders = thumbBorders,
+            thumbWalls = thumbWalls,
         )
 
         val resultsChannel = Channel<List<VertexHolder>>()
         coroutineScope.launch {
             createIfNeeded(resultsChannel, KeyboardPart.KeyMatrix, visibleModels) {
-                createMatrix(cfg, keyPlace, thumbKeyPlace)
+                createMatrix(cfg, keyPlace, thumbKeyPlace, thumbBorders, thumbWalls)
             }
 
             createIfNeeded(resultsChannel, KeyboardPart.Case, visibleModels) {
@@ -133,6 +161,8 @@ class KeyboardBuilder(
                     switcherFactory,
                     controller,
                     trackball,
+                    thumbBorders = thumbBorders,
+                    thumbWalls = thumbWalls,
                 )
             }
             createIfNeeded(resultsChannel, KeyboardPart.KeyCaps, visibleModels) {
@@ -181,6 +211,8 @@ class KeyboardBuilder(
                     try {
                         currentResults.addAll(resultsChannel.receive())
                         receivedCount++
+                        // Emit partial update (not complete yet)
+                        listener.onReady(currentResults.toList(), complete = receivedCount >= expectedCount)
                     } catch (e: ClosedReceiveChannelException) {
                         println("Channel was closed ${this@KeyboardBuilder}" + e.message)
                         break
@@ -188,7 +220,10 @@ class KeyboardBuilder(
                 }
                 println("--------------- create3dModels: $this onReady : ${currentResults.size}")
 
-                listener.onReady(currentResults)
+                if (receivedCount >= expectedCount) {
+                    // Ensure final complete callback in case loop ended exactly
+                    listener.onReady(currentResults.toList(), complete = true)
+                }
                 resultsChannel.close()
             }
         }
@@ -217,7 +252,9 @@ class KeyboardBuilder(
     }
 
     private fun createMatrix(
-        cfg: KeyboardConfig, keyPlace: KeyPlace, thumbKeyPlace: ThumbKeyPlace
+        cfg: KeyboardConfig, keyPlace: KeyPlace, thumbKeyPlace: ThumbKeyPlace,
+        thumbBorders: ThumbBorders,
+        thumbWalls: ThumbWalls,
     ): List<VertexHolder> {
         val result = mutableListOf<VertexHolder>()
 
@@ -228,7 +265,7 @@ class KeyboardBuilder(
         val amoebaHoles = amoebaHoles(
             cfg, keyPlace, thumbKeyPlace
         ).takeIf { cfg.keyPlaceholderType == KeyPlaceholderType.AmoebaSu120 }
-        val borders = keyMatrix.createBordersModel(amoebaHoles)
+        val borders = keyMatrix.createBordersModel(amoebaHoles, thumbBorders, thumbWalls = thumbWalls)
         val placeHolders = keyMatrix.createPlaceholders()
 
         saveModel(cfg, "placeHolder.stl", keyMatrix.createPlaceHolder())
@@ -258,6 +295,8 @@ class KeyboardBuilder(
         switcherFactory: SwitcherFactory,
         controller: Controller,
         trackball: Trackball,
+        thumbBorders: ThumbBorders,
+        thumbWalls: ThumbWalls,
     ): List<VertexHolder> {
         val result = mutableListOf<VertexHolder>()
 
@@ -275,6 +314,8 @@ class KeyboardBuilder(
             controllerFactory = controllerFactory,
             switcherFactory = switcherFactory,
             controller = controller,
+            thumbBorders = thumbBorders,
+            thumbWalls = thumbWalls,
             trackball = trackball,
         )
         if (cfg.trackball.mode != TrackballMode.None) {
@@ -521,6 +562,8 @@ class KeyboardBuilder(
         switcherFactory: SwitcherFactory,
         controller: Controller,
         trackball: Trackball,
+        thumbBorders: ThumbBorders,
+        thumbWalls: ThumbWalls,
     ): ModelHolder {
         val holeVerticalExtra = -3.0
 
@@ -541,7 +584,8 @@ class KeyboardBuilder(
             keyPlace,
             thumbKeyPlace,
             topEdgeOffsetZ = holeVerticalExtra / 2,
-            isPlateMode = false,
+            thumbBorders = thumbBorders,
+            thumbWalls = thumbWalls,
         ).createBorders(
             borderThickness = holeBorderThikness, borderHeight = holeBorderHeight
         )
@@ -583,7 +627,7 @@ class KeyboardBuilder(
         return ModelHolder(
             cfg,
             wallsModel.addModel(screwMatrixHolders).addModel(wallScrews).subtractModel(screwMatrixHoldersHoles),
-            wallModelsWithHoles,
+            wallsModels, //wallModelsWithHoles, // for color wall debug place wallsModels
             wallScrews.withColor(Color.yellow),
             //usbPortHole.withColor(Color.PURPLE),
             usbPortHoleCase.withColor(Color.GREEN),

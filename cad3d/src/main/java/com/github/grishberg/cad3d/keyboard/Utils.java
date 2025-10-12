@@ -24,6 +24,10 @@ public class Utils {
         return new Hull(models);
     }
 
+    public static Abstract3dModel hull(List<Abstract3dModel> models) {
+        return new Hull(models);
+    }
+
     public static Cube cube(double x, double y, double z) {
         return new Cube(x, y, z);
     }

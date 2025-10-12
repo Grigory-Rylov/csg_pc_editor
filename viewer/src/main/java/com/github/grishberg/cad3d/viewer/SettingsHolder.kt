@@ -14,6 +14,12 @@ import com.github.grishberg.cad3d.plugin.cfg.ViewerSettings
 import java.io.File
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class SettingsHolder(
     val filePath: String,
@@ -27,6 +33,10 @@ class SettingsHolder(
 
     var settings: SettingsContainer = createDefaultSettings()
         private set
+
+    private val coroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    private var pendingSaveJob: Job? = null
+    private val saveDebounceMillis: Long = 1000
 
     var settingsShowCaps: Boolean
         get() = settings.assemblySettings.settingsShowCaps
@@ -151,16 +161,19 @@ class SettingsHolder(
         keyboardSettings: KeyboardSettings,
     ) {
         settings = settings.copy(keyboardSettings = keyboardSettings)
+        scheduleSaveDebounced()
     }
 
     fun updateSettings(
         thumbClusterSettings: ThumbClusterSettings
     ) {
         settings = settings.copy(thumbClusterSettings = thumbClusterSettings)
+        scheduleSaveDebounced()
     }
 
     fun updateSettings(tbConfig: TrackballConfig) {
         settings = settings.copy(trackballSettings = tbConfig)
+        scheduleSaveDebounced()
     }
 
     private val json = Json {
@@ -182,6 +195,14 @@ class SettingsHolder(
             file.writeText(jsonString)
         } catch (e: Exception) {
             e.printStackTrace()
+        }
+    }
+
+    private fun scheduleSaveDebounced() {
+        pendingSaveJob?.cancel()
+        pendingSaveJob = coroutineScope.launch {
+            delay(saveDebounceMillis)
+            saveSettings()
         }
     }
 

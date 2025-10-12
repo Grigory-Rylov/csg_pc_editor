@@ -21,6 +21,7 @@ import com.jogamp.opengl.fixedfunc.GLLightingFunc
 import com.jogamp.opengl.glu.GLU
 import com.jogamp.opengl.util.Animator
 import java.awt.BorderLayout
+import java.awt.Color
 import java.awt.Dimension
 import java.awt.FlowLayout
 import java.awt.event.ActionEvent
@@ -70,6 +71,8 @@ class Main(title: String?) : JFrame(title), GLEventListener {
     private var currentDebugCommandIndex = 0
     private lateinit var debugNavigationPanel: JPanel
     private lateinit var debugInfoLabel: JLabel
+    private lateinit var helpLabel: JLabel
+    private lateinit var statusLabel: JLabel
     private lateinit var prevDebugButton: JButton
     private lateinit var nextDebugButton: JButton
     private val pluginManager: PluginManager
@@ -289,10 +292,15 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         debugInfoLabel = JLabel("Debug: выключен")
         debugInfoLabel.preferredSize = Dimension(350, 30)
 
+        // Метка статуса рендеринга
+        statusLabel = JLabel("Готово")
+        statusLabel.preferredSize = Dimension(200, 30)
+
         // Подсказка о горячих клавишах
-        val helpLabel = JLabel("Горячие клавиши: R - вкл/выкл debug, Q/E - переключение команд")
+        helpLabel = JLabel("Горячие клавиши: R - вкл/выкл debug, Q/E - переключение команд")
         helpLabel.preferredSize = Dimension(400, 30)
 
+        debugNavigationPanel.add(statusLabel)
         debugNavigationPanel.add(prevDebugButton)
         debugNavigationPanel.add(debugInfoLabel)
         debugNavigationPanel.add(nextDebugButton)
@@ -300,6 +308,10 @@ class Main(title: String?) : JFrame(title), GLEventListener {
 
         // Изначально кнопки отключены
         updateDebugNavigationState()
+
+        // Панель не видна, если debug выключен
+        // Панель всегда видима, статус слева, debug-инфо по флагу
+        debugNavigationPanel.isVisible = true
     }
 
     private fun showConfigDialog() {
@@ -339,11 +351,16 @@ class Main(title: String?) : JFrame(title), GLEventListener {
     private fun rebuildConfigAndRequestRendering(plugins: List<Cad3dPlugin>, modifiedKeyboardParts: Set<KeyboardPart>) {
         plugins.forEach {
             println("Request from ${it.name} , ver ${it.version}")
+            // Показать статус: Рендеринг
+            setRenderingStatus(true)
             it.requestModels(
                 settingsHolder.settings, modifiedKeyboardParts, object : ResultListener {
-                    override fun onReady(result: List<VertexHolder>) {
+                    override fun onReady(result: List<VertexHolder>, complete: Boolean) {
                         vertexHolderList.clear()
                         vertexHolderList.addAll(result)
+                        if (complete) {
+                            setRenderingStatus(false)
+                        }
                     }
                 })
         }
@@ -357,6 +374,10 @@ class Main(title: String?) : JFrame(title), GLEventListener {
     private fun updateDebugNavigationState() {
         prevDebugButton.isEnabled = showDebugInfo
         nextDebugButton.isEnabled = showDebugInfo
+        debugInfoLabel.isVisible = showDebugInfo
+        prevDebugButton.isVisible = showDebugInfo
+        nextDebugButton.isVisible = showDebugInfo
+        helpLabel.isVisible = showDebugInfo
 
         if (showDebugInfo && debugCommands.isNotEmpty()) {
             val currentCmd = debugCommands[currentDebugCommandIndex]
@@ -365,6 +386,17 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         } else {
             debugInfoLabel.text = "Debug: выключен"
         }
+
+        // Обновляем layout окна при изменении видимости панели
+        debugNavigationPanel.revalidate()
+        debugNavigationPanel.repaint()
+        contentPane.revalidate()
+        contentPane.repaint()
+    }
+
+    private fun setRenderingStatus(isRendering: Boolean) {
+        statusLabel.text = if (isRendering) "Рендеринг" else "Готово"
+        statusLabel.background = if (isRendering) Color.ORANGE else Color.GREEN
     }
 
     private fun updateDebugDisplay() {

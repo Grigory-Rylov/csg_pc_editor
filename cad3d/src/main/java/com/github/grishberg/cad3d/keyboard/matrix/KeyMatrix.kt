@@ -8,6 +8,8 @@ import com.github.grishberg.cad3d.keyboard.ThumbConnections
 import com.github.grishberg.cad3d.keyboard.ThumbKeyPlace
 import com.github.grishberg.cad3d.keyboard.amoeba.Amoeba
 import com.github.grishberg.cad3d.keyboard.casebody.Walls
+import com.github.grishberg.cad3d.keyboard.casebody.thumb.ThumbBorders
+import com.github.grishberg.cad3d.keyboard.casebody.thumb.ThumbWalls
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
 import com.github.grishberg.cad3d.keyboard.cfg.WallsSettings
 import com.github.grishberg.cad3d.keyboard.screws.ScrewBase
@@ -26,7 +28,7 @@ class KeyMatrix(
 
     fun createConnectionsModel(): ModelHolder {
         val connections = Connections(cfg, keyPlace).buildConnections()
-        val thumbPlaceConnections = ThumbConnections(thumbKeyPlace).buildThumbPlaceConnections()
+        val thumbPlaceConnections = ThumbConnections(cfg, thumbKeyPlace).buildThumbPlaceConnections()
 
         return ModelHolder(
             connections.addModel(thumbPlaceConnections),
@@ -35,7 +37,11 @@ class KeyMatrix(
         )
     }
 
-    fun createBordersModel(amoebaHoles: Abstract3dModel?): ModelHolder {
+    fun createBordersModel(
+        amoebaHoles: Abstract3dModel?,
+        thumbBorders: ThumbBorders,
+        thumbWalls: ThumbWalls,
+    ): ModelHolder {
         val screwBase = ScrewBase(cfg)
         val screws = ScrewKeyMatrixPlace(cfg, keyPlace, thumbKeyPlace).place(screwBase.matrixScrewHole())
 
@@ -44,7 +50,15 @@ class KeyMatrix(
             borderHeight = borderHeigth, bottomBorderHeight = 4.0
 
         )
-        val bordersModels = Walls(cfg, wallsSettings, keyPlace, thumbKeyPlace, topEdgeOffsetZ = 0.0).createBorders(
+        val bordersModels = Walls(
+            cfg,
+            wallsSettings,
+            keyPlace,
+            thumbKeyPlace,
+            topEdgeOffsetZ = 0.0,
+            thumbBorders = thumbBorders,
+            thumbWalls = thumbWalls
+        ).createBorders(
             1.5, borderHeigth
         )
         val borders = Union(bordersModels).subtractModel(screws).subtractModel(amoebaHoles)

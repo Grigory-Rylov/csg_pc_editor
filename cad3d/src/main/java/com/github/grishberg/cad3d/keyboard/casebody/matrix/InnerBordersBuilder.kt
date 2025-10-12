@@ -200,11 +200,31 @@ class InnerBordersBuilder(
         ),
     )
 
+    override fun rightDiagonal(
+        backKeyPlace: (Abstract3dModel) -> Abstract3dModel,
+        frontKeyPlace: (Abstract3dModel) -> Abstract3dModel,
+    ): Abstract3dModel {
+        return Utils.hull(
+            backKeyPlace(KeyPlaceholder.placeHolderFrontRight()),
+            frontKeyPlace(KeyPlaceholder.placeHolderFrontRight()),
+            verticalCube(
+                backKeyPlace(
+                    KeyPlaceholder.placeHolderFrontRight().move(rightOffset, 0.0, borderZOffset)
+                )
+            ),
+            verticalCube(frontKeyPlace(KeyPlaceholder.placeHolderFrontRight().move(rightOffset, 0.0, borderZOffset))),
+        )
+    }
+
     private fun verticalCube(obj: Abstract3dModel): Abstract3dModel {
         return borderObject(borderThickness, borderHeight).move(obj.move)
     }
 
     private fun borderObject(thickness: Double, height: Double): Abstract3dModel {
         return Utils.cylinder(thickness, height)
+    }
+
+    private fun topBorderObject(): Abstract3dModel {
+        return Utils.cylinder(borderThickness, borderHeight)
     }
 }
