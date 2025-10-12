@@ -70,9 +70,9 @@ class TwoRows5ButtonsThumbWalls(
             thumbBackLPoint,
             bottomEdgePatcher.leftPoint(left),
             bottomEdgePatcher.projection(thumbBackLPoint),
+            border,
         )
         models.add(wall.withColor(Color.ALICE_BLUE))
-        models.add(border.withColor(Color.BLANCHED_ALMOND))
 
         //left front
         models.add(cornerWallBuilder.frontLeft { obj -> thumbKeyPlace.placeL2(obj) })
@@ -85,12 +85,11 @@ class TwoRows5ButtonsThumbWalls(
             )
         )
 
-        // models.addAll(rightFrontCorner(topEdgeOffsetZ))
+
         models.addAll(frontRight(topEdgeOffsetZ, bottomEdgePatcher))
 
         models.add(wallsBuilder.frontWall { o -> thumbKeyPlace.placeR2(o) })
-        //models.add(cornerWallBuilder.frontRight { o -> thumbKeyPlace.placeR2(o) })
-        //models.add(wallsBuilder.frontWall { o -> ThumbKeyPlace.placeM(o) })
+
         models.add(wallsBuilder.frontWall { o -> thumbKeyPlace.placeL2(o) })
 
         models.addAll(wallsBuilder.leftWall { o -> thumbKeyPlace.placeL(o) })
@@ -178,10 +177,9 @@ class TwoRows5ButtonsThumbWalls(
 
         if (cfg.isSkeletonMode) {
             return listOf(
-                border,
-                hull(thumbPoints.row2RightFRRightOuter, bottomEdgePatcher.frontPoint(thumbPoints.row2RightFRRightOuter)),
-                hull(rightOuter, bottomEdgePatcher.rightPoint(rightOuter)),
-                hull(
+                border, hull(
+                    thumbPoints.row2RightFRRightOuter, bottomEdgePatcher.frontPoint(thumbPoints.row2RightFRRightOuter)
+                ), hull(rightOuter, bottomEdgePatcher.rightPoint(rightOuter)), hull(
                     bottomEdgePatcher.frontPoint(thumbPoints.row2RightFRRightOuter),
                     bottomEdgePatcher.rightPoint(rightOuter),
                 )

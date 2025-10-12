@@ -1,7 +1,7 @@
 package com.github.grishberg.cad3d.keyboard.cfg
 
 data class WallsSettings(
-    val bottomBorderHeight: Double = 4.0,
+    val bottomBorderHeight: Double = 1.0,
     val outerVerticalOffset: Double = 10.0,
     val outerHorizontalOffset: Double = 15.0,
     val outerBorderZOffset: Double = -6.0,

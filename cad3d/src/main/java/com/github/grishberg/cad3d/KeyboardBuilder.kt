@@ -107,7 +107,7 @@ class KeyboardBuilder(
         val switcherFactory = SwitcherFactory(cfg)
         val controllerHolderDimensions = ControllerHolderDimensions()
 
-        val wallsSettings = WallsSettings(bottomBorderHeight = 4.0)
+        val wallsSettings = WallsSettings(bottomBorderHeight = 1.0)
         val controllerHolderWall = ControllerHolderWall(wallsSettings, keyPlace)
         val screwWallPlaces = ScrewWallPlaces(
             cfg, wallsSettings, keyPlace, thumbKeyPlace, controllerHolderWall, controllerHolderDimensions
