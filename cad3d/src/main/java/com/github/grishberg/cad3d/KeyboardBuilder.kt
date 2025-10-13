@@ -627,7 +627,7 @@ class KeyboardBuilder(
         return ModelHolder(
             cfg,
             wallsModel.addModel(screwMatrixHolders).addModel(wallScrews).subtractModel(screwMatrixHoldersHoles),
-            wallsModels, //wallModelsWithHoles, // for color wall debug place wallsModels
+            wallModelsWithHoles, // for color wall debug place wallsModels
             wallScrews.withColor(Color.yellow),
             //usbPortHole.withColor(Color.PURPLE),
             usbPortHoleCase.withColor(Color.GREEN),

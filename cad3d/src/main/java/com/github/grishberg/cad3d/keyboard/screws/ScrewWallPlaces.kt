@@ -8,6 +8,7 @@ import com.github.grishberg.cad3d.keyboard.casebody.controllers.ControllerHolder
 import com.github.grishberg.cad3d.keyboard.casebody.wall.ControllerHolderWall
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
 import com.github.grishberg.cad3d.keyboard.cfg.WallsSettings
+import com.github.grishberg.cad3d.plugin.cfg.ThumbClusterMode
 import eu.printingin3d.javascad.coords.V3d
 import eu.printingin3d.javascad.models.Abstract3dModel
 import eu.printingin3d.javascad.models.Cube
@@ -35,13 +36,21 @@ class ScrewWallPlaces(
         models.add(placeRightBack(o, keyPlace.place(cfg.lastCol, 0, cube), offsetY = 10.0))
         models.add(placeRightFront(o, keyPlace.place(cfg.lastCol, cfg.lastRow, cube), offsetY = -4.0))
 
-        models.add(placeFrontCenter(o, keyPlace.place(3, cfg.lastRow, cube), offsetY = -23.5))
+        val offsetY = if (cfg.thumbClusterSettings.type == ThumbClusterMode.TwoRows5Buttons) -23.0 else -23.5
+        val offsetX = if (cfg.thumbClusterSettings.type == ThumbClusterMode.TwoRows5Buttons) 6.0 else 0.0
+
+        models.add(placeFrontCenter(o, keyPlace.place(3, cfg.lastRow, cube), offsetX = offsetX, offsetY = offsetY))
 
         if (!cfg.isSkeletonMode) {
             models.add(placeTop(o, keyPlace.place(3, 0, cube), offsetY = 12.0))
         }
 
-        models.add(placeFrontCenter(o, thumbKeyPlace.placeL(cube), offsetX = -0.5, offsetY = -10.0))
+        if (cfg.thumbClusterSettings.type == ThumbClusterMode.TwoRows5Buttons) {
+            models.add(placeFrontCenter(o, thumbKeyPlace.placeL2(cube), offsetX = -0.5, offsetY = -10.0))
+        } else {
+            models.add(placeFrontCenter(o, thumbKeyPlace.placeL(cube), offsetX = -0.5, offsetY = -10.0))
+        }
+
         return Union(models)
     }
 
