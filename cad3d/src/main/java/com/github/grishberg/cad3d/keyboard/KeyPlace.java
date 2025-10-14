@@ -7,7 +7,6 @@ import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig;
 import eu.printingin3d.javascad.coords.Angles3d;
 import eu.printingin3d.javascad.coords.V3d;
 import eu.printingin3d.javascad.models.Abstract3dModel;
-import eu.printingin3d.javascad.models.Cube;
 
 public class KeyPlace {
 
@@ -68,29 +67,6 @@ public class KeyPlace {
         int row,
         V3d initialPoint
     ) {
-        Abstract3dModel obj = new Cube(1);
-        V3d keyOffset = cfg.getColumnOffsetProvider().getOffset(column);
-
-        return obj.move(initialPoint)
-            .move(0, 0, -rowRadius)
-            .rotate(Angles3d.xOnly(calculateXAngle(row)))
-            .move(0, 0, rowRadius)
-            .move(0, 0, -columnRadius)
-            .rotate(Angles3d.yOnly(calculateYAngle(column)))
-            .move(0, 0, columnRadius)
-            .move(keyOffset.x, keyOffset.y, keyOffset.z)
-            .rotate(Angles3d.zOnly(cfg.getZAngleProvider().getZAngle(column)))
-            .rotate(Angles3d.yOnly(cfg.getTentingAngle()))
-            .move(0, 0, cfg.getPlateZOffset())
-            .getMove();
-    }
-
-    //not correct
-    public V3d calculateCoordinates0(
-        int column,
-        int row,
-        V3d initialPoint
-    ) {
         double zOffset = cfg.getPlateZOffset();
         double zAngle = cfg.getZAngleProvider().getZAngle(column);
         V3d offset = cfg.getColumnOffsetProvider().getOffset(column);
@@ -107,40 +83,50 @@ public class KeyPlace {
         double zAngleRad = Math.toRadians(zAngle);
         double yAngleRad = Math.toRadians(calculateYAngle(column));
         double xAngleRad = Math.toRadians(calculateXAngle(row));
+        double tentingAngleRad = Math.toRadians(cfg.getTentingAngle());
 
-        // 1
+        // 1) move(0,0,-rowRadius)
         z -= zRad2;
 
-        // 2
-        double tempZ = z;
-        z = z * Math.cos(-xAngleRad) - y * Math.sin(-xAngleRad);
-        y = tempZ * Math.sin(-xAngleRad) + y * Math.cos(-xAngleRad);
+        // 2) rotate X by +xAngle
+        double yAfterX = y * Math.cos(xAngleRad) - z * Math.sin(xAngleRad);
+        double zAfterX = y * Math.sin(xAngleRad) + z * Math.cos(xAngleRad);
+        y = yAfterX;
+        z = zAfterX;
 
-        // 3
+        // 3) move back by rowRadius
         z += zRad2;
 
-        // 4
+        // 4) move(0,0,-columnRadius)
         z -= zRad1;
 
-        // 5
-        double tempY = x;
-        x = x * Math.cos(-yAngleRad) - z * Math.sin(-yAngleRad);
-        z = tempY * Math.sin(-yAngleRad) + z * Math.cos(-yAngleRad);
+        // 5) rotate Y by +yAngle
+        double xAfterY = x * Math.cos(yAngleRad) + z * Math.sin(yAngleRad);
+        double zAfterY = -x * Math.sin(yAngleRad) + z * Math.cos(yAngleRad);
+        x = xAfterY;
+        z = zAfterY;
 
-        // 6
+        // 6) move back by columnRadius
         z += zRad1;
 
-        // 7
+        // 7) move by key offset
         x += dx;
         y += dy;
         z += dz;
 
-        // 8
-        double tempX = x;
-        x = x * Math.cos(zAngleRad) - y * Math.sin(zAngleRad);
-        y = tempX * Math.sin(zAngleRad) + y * Math.cos(zAngleRad);
+        // 8) rotate Z by zAngle
+        double xAfterZ = x * Math.cos(zAngleRad) - y * Math.sin(zAngleRad);
+        double yAfterZ = x * Math.sin(zAngleRad) + y * Math.cos(zAngleRad);
+        x = xAfterZ;
+        y = yAfterZ;
 
-        // 9
+        // 9) rotate Y by tentingAngle
+        double xAfterTenting = x * Math.cos(tentingAngleRad) + z * Math.sin(tentingAngleRad);
+        double zAfterTenting = -x * Math.sin(tentingAngleRad) + z * Math.cos(tentingAngleRad);
+        x = xAfterTenting;
+        z = zAfterTenting;
+
+        // 10) move by plateZOffset
         z += zOffset;
 
         return new V3d(x, y, z);
