@@ -95,7 +95,7 @@ class KeyboardBuilder(
             cache.remove(it)
         }
 
-        val keyPlace = KeyPlace(cfg)
+        val keyPlace = KeyPlace(cfg.keyPlaceConfig)
         val thumbKeyPlace = ThumbKeyPlace(cfg)
         val trackball = Trackball(cfg, keyPlace)
 
@@ -264,7 +264,7 @@ class KeyboardBuilder(
         val connections = keyMatrix.createConnectionsModel()
         val amoebaHoles = amoebaHoles(
             cfg, keyPlace, thumbKeyPlace
-        ).takeIf { cfg.keyPlaceholderType == KeyPlaceholderType.AmoebaSu120 }
+        ).takeIf { cfg.keyPlaceConfig.keyPlaceholderType == KeyPlaceholderType.AmoebaSu120 }
         val borders = keyMatrix.createBordersModel(amoebaHoles, thumbBorders, thumbWalls = thumbWalls)
         val placeHolders = keyMatrix.createPlaceholders()
 
@@ -514,14 +514,6 @@ class KeyboardBuilder(
         return ModelHolder(placedModel, createVertexHolder(cfg, placedModel, color))
     }
 
-    private fun keyHoles(cfg: KeyboardConfig, keyPlace: KeyPlace): Abstract3dModel {
-        return KeySwitchHoles(cfg, keyPlace).build()
-    }
-
-    private fun keyPlaceHoles(cfg: KeyboardConfig, keyPlace: KeyPlace, offset: Double): Abstract3dModel {
-        return KeyPlaceHoles(cfg, keyPlace).build(offset)
-    }
-
     private fun wristRestMount(): Abstract3dModel {
         // left back
         return Cylinder(42.0, 6.0).move(-56.0, -88.0, -2.0).addModel( // left front
@@ -534,15 +526,15 @@ class KeyboardBuilder(
     }
 
     private fun keyPlaceBottomWalls(cfg: KeyboardConfig, keyPlace: KeyPlace): Abstract3dModel {
-        return KeyHolderBottomWalls(cfg, keyPlace).build()
+        return KeyHolderBottomWalls(cfg.keyPlaceConfig, keyPlace).build()
     }
 
     private fun createKeycapsModel(
         cfg: KeyboardConfig, model: Abstract3dModel, keyPlace: KeyPlace, color: Color
     ): ModelHolder {
         val models = mutableListOf<Abstract3dModel>()
-        for (column in 0 until cfg.columnsCount) {
-            for (row in 0 until cfg.rowsCount) {
+        for (column in 0 until cfg.keyPlaceConfig.columnsCount) {
+            for (row in 0 until cfg.keyPlaceConfig.rowsCount) {
                 models.add(keyPlace.place(column, row, model))
             }
         }

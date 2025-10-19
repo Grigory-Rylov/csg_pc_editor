@@ -15,7 +15,7 @@ class Amoeba(private val cfg: KeyboardConfig) {
     private val holeDistance = 14.0
     private val holeDiameter = 1.4
 
-    private val bottomOffset = if (cfg.isLowProfile) -thikness / 2 else -thikness / 2 - 1.0
+    private val bottomOffset = if (cfg.keyPlaceConfig.isLowProfile) -thikness / 2 else -thikness / 2 - 1.0
 
     fun create(): Abstract3dModel {
         return Cube(width, height, thikness).moveZ(bottomOffset).subtractModel(createHoles())

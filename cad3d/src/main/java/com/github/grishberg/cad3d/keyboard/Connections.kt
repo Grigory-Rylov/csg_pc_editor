@@ -17,8 +17,8 @@ class Connections(private val cfg: KeyboardConfig, private val keyPlace: KeyPlac
     fun buildConnections(): Abstract3dModel {
         models.clear()
         // diagonals
-        for (column in 0 until cfg.columnsCount - 1) {
-            for (row in 0 until cfg.rowsCount - 1) {
+        for (column in 0 until cfg.keyPlaceConfig.columnsCount - 1) {
+            for (row in 0 until cfg.keyPlaceConfig.rowsCount - 1) {
                 addHull(
                     keyPlace.place(column, row, placeHolderFrontRight()),
                     keyPlace.place(column + 1, row, placeHolderFrontLeft()),
@@ -29,8 +29,8 @@ class Connections(private val cfg: KeyboardConfig, private val keyPlace: KeyPlac
         }
 
         //columns
-        for (column in 0 until cfg.columnsCount - 1) {
-            for (row in 0 until cfg.rowsCount) {
+        for (column in 0 until cfg.keyPlaceConfig.columnsCount - 1) {
+            for (row in 0 until cfg.keyPlaceConfig.rowsCount) {
                 addHull(
                     keyPlace.place(column, row, placeHolderRight()), keyPlace.place(column + 1, row, placeHolderLeft())
                 )
@@ -38,8 +38,8 @@ class Connections(private val cfg: KeyboardConfig, private val keyPlace: KeyPlac
         }
 
         // rows
-        for (column in 0 until cfg.columnsCount) {
-            for (row in 0 until cfg.rowsCount - 1) {
+        for (column in 0 until cfg.keyPlaceConfig.columnsCount) {
+            for (row in 0 until cfg.keyPlaceConfig.rowsCount - 1) {
                 addHull(
                     keyPlace.place(column, row, placeHolderFront()),
                     keyPlace.place(column, row + 1, placeHolderBack())

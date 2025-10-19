@@ -16,7 +16,7 @@ class KeyCaps(private val cfg: KeyboardConfig) {
 
     private fun createModel(): Abstract3dModel {
         return Cube(
-            width, width, cfg.saProfileKeyHeight + cfg.saProfileKeyHeight / 2
+            width, width, cfg.keyPlaceConfig.saProfileKeyHeight + cfg.keyPlaceConfig.saProfileKeyHeight / 2
         ).move(0.0, 0.0, 7.5)
     }
 }

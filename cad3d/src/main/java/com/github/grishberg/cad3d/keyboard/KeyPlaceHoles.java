@@ -7,6 +7,7 @@ import static com.github.grishberg.cad3d.keyboard.Utils.hull;
 import static com.github.grishberg.cad3d.keyboard.Utils.sphere;
 import static com.github.grishberg.cad3d.keyboard.Utils.union;
 
+import com.github.grishberg.cad3d.kbd.core.cfg.KeyPlaceConfig;
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig;
 import eu.printingin3d.javascad.coords.V3d;
 import eu.printingin3d.javascad.models.Abstract3dModel;
@@ -19,11 +20,11 @@ public class KeyPlaceHoles {
     private static final int OFFSET_Z = 15;
     private static final int HOLE_SIZE = 14;
     private static final double HOLE_RADIUS = 3;
-    private final KeyboardConfig cfg;
+    private final KeyPlaceConfig cfg;
     private final KeyPlace keyPlace;
 
     public KeyPlaceHoles(KeyboardConfig cfg, KeyPlace keyPlace) {
-        this.cfg = cfg;
+        this.cfg = cfg.getKeyPlaceConfig();
         this.keyPlace = keyPlace;
     }
 

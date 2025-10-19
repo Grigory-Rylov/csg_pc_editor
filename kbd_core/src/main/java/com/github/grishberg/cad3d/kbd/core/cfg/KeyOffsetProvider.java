@@ -1,4 +1,4 @@
-package com.github.grishberg.cad3d.keyboard.cfg;
+package com.github.grishberg.cad3d.kbd.core.cfg;
 
 import eu.printingin3d.javascad.coords.V3d;
 

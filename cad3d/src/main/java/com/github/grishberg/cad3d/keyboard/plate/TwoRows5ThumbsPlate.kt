@@ -132,7 +132,7 @@ class TwoRows5ThumbsPlate(
         ).subtractModel(screws)
         models.add(part7)
 
-        val offsetZ = -cfg.plateThickness / 2
+        val offsetZ = -cfg.keyPlaceConfig.plateThickness / 2
 
         val debugObject = Cube(3.0)
         return ModelHolder(
@@ -165,6 +165,6 @@ class TwoRows5ThumbsPlate(
     }
 
     private fun platePoint(point: V3d): Abstract3dModel {
-        return Cylinder(cfg.plateThickness, Radius.fromDiameter(3.0)).move(point)
+        return Cylinder(cfg.keyPlaceConfig.plateThickness, Radius.fromDiameter(3.0)).move(point)
     }
 }

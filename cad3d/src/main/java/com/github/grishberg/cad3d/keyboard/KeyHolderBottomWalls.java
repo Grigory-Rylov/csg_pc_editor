@@ -6,7 +6,7 @@ import static com.github.grishberg.cad3d.keyboard.Utils.hull;
 import static com.github.grishberg.cad3d.keyboard.Utils.sphere;
 import static com.github.grishberg.cad3d.keyboard.Utils.union;
 
-import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig;
+import com.github.grishberg.cad3d.kbd.core.cfg.KeyPlaceConfig;
 import eu.printingin3d.javascad.coords.V3d;
 import eu.printingin3d.javascad.models.Abstract3dModel;
 import java.util.ArrayList;
@@ -18,10 +18,10 @@ public class KeyHolderBottomWalls {
     private static final int HOLE_SIZE = 14;
     public static final double HOLE_RADIUS = 5;
     private static final double HEIGHT = HOLE_RADIUS * 2;
-    private final KeyboardConfig cfg;
+    private final KeyPlaceConfig cfg;
     private final KeyPlace keyPlace;
 
-    public KeyHolderBottomWalls(KeyboardConfig cfg, KeyPlace keyPlace) {
+    public KeyHolderBottomWalls(KeyPlaceConfig cfg, KeyPlace keyPlace) {
         this.cfg = cfg;
         this.keyPlace = keyPlace;
     }

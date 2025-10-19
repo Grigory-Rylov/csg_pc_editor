@@ -1,221 +1,176 @@
-package com.github.grishberg.cad3d.keyboard;
+package com.github.grishberg.cad3d.keyboard
 
-import static java.lang.Math.sin;
-import static java.lang.Math.toRadians;
+import com.github.grishberg.cad3d.kbd.core.cfg.KeyPlaceConfig
+import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
+import eu.printingin3d.javascad.coords.Angles3d
+import eu.printingin3d.javascad.coords.V3d
+import eu.printingin3d.javascad.models.Abstract3dModel
+import kotlin.math.cos
+import kotlin.math.sin
 
-import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig;
-import eu.printingin3d.javascad.coords.Angles3d;
-import eu.printingin3d.javascad.coords.V3d;
-import eu.printingin3d.javascad.models.Abstract3dModel;
+class KeyPlace(private val cfg: KeyPlaceConfig) {
 
-public class KeyPlace {
+    private val capTopHeight: Double = cfg.plateThickness + cfg.saProfileKeyHeight
+    private val mountWidth: Double = cfg.keyswitchWidth + cfg.horizontalExtraSpace
+    private val mountHeight: Double = cfg.keyswitchWidth + cfg.verticalExtraSpace
 
-    private final KeyboardConfig cfg;
-    private final double capTopHeight;
-    private final double mountWidth;
-    private double mountHeight;
+    private val columnRadius: Double =
+        ((mountWidth + cfg.extraHeight) / 2.0) / sin(Math.toRadians(cfg.columnCurvature) / 2.0) + capTopHeight
+    private val rowRadius: Double =
+        ((mountHeight + cfg.extraWidth) / 2.0) / sin(Math.toRadians(cfg.rowCurvature) / 2.0) + capTopHeight
 
-    private double columnRadius;
-    private double rowRadius;
+    @JvmOverloads
+    fun place(column: Int, row: Int, obj: Abstract3dModel, offset: V3d = V3d(0.0, 0.0, 0.0)): Abstract3dModel {
+        val keyOffset = cfg.columnOffsetProvider.getOffset(column)
 
-
-    public KeyPlace(KeyboardConfig cfg) {
-        this.cfg = cfg;
-        capTopHeight = cfg.getPlateThickness() + cfg.getSaProfileKeyHeight();
-        mountWidth = cfg.getKeyswitchWidth() + cfg.getHorizontalExtraSpace();
-        mountHeight = cfg.getKeyswitchWidth() + cfg.getVerticalExtraSpace();
-
-        columnRadius =
-            ((mountWidth + cfg.getExtraHeight()) / 2.0) /
-                sin(toRadians(cfg.getColumnCurvature()) / 2.0) + capTopHeight;
-        rowRadius =
-            ((mountHeight + cfg.getExtraWidth()) / 2.0) /
-                sin(toRadians(cfg.getRowCurvature()) / 2.0) + capTopHeight;
-
+        return obj.move(offset).move(0, 0, -rowRadius).rotate(Angles3d.xOnly(calculateXAngle(row)))
+            .move(0, 0, rowRadius).move(0, 0, -columnRadius).rotate(Angles3d.yOnly(calculateYAngle(column)))
+            .move(0, 0, columnRadius).move(keyOffset.x, keyOffset.y, keyOffset.z)
+            .rotate(Angles3d.zOnly(cfg.zAngleProvider.getZAngle(column))).rotate(Angles3d.yOnly(cfg.tentingAngle))
+            .move(0, 0, cfg.plateZOffset)
     }
 
-    public Abstract3dModel place(int column, int row, Abstract3dModel obj) {
-        return place(column, row, obj, new V3d(0, 0, 0));
-    }
-
-    public Abstract3dModel place(int column, int row, Abstract3dModel obj, V3d offset) {
-        V3d keyOffset = cfg.getColumnOffsetProvider().getOffset(column);
-
-        return obj.move(offset)
-            .move(0, 0, -rowRadius)
-            .rotate(Angles3d.xOnly(calculateXAngle(row)))
-            .move(0, 0, rowRadius)
-            .move(0, 0, -columnRadius)
-            .rotate(Angles3d.yOnly(calculateYAngle(column)))
-            .move(0, 0, columnRadius)
-            .move(keyOffset.x, keyOffset.y, keyOffset.z)
-            .rotate(Angles3d.zOnly(cfg.getZAngleProvider().getZAngle(column)))
-            .rotate(Angles3d.yOnly(cfg.getTentingAngle()))
-            .move(0, 0, cfg.getPlateZOffset());
-    }
-
-    public V3d calculateCoordinates(int column, int row) {
-        return calculateCoordinates(column, row, new V3d(0, 0, 0));
-    }
-
-    public V3d coords(int column, int row, double x, double y, double z) {
-        return calculateCoordinates(column, row, new V3d(x, y, z));
-    }
-
-    public V3d calculateCoordinates(
-        int column,
-        int row,
-        V3d initialPoint
-    ) {
-        double zOffset = cfg.getPlateZOffset();
-        double zAngle = cfg.getZAngleProvider().getZAngle(column);
-        V3d offset = cfg.getColumnOffsetProvider().getOffset(column);
-        double dx = offset.getX();
-        double dy = offset.getY();
-        double dz = offset.getZ();
-        double zRad1 = columnRadius;
-        double zRad2 = rowRadius;
-        double x = initialPoint.getX();
-        double y = initialPoint.getY();
-        double z = initialPoint.getZ();
+    @JvmOverloads
+    fun calculateCoordinates(
+        column: Int, row: Int, initialPoint: V3d = V3d(0.0, 0.0, 0.0)
+    ): V3d {
+        val zOffset = cfg.plateZOffset
+        val zAngle = cfg.zAngleProvider.getZAngle(column)
+        val offset = cfg.columnOffsetProvider.getOffset(column)
+        val dx = offset.getX()
+        val dy = offset.getY()
+        val dz = offset.getZ()
+        val zRad1 = columnRadius
+        val zRad2 = rowRadius
+        var x = initialPoint.getX()
+        var y = initialPoint.getY()
+        var z = initialPoint.getZ()
 
         // Convert angles from degrees to radians because Java trigonometric functions use radians
-        double zAngleRad = Math.toRadians(zAngle);
-        double yAngleRad = Math.toRadians(calculateYAngle(column));
-        double xAngleRad = Math.toRadians(calculateXAngle(row));
-        double tentingAngleRad = Math.toRadians(cfg.getTentingAngle());
+        val zAngleRad = Math.toRadians(zAngle)
+        val yAngleRad = Math.toRadians(calculateYAngle(column))
+        val xAngleRad = Math.toRadians(calculateXAngle(row))
+        val tentingAngleRad = Math.toRadians(cfg.tentingAngle)
 
         // 1) move(0,0,-rowRadius)
-        z -= zRad2;
+        z -= zRad2
 
         // 2) rotate X by +xAngle
-        double yAfterX = y * Math.cos(xAngleRad) - z * Math.sin(xAngleRad);
-        double zAfterX = y * Math.sin(xAngleRad) + z * Math.cos(xAngleRad);
-        y = yAfterX;
-        z = zAfterX;
+        val yAfterX = y * cos(xAngleRad) - z * sin(xAngleRad)
+        val zAfterX = y * sin(xAngleRad) + z * cos(xAngleRad)
+        y = yAfterX
+        z = zAfterX
 
         // 3) move back by rowRadius
-        z += zRad2;
+        z += zRad2
 
         // 4) move(0,0,-columnRadius)
-        z -= zRad1;
+        z -= zRad1
 
         // 5) rotate Y by +yAngle
-        double xAfterY = x * Math.cos(yAngleRad) + z * Math.sin(yAngleRad);
-        double zAfterY = -x * Math.sin(yAngleRad) + z * Math.cos(yAngleRad);
-        x = xAfterY;
-        z = zAfterY;
+        val xAfterY = x * cos(yAngleRad) + z * sin(yAngleRad)
+        val zAfterY = -x * sin(yAngleRad) + z * cos(yAngleRad)
+        x = xAfterY
+        z = zAfterY
 
         // 6) move back by columnRadius
-        z += zRad1;
+        z += zRad1
 
         // 7) move by key offset
-        x += dx;
-        y += dy;
-        z += dz;
+        x += dx
+        y += dy
+        z += dz
 
         // 8) rotate Z by zAngle
-        double xAfterZ = x * Math.cos(zAngleRad) - y * Math.sin(zAngleRad);
-        double yAfterZ = x * Math.sin(zAngleRad) + y * Math.cos(zAngleRad);
-        x = xAfterZ;
-        y = yAfterZ;
+        val xAfterZ = x * cos(zAngleRad) - y * sin(zAngleRad)
+        val yAfterZ = x * sin(zAngleRad) + y * cos(zAngleRad)
+        x = xAfterZ
+        y = yAfterZ
 
         // 9) rotate Y by tentingAngle
-        double xAfterTenting = x * Math.cos(tentingAngleRad) + z * Math.sin(tentingAngleRad);
-        double zAfterTenting = -x * Math.sin(tentingAngleRad) + z * Math.cos(tentingAngleRad);
-        x = xAfterTenting;
-        z = zAfterTenting;
+        val xAfterTenting = x * cos(tentingAngleRad) + z * sin(tentingAngleRad)
+        val zAfterTenting = -x * sin(tentingAngleRad) + z * cos(tentingAngleRad)
+        x = xAfterTenting
+        z = zAfterTenting
 
         // 10) move by plateZOffset
-        z += zOffset;
+        z += zOffset
 
-        return new V3d(x, y, z);
+        return V3d(x, y, z)
     }
 
-
-    private double calculateYAngle(int column) {
-        return cfg.getColumnCurvature() * (cfg.getCenterCol() - column);
+    private fun calculateYAngle(column: Int): Double {
+        return cfg.columnCurvature * (cfg.centerCol - column)
     }
 
-    private double calculateXAngle(int row) {
-        return cfg.getRowCurvature() * (cfg.getCenterRow() - row);
+    private fun calculateXAngle(row: Int): Double {
+        return cfg.rowCurvature * (cfg.centerRow - row)
     }
 
-    public V3d calculatePlacePoint(
-        int column,
-        int row,
-        PlacePointType pointType
-    ) {
-        return calculatePlacePoint(column, row, pointType, 0, 0);
-    }
+    @JvmOverloads
+    fun calculatePlacePoint(
+        column: Int,
+        row: Int,
+        pointType: PlacePointType,
+        xOffset: Double = 0.0,
+        yOffset: Double = 0.0,
+        zOffset: Double = 0.0
+    ): V3d {
+        var x = 0.0
+        var y = 0.0
+        var z = 0.0
 
-    public V3d calculatePlacePoint(
-        int column,
-        int row,
-        PlacePointType pointType,
-        double xOffset,
-        double yOffset
-    ){
-        return calculatePlacePoint(column, row, pointType, xOffset, yOffset, 0);
-    }
+        when (pointType) {
+            PlacePointType.BackLeftTop -> {
+                x = cfg.keyPlaceHolderWidth / -2.0 + xOffset
+                y = cfg.keyPlaceHolderDepth / 2.0 + yOffset
+                z = cfg.keyPlaceHolderHeight + zOffset
+            }
 
-    public V3d calculatePlacePoint(
-        int column,
-        int row,
-        PlacePointType pointType,
-        double xOffset,
-        double yOffset,
-        double zOffset
-    ) {
-        double x = 0.0;
-        double y = 0.0;
-        double z = 0.0;
+            PlacePointType.BackRightTop -> {
+                x = cfg.keyPlaceHolderWidth / 2.0 + xOffset
+                y = cfg.keyPlaceHolderDepth / 2.0 + yOffset
+                z = cfg.keyPlaceHolderHeight + zOffset
+            }
 
-        switch (pointType) {
-            case BackLeftTop:
-                x = cfg.getKeyPlaceHolderWidth() / -2.0 + xOffset;
-                y = cfg.getKeyPlaceHolderDepth() / 2.0 + yOffset;
-                z = cfg.getKeyPlaceHolderHeight() + zOffset;
-                break;
-            case BackRightTop:
-                x = cfg.getKeyPlaceHolderWidth() / 2.0 + xOffset;
-                y = cfg.getKeyPlaceHolderDepth() / 2.0 + yOffset;
-                z = cfg.getKeyPlaceHolderHeight() + zOffset;
-                break;
-            case FrontLeftTop:
-                x = cfg.getKeyPlaceHolderWidth() / -2.0 + xOffset;
-                y = cfg.getKeyPlaceHolderDepth() / -2.0 + yOffset;
-                z = cfg.getKeyPlaceHolderHeight() + zOffset;
-                break;
-            case FrontRightTop:
-                x = cfg.getKeyPlaceHolderWidth() / 2.0 + xOffset;
-                y = cfg.getKeyPlaceHolderDepth() / -2.0 + yOffset;
-                z = cfg.getKeyPlaceHolderHeight() + zOffset;
-                break;
-            case BackLeftBottom:
-                x = cfg.getKeyPlaceHolderWidth() / -2.0 + xOffset;
-                y = cfg.getKeyPlaceHolderDepth() / 2.0 + yOffset;
-                z = zOffset;
-                break;
-            case BackRightBottom:
-                x = cfg.getKeyPlaceHolderWidth() / 2.0 + xOffset;
-                y = cfg.getKeyPlaceHolderDepth() / 2.0 + yOffset;
-                z = zOffset;
-                break;
-            case FrontLeftBottom:
-                x = cfg.getKeyPlaceHolderWidth() / -2.0 + xOffset;
-                y = cfg.getKeyPlaceHolderDepth() / -2.0 + yOffset;
-                z = zOffset;
-                break;
-            case FrontRightBottom:
-                x = cfg.getKeyPlaceHolderWidth() / 2.0 + xOffset;
-                y = cfg.getKeyPlaceHolderDepth() / -2.0 + yOffset;
-                z = zOffset;
-                break;
+            PlacePointType.FrontLeftTop -> {
+                x = cfg.keyPlaceHolderWidth / -2.0 + xOffset
+                y = cfg.keyPlaceHolderDepth / -2.0 + yOffset
+                z = cfg.keyPlaceHolderHeight + zOffset
+            }
+
+            PlacePointType.FrontRightTop -> {
+                x = cfg.keyPlaceHolderWidth / 2.0 + xOffset
+                y = cfg.keyPlaceHolderDepth / -2.0 + yOffset
+                z = cfg.keyPlaceHolderHeight + zOffset
+            }
+
+            PlacePointType.BackLeftBottom -> {
+                x = cfg.keyPlaceHolderWidth / -2.0 + xOffset
+                y = cfg.keyPlaceHolderDepth / 2.0 + yOffset
+                z = zOffset
+            }
+
+            PlacePointType.BackRightBottom -> {
+                x = cfg.keyPlaceHolderWidth / 2.0 + xOffset
+                y = cfg.keyPlaceHolderDepth / 2.0 + yOffset
+                z = zOffset
+            }
+
+            PlacePointType.FrontLeftBottom -> {
+                x = cfg.keyPlaceHolderWidth / -2.0 + xOffset
+                y = cfg.keyPlaceHolderDepth / -2.0 + yOffset
+                z = zOffset
+            }
+
+            PlacePointType.FrontRightBottom -> {
+                x = cfg.keyPlaceHolderWidth / 2.0 + xOffset
+                y = cfg.keyPlaceHolderDepth / -2.0 + yOffset
+                z = zOffset
+            }
         }
 
-        V3d initialPoint3d = new V3d(x, y, z);
-        return calculateCoordinates(column, row, initialPoint3d);
+        val initialPoint3d = V3d(x, y, z)
+        return calculateCoordinates(column, row, initialPoint3d)
     }
-
 }

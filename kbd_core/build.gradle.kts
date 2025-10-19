@@ -7,9 +7,6 @@ version = "1.0.1"
 dependencies {
     implementation(project(":javascad"))
     implementation(project(":plugin"))
-    implementation(project(":kbd_core"))
-
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.0")
 
     testImplementation("junit:junit:4.13.1")
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")

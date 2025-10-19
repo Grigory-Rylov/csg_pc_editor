@@ -113,7 +113,7 @@ class SingleRow3ThumbsPlate(
         ).subtractModel(screws)
         models.add(part7)
 
-        val offsetZ = -cfg.plateThickness / 2
+        val offsetZ = -cfg.keyPlaceConfig.plateThickness / 2
 
         return ModelHolder(
             Union(models),
@@ -129,6 +129,6 @@ class SingleRow3ThumbsPlate(
     }
 
     private fun platePoint(point: V3d): Abstract3dModel {
-        return Cylinder(cfg.plateThickness, Radius.fromDiameter(3.0)).move(point)
+        return Cylinder(cfg.keyPlaceConfig.plateThickness, Radius.fromDiameter(3.0)).move(point)
     }
 }

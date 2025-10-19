@@ -1,4 +1,4 @@
-package com.github.grishberg.cad3d.keyboard.cfg;
+package com.github.grishberg.cad3d.kbd.core.cfg;
 
 public class KeyZAngleProvider {
    public double getZAngle(int column) {

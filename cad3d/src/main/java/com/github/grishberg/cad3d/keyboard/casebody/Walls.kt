@@ -162,7 +162,7 @@ class Walls(
                 keyPlace = { obj -> keyPlace.place(2, 0, obj) },
             )
         )
-        for (column in 3 until cfg.columnsCount) {
+        for (column in 3 until cfg.keyPlaceConfig.columnsCount) {
             // back columns
             models.add(
                 wallsBuilder.backMidWall(
@@ -200,7 +200,7 @@ class Walls(
             )
         })
 
-        for (column in 0 until cfg.columnsCount) {
+        for (column in 0 until cfg.keyPlaceConfig.columnsCount) {
             // back columns
             models.add(wallsBuilder.backWall(onlyBorder = true) { obj ->
                 keyPlace.place(
@@ -221,7 +221,7 @@ class Walls(
                 )
             })
         }
-        for (column in 0 until cfg.columnsCount - 1) {
+        for (column in 0 until cfg.keyPlaceConfig.columnsCount - 1) {
             // back diagonals
             if (!isWallMode || column != 1) {
                 models.add(
@@ -248,7 +248,7 @@ class Walls(
 
         }
 
-        for (row in 0 until cfg.rowsCount) {
+        for (row in 0 until cfg.keyPlaceConfig.rowsCount) {
             //left
             models.addAll(wallsBuilder.leftWall { obj ->
                 keyPlace.place(
@@ -263,7 +263,7 @@ class Walls(
             })
 
         }
-        for (row in 0 until cfg.rowsCount - 1) {
+        for (row in 0 until cfg.keyPlaceConfig.rowsCount - 1) {
             models.add(
                 wallsBuilder.leftMidWall(
                     leftPlace = { obj -> keyPlace.place(0, row, obj) },

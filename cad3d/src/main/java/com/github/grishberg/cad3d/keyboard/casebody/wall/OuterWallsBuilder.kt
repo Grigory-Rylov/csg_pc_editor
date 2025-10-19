@@ -439,7 +439,7 @@ class OuterWallsBuilder(
         val topBorderPoints = mutableListOf<V3d>()
         val bottomEdgePoints = mutableListOf<V3d>()
 
-        for (column in 0 until keyboardConfig.columnsCount) {
+        for (column in 0 until keyboardConfig.keyPlaceConfig.columnsCount) {
             val topKeyPlace = { obj: Abstract3dModel ->
                 keyPlace.place(
                     column, 0, obj

@@ -25,7 +25,7 @@ class ScrewBase(private val cfg: KeyboardConfig) {
      */
     fun plateScrewHolder(): Abstract3dModel {
         return Union(
-            Cylinder(cfg.plateThickness + 1, Radius.fromDiameter(cfg.screwBoltDiameter)),
+            Cylinder(cfg.keyPlaceConfig.plateThickness + 1, Radius.fromDiameter(cfg.screwBoltDiameter)),
 
             Cylinder(cfg.screwHeadHeight,
                 Radius.fromDiameter(cfg.screwHeadDiameter + 0.2),

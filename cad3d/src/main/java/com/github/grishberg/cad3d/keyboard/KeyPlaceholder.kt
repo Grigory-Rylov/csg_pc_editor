@@ -28,7 +28,7 @@ object KeyPlaceholder {
     private const val HORIZONTAL_TOP_OFFSET = BASE_TOP_OFFSET - HORIZONTAL_WALL_HEIGHT / 2 + 2.6 / 2
 
     fun placeHolder(cfg: KeyboardConfig): Abstract3dModel {
-        return if (cfg.isLowProfile) lowProfilePlaceholder(cfg) else standardProfilePlaceholder()
+        return if (cfg.keyPlaceConfig.isLowProfile) lowProfilePlaceholder(cfg) else standardProfilePlaceholder()
     }
 
     private fun lowProfilePlaceholder(cfg: KeyboardConfig): Abstract3dModel {
@@ -59,7 +59,7 @@ object KeyPlaceholder {
                 cube(5.0, 15.0, 1.0).moveZ(0.7 + 1.8 - 1.3 + EDGE_HEIGHT - delta)
             )
 
-        return if (cfg.keyPlaceholderType == KeyPlaceholderType.AmoebaSu120) {
+        return if (cfg.keyPlaceConfig.keyPlaceholderType == KeyPlaceholderType.AmoebaSu120) {
             placeholder.addModel(cornerCubes)
         } else {
             placeholder

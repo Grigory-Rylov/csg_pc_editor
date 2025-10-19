@@ -27,7 +27,7 @@ class ThumbKeyPlace(private val cfg: KeyboardConfig) {
         var offset = 0.0
         for (thumb in 0 until count) {
             thumbCoordinates.add(0, V3d(offset, 0.0, 0.0))
-            offset -= (thumbConfig.spaceBetweenKey + cfg.keyPlaceHolderWidth)
+            offset -= (thumbConfig.spaceBetweenKey + cfg.keyPlaceConfig.keyPlaceHolderWidth)
         }
 
         if (thumbConfig.type == ThumbClusterMode.TwoRows5Buttons) {
@@ -35,7 +35,7 @@ class ThumbKeyPlace(private val cfg: KeyboardConfig) {
             offset = 0.0
 
             for (thumb in 0 until 2) {
-                offset -= (thumbConfig.spaceBetweenKey + cfg.keyPlaceHolderWidth)
+                offset -= (thumbConfig.spaceBetweenKey + cfg.keyPlaceConfig.keyPlaceHolderWidth)
                 thumbCoordinatesRow2.add(0, V3d(offset, 0.0, 0.0))
 
             }
@@ -143,7 +143,7 @@ class ThumbKeyPlace(private val cfg: KeyboardConfig) {
     ): Abstract3dModel {
         return obj.rotate(xAngle.toDouble(), yAngle.toDouble(), zAngle.toDouble()).move(offset)
             .rotate(0.0, thumbConfig.rotateY, thumbConfig.rotateZ)
-            .move(thumbConfig.xOffset, thumbConfig.yOffset, thumbConfig.zOffset + cfg.plateZOffset)
+            .move(thumbConfig.xOffset, thumbConfig.yOffset, thumbConfig.zOffset + cfg.keyPlaceConfig.plateZOffset)
     }
 
     private data class ArcResult(val angleZ: Double, val angleY: Double, val offset: V3d)
