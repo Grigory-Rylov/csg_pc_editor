@@ -21,7 +21,7 @@ class RoundSwitcher(private val cfg: KeyboardConfig) : Switcher {
 
     override fun createSwitcherHole(): Abstract3dModel {
         return Cylinder(10.0, Radius.fromDiameter(holeDiameter)).addModel(
-            Cylinder(2.0, Radius.fromDiameter(outerHoleDiameter)).moveZ(-cfg.wallsSettings.borderThickness - 2.0)
+            Cylinder(2.0, Radius.fromDiameter(outerHoleDiameter)).moveZ(-cfg.wallsSettings.borderThickness - 0.5)
         ).rotate(Angles3d.xOnly(90.0))
     }
 }

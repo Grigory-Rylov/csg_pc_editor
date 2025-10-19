@@ -34,7 +34,7 @@ import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
 import com.github.grishberg.cad3d.keyboard.cfg.WallsSettings
 import com.github.grishberg.cad3d.keyboard.matrix.KeyMatrix
 import com.github.grishberg.cad3d.keyboard.plate.BottomPoints
-import com.github.grishberg.cad3d.keyboard.plate.Plate
+import com.github.grishberg.cad3d.keyboard.plate.PlateFactory
 import com.github.grishberg.cad3d.keyboard.screws.ScrewBase
 import com.github.grishberg.cad3d.keyboard.screws.ScrewKeyMatrixPlace
 import com.github.grishberg.cad3d.keyboard.screws.ScrewWallPlaces
@@ -458,7 +458,7 @@ class KeyboardBuilder(
         val startTime = System.currentTimeMillis()
 
         val bottomPoints = BottomPoints(cfg, keyPlace, thumbKeyPlace, wallsSettings)
-        val plate = Plate(cfg, bottomPoints, screwWallPlaces, ScrewBase(cfg)).create()
+        val plate = PlateFactory(cfg, bottomPoints, screwWallPlaces, ScrewBase(cfg)).create()
 
         result.addAll(plate.vertexHolders)
         saveModel(cfg, "plate.stl", plate.model)

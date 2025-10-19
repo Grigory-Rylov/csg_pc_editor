@@ -77,6 +77,13 @@ class BottomPoints(
     val T8 = thumbPoints[8]
     val T9 = thumbPoints[9]
 
+    val TR2L1 = thumbPoints[10]
+    val TR2L2 = thumbPoints[11]
+    val TR2R1 = thumbPoints[12]
+    val TR2R2 = thumbPoints[13]
+    val TR2L3 = thumbPoints[14]
+
+
     private fun createBackPoints(): List<V3d> {
         val points = mutableListOf<V3d>()
         for (i in 2 until 6) {
@@ -286,12 +293,35 @@ class BottomPoints(
             KeyPlaceholder.placeHolderFrontRight()
                 .move(wallsSettings.outerRightOffset, 0.0, wallsSettings.outerBorderZOffset)
         )
+        val frontRight21 = thumbKeyPlace.placeR2(
+            KeyPlaceholder.placeHolderFrontRight()
+                .move(0.0, -wallsSettings.outerVerticalOffset, wallsSettings.outerBorderZOffset)
+        )
+        val frontRight22 = thumbKeyPlace.placeR2(
+            KeyPlaceholder.placeHolderFrontRight()
+                .move(wallsSettings.outerRightOffset, 0.0, wallsSettings.outerBorderZOffset)
+        )
         //frontLeft
         val frontLeft1 = thumbKeyPlace.placeL(
             KeyPlaceholder.placeHolderFrontLeft()
                 .move(-wallsSettings.outerLeftOffset, 0.0, wallsSettings.outerBorderZOffset)
         )
         val frontLeft2 = thumbKeyPlace.placeL(
+            KeyPlaceholder.placeHolderFrontLeft()
+                .move(0.0, -wallsSettings.outerVerticalOffset, wallsSettings.outerBorderZOffset)
+        )
+        val frontLeft3 = thumbKeyPlace.placeR2(
+            KeyPlaceholder.placeHolderFrontLeft()
+                .move(0.0, -wallsSettings.outerVerticalOffset, wallsSettings.outerBorderZOffset)
+        )
+
+        // second row
+        val frontLeft21 = thumbKeyPlace.placeL2(
+            KeyPlaceholder.placeHolderFrontLeft()
+                .move(-wallsSettings.outerLeftOffset, 0.0, wallsSettings.outerBorderZOffset)
+        )
+
+        val frontLeft22 = thumbKeyPlace.placeL2(
             KeyPlaceholder.placeHolderFrontLeft()
                 .move(0.0, -wallsSettings.outerVerticalOffset, wallsSettings.outerBorderZOffset)
         )
@@ -330,6 +360,13 @@ class BottomPoints(
         result.add(frontRightM.move.projectionZ(0.0))
         result.add(frontLeftR.move.projectionZ(0.0))
 
+        result.add(frontRight21.move.projectionZ(0.0))
+        result.add(frontRight22.move.projectionZ(0.0))
+
+        result.add(frontLeft21.move.projectionZ(0.0))
+        result.add(frontLeft22.move.projectionZ(0.0))
+
+        result.add(frontLeft3.move.projectionZ(0.0))
         return result
     }
 }
