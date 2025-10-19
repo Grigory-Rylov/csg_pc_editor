@@ -126,12 +126,12 @@ class BottomPoints(
         for (i in 4 until 6) {
 
             val xRightOffset = if (i == 4) {
-                -4.0
+                -2.5
             } else {
                 0.0
             }
             val xLeftOffset = if (i == 5) {
-                -4.0
+                -2.5
             } else {
                 0.0
             }

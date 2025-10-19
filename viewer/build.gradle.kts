@@ -25,6 +25,11 @@ dependencies {
 
 application {
     mainClass.set("org.example.viewer.MainKt")
+    // Suppress JOGL AppContext reflective access warnings on JDK 17+
+    applicationDefaultJvmArgs = listOf(
+        "--add-exports=java.desktop/sun.awt=ALL-UNNAMED",
+        "--add-opens=java.desktop/sun.awt=ALL-UNNAMED"
+    )
 }
 
 kotlin {
