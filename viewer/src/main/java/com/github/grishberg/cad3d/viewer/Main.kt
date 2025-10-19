@@ -49,7 +49,7 @@ import kotlinx.coroutines.SupervisorJob
 class Main(title: String?) : JFrame(title), GLEventListener {
 
     //    protected GLWindow window;
-    protected var animator: Animator? = null
+    private val animator: Animator = Animator()
 
     //public Caps caps;
     // Установка позиции источника света
@@ -83,25 +83,6 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         settingsHolder.loadSettings()
 
         val pluginsDir = File("cad3d/build/libs")
-
-//        sceneBuilder = KeyboardBuilder(
-//            initialConfig = settingsHolder.settings.getKeyboardConfig(modifiedKeyboardParts = emptySet()),
-//            pointsController = pointsController,
-//            mainThreadDispatcher = Dispatchers.Main,
-//        )
-        val debugRecorder = DebugRecorderImpl()
-        //sceneBuilder = SceneBuilderTest(debugRecorder)
-//        sceneBuilder.setListener(object : SceneBuilder.ReadyListener {
-//            override fun onReady(buffers: List<VertexHolder>) {
-//                SwingUtilities.invokeLater {
-//                    debugCommands.clear()
-//                    debugCommands.addAll(debugRecorder.commands)
-//                    vertexHolderList.clear()
-//                    vertexHolderList.addAll(buffers)
-//                }
-//            }
-//        })
-
         setup()
 
 
@@ -114,11 +95,6 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         })
 
         pluginManager.start()
-//        coroutineScope.launch {
-//            val newPlugins = pluginManager.loadPlugins()
-//            plugins = newPlugins
-//            rebuildConfigAndRequestRendering(newPlugins, emptySet())
-//        }
     }
 
     fun setup() {
@@ -142,9 +118,8 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         glCanvas!!.addMouseWheelListener(mouseListener)
         glCanvas!!.addKeyListener(GlCanvasKeyListener())
         defaultCloseOperation = EXIT_ON_CLOSE
-        animator = Animator()
-        animator!!.add(glCanvas)
-        animator!!.start()
+        animator.add(glCanvas)
+        animator.start()
         contentPane.add(glCanvas, BorderLayout.CENTER)
         contentPane.add(controlPanel, BorderLayout.NORTH)
         contentPane.add(debugNavigationPanel, BorderLayout.SOUTH)
@@ -154,12 +129,15 @@ class Main(title: String?) : JFrame(title), GLEventListener {
             override fun windowClosing(e: WindowEvent) {
                 pluginManager.stop()
                 settingsHolder.saveSettings()
-                animator!!.stop()
+                if (animator.isAnimating) {
+                    animator.stop()
+                }
                 dispose()
             }
         })
         setSize(1200, 800)
         isVisible = true
+        requestRender()
     }
 
     private fun createControlPanel(): JPanel {
@@ -361,6 +339,7 @@ class Main(title: String?) : JFrame(title), GLEventListener {
                         if (complete) {
                             setRenderingStatus(false)
                         }
+                        requestRender()
                     }
                 })
         }
@@ -411,6 +390,10 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         }
 
         updateDebugNavigationState()
+    }
+
+    private fun requestRender() {
+        glCanvas?.display()
     }
 
     private fun createToggleButton(text: String, initialState: Boolean, onChanged: (Boolean) -> Unit): JCheckBox {
@@ -573,6 +556,7 @@ class Main(title: String?) : JFrame(title), GLEventListener {
             }
             prevMouseX = currentMouseX
             prevMouseY = currentMouseY
+            requestRender()
         }
 
         override fun mouseMoved(e: MouseEvent) {}
@@ -589,6 +573,7 @@ class Main(title: String?) : JFrame(title), GLEventListener {
 
             // Ограничиваем диапазон значений (опционально)
             settingsHolder.translateZ = Math.max(ZOOM_MIN_OFFSET, Math.min(settingsHolder.translateZ, ZOOM_MAX_OFFSET))
+            requestRender()
         }
     }
 
@@ -632,7 +617,7 @@ class Main(title: String?) : JFrame(title), GLEventListener {
                     updateDebugNavigationState()
                 }
             }
-            //window.reparentWindow(); // Обновляем отображение
+            requestRender()
         }
 
         override fun keyReleased(e: KeyEvent) {}
