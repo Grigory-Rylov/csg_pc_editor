@@ -2,6 +2,7 @@ package com.github.grishberg.cad3d
 
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig.Companion.getKeyboardConfig
 import com.github.grishberg.cad3d.plugin.Cad3dPlugin
+import com.github.grishberg.cad3d.plugin.StlExportListener
 import com.github.grishberg.cad3d.plugin.ResultListener
 import com.github.grishberg.cad3d.plugin.cfg.KeyboardPart
 import com.github.grishberg.cad3d.plugin.cfg.SettingsContainer
@@ -22,6 +23,10 @@ class KeyboardBuilderPlugin : Cad3dPlugin {
         config: SettingsContainer, modifiedKeyboardParts: Set<KeyboardPart>, listener: ResultListener
     ) {
         keyboardBuilder.rebuildModels(config.getKeyboardConfig(modifiedKeyboardParts), listener)
+    }
+
+    override fun exportStl(config: SettingsContainer, listener: StlExportListener) {
+        keyboardBuilder.exportStl(config.getKeyboardConfig(emptySet()), listener)
     }
 
     override fun onUnload() {

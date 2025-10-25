@@ -8,9 +8,9 @@ import com.github.grishberg.cad3d.plugin.VertexHolder
 import com.github.grishberg.cad3d.plugin.cfg.KeyboardPart
 import com.github.grishberg.cad3d.plugins.PluginManager
 import com.github.grishberg.cad3d.plugins.PluginManagerImpl
-import com.github.grishberg.cad3d.ui.DebugRecorderImpl
 import com.github.grishberg.cad3d.viewer.debug.DebugVisualizerImpl
 import com.github.grishberg.cad3d.viewer.dialog.ConfigEditor
+import com.github.grishberg.cad3d.viewer.dialog.StlExportDialog
 import com.jogamp.opengl.GL2
 import com.jogamp.opengl.GLAutoDrawable
 import com.jogamp.opengl.GLCapabilities
@@ -24,7 +24,6 @@ import java.awt.BorderLayout
 import java.awt.Color
 import java.awt.Dimension
 import java.awt.FlowLayout
-import java.awt.event.ActionEvent
 import java.awt.event.InputEvent
 import java.awt.event.KeyEvent
 import java.awt.event.KeyListener
@@ -211,12 +210,22 @@ class Main(title: String?) : JFrame(title), GLEventListener {
             showConfigDialog()
         }
 
+        val exportStlButton = JButton("Экспорт STL")
+        exportStlButton.addActionListener {
+            val dialog = StlExportDialog(this)
+            plugins.forEach { plugin ->
+                plugin.exportStl(settingsHolder.settings, dialog)
+            }
+            dialog.isVisible = true
+        }
+
         // --- Распределяем кнопки по строкам ---
         // Вы можете изменить это распределение в зависимости от того, какие кнопки вам
         // нужны чаще и должны быть на верхнем ряду.
 
         // Верхний ряд (row1)
         row1.add(configButton)
+        row1.add(exportStlButton)
         row1.add(keysButton)
         row1.add(caseButton)
         row1.add(matrixButton)

@@ -3,11 +3,8 @@ package com.github.grishberg.cad3d
 import com.github.grishberg.cad3d.keyboard.KeyCaps
 import com.github.grishberg.cad3d.keyboard.KeyHolderBottomWalls
 import com.github.grishberg.cad3d.keyboard.KeyPlace
-import com.github.grishberg.cad3d.keyboard.KeyPlaceHoles
-import com.github.grishberg.cad3d.keyboard.KeySwitchHoles
 import com.github.grishberg.cad3d.keyboard.ModelHolder
 import com.github.grishberg.cad3d.keyboard.ThumbKeyPlace
-import com.github.grishberg.cad3d.keyboard.Utils
 import com.github.grishberg.cad3d.keyboard.amoeba.Amoeba
 import com.github.grishberg.cad3d.keyboard.casebody.DefaultBottomEdgePatcher
 import com.github.grishberg.cad3d.keyboard.casebody.Walls
@@ -24,8 +21,8 @@ import com.github.grishberg.cad3d.keyboard.casebody.thumb.SingleColumn3ButtonsTh
 import com.github.grishberg.cad3d.keyboard.casebody.thumb.ThumbBorders
 import com.github.grishberg.cad3d.keyboard.casebody.thumb.ThumbPoints
 import com.github.grishberg.cad3d.keyboard.casebody.thumb.ThumbWalls
-import com.github.grishberg.cad3d.keyboard.casebody.thumb.TwoRows5ButtonsThumbWalls
 import com.github.grishberg.cad3d.keyboard.casebody.thumb.TwoRows5ButtonsMatrixThumbsBordersBuilder
+import com.github.grishberg.cad3d.keyboard.casebody.thumb.TwoRows5ButtonsThumbWalls
 import com.github.grishberg.cad3d.keyboard.casebody.wall.ControllerHolderWall
 import com.github.grishberg.cad3d.keyboard.casebody.wall.FrontRightToMatrixWallBuilder
 import com.github.grishberg.cad3d.keyboard.casebody.wall.SingleRow3ButtonsFrontRightToMatrixWallBuilder
@@ -41,6 +38,7 @@ import com.github.grishberg.cad3d.keyboard.screws.ScrewWallPlaces
 import com.github.grishberg.cad3d.keyboard.screws.ScrewsMatrixHolder
 import com.github.grishberg.cad3d.keyboard.wristrest.WristRest
 import com.github.grishberg.cad3d.plugin.ResultListener
+import com.github.grishberg.cad3d.plugin.StlExportListener
 import com.github.grishberg.cad3d.plugin.VertexHolder
 import com.github.grishberg.cad3d.plugin.cfg.KeyPlaceholderType
 import com.github.grishberg.cad3d.plugin.cfg.KeyboardPart
@@ -49,7 +47,6 @@ import com.github.grishberg.cad3d.plugin.cfg.TrackballMode
 import com.github.grishberg.cad3d.trackball.Trackball
 import com.github.grishberg.cad3d.util.fromModel
 import com.github.grishberg.javascad.StlExporter
-import eu.printingin3d.javascad.coords.V3d
 import eu.printingin3d.javascad.models.Abstract3dModel
 import eu.printingin3d.javascad.models.Cube
 import eu.printingin3d.javascad.models.Cylinder
@@ -60,12 +57,15 @@ import eu.printingin3d.javascad.vrl.ColorFacetGenerationContext
 import eu.printingin3d.javascad.vrl.FacetGenerationContext
 import java.io.File
 import java.io.IOException
+import java.lang.ref.WeakReference
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ClosedReceiveChannelException
 import kotlinx.coroutines.isActive
+import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 
 class KeyboardBuilder(
@@ -75,6 +75,7 @@ class KeyboardBuilder(
 
     private var resolution = 15 // Количество промежуточных точек между заданными точками
     private val cache = ConcurrentHashMap<KeyboardPart, List<VertexHolder>>()
+    private val stlModelsCache = ConcurrentHashMap<KeyboardPart, Map<String, Abstract3dModel>>()
     private val currentResults = mutableListOf<VertexHolder>()
 
     fun rebuildModels(cfg: KeyboardConfig, listener: ResultListener) {
@@ -119,10 +120,18 @@ class KeyboardBuilder(
         val bottomEdgePatcher = DefaultBottomEdgePatcher(
             wallsSettings.borderThickness, wallsSettings.bottomBorderHeight
         )
-        val frontRightToMatrixWallBuilder: FrontRightToMatrixWallBuilder =  when (cfg.thumbClusterSettings.type) {
-            ThumbClusterMode.SingleColumn3Buttons -> SingleRow3ButtonsFrontRightToMatrixWallBuilder(cfg, bottomEdgePatcher, topEdgeOffsetZ)
-            ThumbClusterMode.SingleColumn4Buttons -> SingleRow3ButtonsFrontRightToMatrixWallBuilder(cfg, bottomEdgePatcher, topEdgeOffsetZ)
-            ThumbClusterMode.TwoRows5Buttons -> TwoRowsButtonsFrontRightToMatrixWallBuilder(cfg, bottomEdgePatcher, topEdgeOffsetZ, thumbPoints)
+        val frontRightToMatrixWallBuilder: FrontRightToMatrixWallBuilder = when (cfg.thumbClusterSettings.type) {
+            ThumbClusterMode.SingleColumn3Buttons -> SingleRow3ButtonsFrontRightToMatrixWallBuilder(
+                cfg, bottomEdgePatcher, topEdgeOffsetZ
+            )
+
+            ThumbClusterMode.SingleColumn4Buttons -> SingleRow3ButtonsFrontRightToMatrixWallBuilder(
+                cfg, bottomEdgePatcher, topEdgeOffsetZ
+            )
+
+            ThumbClusterMode.TwoRows5Buttons -> TwoRowsButtonsFrontRightToMatrixWallBuilder(
+                cfg, bottomEdgePatcher, topEdgeOffsetZ, thumbPoints
+            )
         }
 
         val thumbBorders = when (cfg.thumbClusterSettings.type) {
@@ -132,9 +141,17 @@ class KeyboardBuilder(
         }
 
         val thumbWalls: ThumbWalls = when (cfg.thumbClusterSettings.type) {
-            ThumbClusterMode.SingleColumn3Buttons -> SingleColumn3ButtonsThumbWalls(cfg, keyPlace, thumbKeyPlace, frontRightToMatrixWallBuilder)
-            ThumbClusterMode.SingleColumn4Buttons -> SingleColumn3ButtonsThumbWalls(cfg, keyPlace, thumbKeyPlace, frontRightToMatrixWallBuilder)
-            ThumbClusterMode.TwoRows5Buttons -> TwoRows5ButtonsThumbWalls(cfg, keyPlace, thumbKeyPlace, thumbPoints, frontRightToMatrixWallBuilder)
+            ThumbClusterMode.SingleColumn3Buttons -> SingleColumn3ButtonsThumbWalls(
+                cfg, keyPlace, thumbKeyPlace, frontRightToMatrixWallBuilder
+            )
+
+            ThumbClusterMode.SingleColumn4Buttons -> SingleColumn3ButtonsThumbWalls(
+                cfg, keyPlace, thumbKeyPlace, frontRightToMatrixWallBuilder
+            )
+
+            ThumbClusterMode.TwoRows5Buttons -> TwoRows5ButtonsThumbWalls(
+                cfg, keyPlace, thumbKeyPlace, thumbPoints, frontRightToMatrixWallBuilder
+            )
         }
         val walls = Walls(
             cfg, wallsSettings, keyPlace, thumbKeyPlace, topEdgeOffsetZ = topEdgeOffsetZ,
@@ -268,15 +285,19 @@ class KeyboardBuilder(
         val borders = keyMatrix.createBordersModel(amoebaHoles, thumbBorders, thumbWalls = thumbWalls)
         val placeHolders = keyMatrix.createPlaceholders()
 
-        saveModel(cfg, "placeHolder.stl", keyMatrix.createPlaceHolder())
+        val placeholderModel = keyMatrix.createPlaceHolder()
+        stlModelsCache[KeyboardPart.KeyMatrix] =
+            (stlModelsCache[KeyboardPart.KeyMatrix] ?: emptyMap()) + (FILE_PLACEHOLDER to placeholderModel)
+        saveModel(cfg, FILE_PLACEHOLDER, placeholderModel)
 
         result.addAll(connections.vertexHolders)
         result.addAll(borders.vertexHolders)
         result.addAll(placeHolders.vertexHolders)
 
         val matrix = placeHolders.model.addModel(connections.model.addModel(borders.model))
-
-        saveModel(cfg, "matrix_right.stl", matrix)
+        stlModelsCache[KeyboardPart.KeyMatrix] =
+            (stlModelsCache[KeyboardPart.KeyMatrix] ?: emptyMap()) + (FILE_MATRIX to matrix)
+        saveModel(cfg, FILE_MATRIX, matrix)
 
         val delta = System.currentTimeMillis() - startTime
         println("createMatrix : $delta")
@@ -327,7 +348,8 @@ class KeyboardBuilder(
 
         result.addAll(caseWalls.vertexHolders)
         val resultCase = if (tbHolder != null) caseWalls.model.addModel(tbHolder) else caseWalls.model
-        saveModel(cfg, "case.stl", resultCase)
+        stlModelsCache[KeyboardPart.Case] = mapOf(FILE_CASE to resultCase)
+        saveModel(cfg, FILE_CASE, resultCase)
         val delta = System.currentTimeMillis() - startTime
         println("createCase : $delta")
         return result
@@ -378,7 +400,8 @@ class KeyboardBuilder(
 
         val trackBallModelHolder = trackball.create()
         result.addAll(trackBallModelHolder.vertexHolders)
-        saveModel(cfg, "trackball.stl", trackBallModelHolder.model)
+        stlModelsCache[KeyboardPart.TrackBallHolder] = mapOf(FILE_TRACKBALL to trackBallModelHolder.model)
+        saveModel(cfg, FILE_TRACKBALL, trackBallModelHolder.model)
 
         val delta = System.currentTimeMillis() - startTime
         println("createTrackball : $delta")
@@ -393,7 +416,8 @@ class KeyboardBuilder(
     private fun createTrackballSensorCap(cfg: KeyboardConfig, keyPlace: KeyPlace): List<VertexHolder> {
         val trackball = Trackball(cfg, keyPlace)
         val sensorCap = trackball.createSensorCap()
-        saveModel(cfg, "trackballCap.stl", sensorCap.model)
+        stlModelsCache[KeyboardPart.TrackBallSensorCap] = mapOf(FILE_TRACKBALL_CAP to sensorCap.model)
+        saveModel(cfg, FILE_TRACKBALL_CAP, sensorCap.model)
         return sensorCap.vertexHolders
     }
 
@@ -440,7 +464,7 @@ class KeyboardBuilder(
             battery = batteryFactory.create(),
         ).create(showPreview = true)
         result.addAll(controllerHolder.vertexHolders)
-        saveModel(cfg, "controller_holder.stl", controllerHolder.model)
+        saveModel(cfg, FILE_CONTROLLER_HOLDER, controllerHolder.model)
 
         val delta = System.currentTimeMillis() - startTime
         println("createControllerHolder : $delta")
@@ -461,7 +485,8 @@ class KeyboardBuilder(
         val plate = PlateFactory(cfg, bottomPoints, screwWallPlaces, ScrewBase(cfg)).create()
 
         result.addAll(plate.vertexHolders)
-        saveModel(cfg, "plate.stl", plate.model)
+        stlModelsCache[KeyboardPart.Plate] = mapOf(FILE_PLATE to plate.model)
+        saveModel(cfg, FILE_PLATE, plate.model)
 
         val delta = System.currentTimeMillis() - startTime
         println("createPlate : $delta")
@@ -485,26 +510,199 @@ class KeyboardBuilder(
         return result
     }
 
+    private var stlExportListener: WeakReference<StlExportListener>? = null
+    private var isExportMode: Boolean = false
+
     private fun saveModel(cfg: KeyboardConfig, name: String, model: Abstract3dModel, needCheck: Boolean = false) {
+        if (!isExportMode) {
+            return
+        }
         val outDir = File("stl")
         if (!outDir.exists()) {
             outDir.mkdirs()
         }
-
+        val targetPath = File(outDir, name).absolutePath
+        stlExportListener?.get()?.onExportStart(name)
         Thread {
             try {
                 val context: FacetGenerationContext = ColorFacetGenerationContext(DEFAULT_COLOR)
                 context.setFn(cfg.stlFn)
-                println("Start stl exporting")
+                println("Start stl exporting $name")
                 StlExporter.saveStl(
-                    model.toCSG(context).polygons, File(outDir, name).absolutePath
+                    model.toCSG(context).polygons, targetPath
                 )
-                println("End stl exporting")
+                println("End stl exporting $name")
+                stlExportListener?.get()?.onExportFinish(name, true, null)
             } catch (e: IOException) {
-                println("Error while stl exporting" + e.message)
+                println("Error while stl exporting $name " + e.message)
+                stlExportListener?.get()?.onExportFinish(name, false, e.message)
                 throw RuntimeException(e)
             }
         }.start()
+    }
+
+    fun exportStl(cfg: KeyboardConfig, listener: StlExportListener) {
+        stlExportListener = WeakReference(listener)
+        val visibleModels = cfg.visibleKeyboardParts
+
+        val keyPlace = KeyPlace(cfg.keyPlaceConfig)
+        val thumbKeyPlace = ThumbKeyPlace(cfg)
+        val trackball = Trackball(cfg, keyPlace)
+
+        val controllerFactory = ControllerFactory(cfg)
+        val controller = controllerFactory.createController()
+
+        val controllerPlace = ControllerPlace(cfg, keyPlace, controller)
+        val switcherPlace = SwitcherPlace(controller, controllerPlace)
+        val switcherFactory = SwitcherFactory(cfg)
+        val controllerHolderDimensions = ControllerHolderDimensions()
+        val wallsSettings = WallsSettings(bottomBorderHeight = 4.0)
+        val controllerHolderWall = ControllerHolderWall(wallsSettings, keyPlace)
+        val screwWallPlaces = ScrewWallPlaces(
+            cfg, wallsSettings, keyPlace, thumbKeyPlace, controllerHolderWall, controllerHolderDimensions
+        )
+
+        // Prepare same helpers as in rebuild flow
+        val topEdgeOffsetZ = -2.0
+        val thumbPoints = ThumbPoints(cfg, keyPlace, thumbKeyPlace)
+        val bottomEdgePatcher = DefaultBottomEdgePatcher(
+            wallsSettings.borderThickness, wallsSettings.bottomBorderHeight
+        )
+        val frontRightToMatrixWallBuilder: FrontRightToMatrixWallBuilder = when (cfg.thumbClusterSettings.type) {
+            ThumbClusterMode.SingleColumn3Buttons -> SingleRow3ButtonsFrontRightToMatrixWallBuilder(
+                cfg, bottomEdgePatcher, topEdgeOffsetZ
+            )
+
+            ThumbClusterMode.SingleColumn4Buttons -> SingleRow3ButtonsFrontRightToMatrixWallBuilder(
+                cfg, bottomEdgePatcher, topEdgeOffsetZ
+            )
+
+            ThumbClusterMode.TwoRows5Buttons -> TwoRowsButtonsFrontRightToMatrixWallBuilder(
+                cfg, bottomEdgePatcher, topEdgeOffsetZ, thumbPoints
+            )
+        }
+
+        val thumbBorders = when (cfg.thumbClusterSettings.type) {
+            ThumbClusterMode.SingleColumn3Buttons -> SingleColumn3ButtonsThumbsBordersBuilder(thumbKeyPlace)
+            ThumbClusterMode.SingleColumn4Buttons -> SingleColumn3ButtonsThumbsBordersBuilder(thumbKeyPlace)
+            ThumbClusterMode.TwoRows5Buttons -> TwoRows5ButtonsMatrixThumbsBordersBuilder(thumbKeyPlace)
+        }
+
+        val thumbWalls: ThumbWalls = when (cfg.thumbClusterSettings.type) {
+            ThumbClusterMode.SingleColumn3Buttons -> SingleColumn3ButtonsThumbWalls(
+                cfg, keyPlace, thumbKeyPlace, frontRightToMatrixWallBuilder
+            )
+
+            ThumbClusterMode.SingleColumn4Buttons -> SingleColumn3ButtonsThumbWalls(
+                cfg, keyPlace, thumbKeyPlace, frontRightToMatrixWallBuilder
+            )
+
+            ThumbClusterMode.TwoRows5Buttons -> TwoRows5ButtonsThumbWalls(
+                cfg, keyPlace, thumbKeyPlace, thumbPoints, frontRightToMatrixWallBuilder
+            )
+        }
+
+        val walls = Walls(
+            cfg, wallsSettings, keyPlace, thumbKeyPlace, topEdgeOffsetZ = topEdgeOffsetZ,
+            thumbBorders = thumbBorders,
+            thumbWalls = thumbWalls,
+        )
+
+        coroutineScope.launch {
+            isExportMode = true
+            try {
+                val planned = mutableListOf<String>()
+                if (visibleModels.contains(KeyboardPart.KeyMatrix)) planned += FILE_MATRIX
+                if (visibleModels.contains(KeyboardPart.Case)) planned += FILE_CASE
+                if (visibleModels.contains(KeyboardPart.Plate)) planned += FILE_PLATE
+                if (visibleModels.contains(KeyboardPart.TrackBall)) planned += FILE_TRACKBALL
+                stlExportListener?.get()?.onExportPlan(planned)
+                val jobs = mutableListOf<Job>()
+                if (visibleModels.contains(KeyboardPart.KeyMatrix)) {
+                    jobs += launch {
+                        // If not cached, build and fill cache
+                        if (stlModelsCache[KeyboardPart.KeyMatrix] == null) {
+                            createMatrix(cfg, keyPlace, thumbKeyPlace, thumbBorders, thumbWalls)
+                        } else {
+                            // Use cache to write files
+                            val cached = stlModelsCache[KeyboardPart.KeyMatrix]!!
+                            cached[FILE_PLACEHOLDER]?.let { saveModel(cfg, FILE_PLACEHOLDER, it) }
+                            cached[FILE_MATRIX]?.let { saveModel(cfg, FILE_MATRIX, it) }
+                        }
+                    }
+                }
+                if (visibleModels.contains(KeyboardPart.Case)) {
+                    jobs += launch {
+                        if (stlModelsCache[KeyboardPart.Case] == null) {
+                            createCase(
+                                cfg,
+                                keyPlace,
+                                thumbKeyPlace,
+                                screwWallPlaces,
+                                walls,
+                                controllerPlace,
+                                switcherPlace,
+                                controllerFactory,
+                                switcherFactory,
+                                controller,
+                                trackball,
+                                thumbBorders = thumbBorders,
+                                thumbWalls = thumbWalls,
+                            )
+                        } else {
+                            val cached = stlModelsCache[KeyboardPart.Case]!!
+                            cached[FILE_CASE]?.let { saveModel(cfg, FILE_CASE, it) }
+                        }
+                    }
+                }
+                if (visibleModels.contains(KeyboardPart.KeyCaps)) {
+                    jobs += launch { createKeyCaps(cfg, keyPlace, thumbKeyPlace) }
+                }
+                if (visibleModels.contains(KeyboardPart.WristRest)) {
+                    jobs += launch { createWristRest(cfg) }
+                }
+                if (visibleModels.contains(KeyboardPart.TrackBallHolder)) {
+                    jobs += launch { createTrackballHolder(cfg, trackball) }
+                }
+                if (visibleModels.contains(KeyboardPart.TrackBall)) {
+                    jobs += launch { createTrackBall(cfg, keyPlace) }
+                }
+                if (visibleModels.contains(KeyboardPart.TrackBallSensor)) {
+                    jobs += launch { createTrackballSensor(cfg, keyPlace) }
+                }
+                if (visibleModels.contains(KeyboardPart.TrackBallSensorCap)) {
+                    jobs += launch { createTrackballSensorCap(cfg, keyPlace) }
+                }
+                if (visibleModels.contains(KeyboardPart.Controller)) {
+                    jobs += launch { createController(controllerFactory, controllerPlace) }
+                }
+                if (visibleModels.contains(KeyboardPart.ControllerHolder)) {
+                    jobs += launch {
+                        createControllerHolder(
+                            cfg, controllerPlace, controller, switcherPlace, controllerHolderDimensions, screwWallPlaces
+                        )
+                    }
+                }
+                if (visibleModels.contains(KeyboardPart.Plate)) {
+                    jobs += launch {
+                        if (stlModelsCache[KeyboardPart.Plate] == null) {
+                            createPlate(cfg, keyPlace, thumbKeyPlace, wallsSettings, screwWallPlaces)
+                        } else {
+                            val cached = stlModelsCache[KeyboardPart.Plate]!!
+                            cached[FILE_PLATE]?.let { saveModel(cfg, FILE_PLATE, it) }
+                        }
+                    }
+                }
+                if (visibleModels.contains(KeyboardPart.Amoeba)) {
+                    jobs += launch { createAmoeba(cfg, keyPlace, thumbKeyPlace) }
+                }
+                jobs.joinAll()
+                stlExportListener?.get()?.onAllFinished()
+            } finally {
+                isExportMode = false
+                // keep weak reference; GC will clear it when dialog is collected
+            }
+        }
     }
 
     private fun createThumbKeyPlaceModel(
@@ -670,25 +868,6 @@ class KeyboardBuilder(
         return ModelHolder(wristRest, vertexHolders)
     }
 
-    private fun createControlPoints(cfg: KeyboardConfig, points: Array<Array<V3d>>): List<VertexHolder> {
-        val result = mutableListOf<VertexHolder>()
-        val colors = arrayOf(Color.RED, Color.BLUE, Color.GREEN, Color.CYAN, Color.MAGENTA, Color.ORANGE)
-        for (rowIndex in points.indices) {
-            for (colIndex in points[rowIndex].indices) {
-                result.add(
-                    createVertexHolder(
-                        cfg, Utils.sphere(2.0).move(points[rowIndex][colIndex]), colors[colIndex % colors.size]
-                    )
-                )
-            }
-        }
-        return result
-    }
-
-    private fun createVertexHolder(cfg: KeyboardConfig, model: IModel) {
-        createVertexHolder(cfg, model, DEFAULT_COLOR)
-    }
-
     private fun createVertexHolder(cfg: KeyboardConfig, model: IModel, color: Color): VertexHolder {
         return fromModel(model, color, cfg.fn)
     }
@@ -696,5 +875,12 @@ class KeyboardBuilder(
     companion object {
 
         private val DEFAULT_COLOR = Color.GRAY
+        private const val FILE_PLACEHOLDER = "placeHolder.stl"
+        private const val FILE_MATRIX = "matrix_right.stl"
+        private const val FILE_CASE = "case.stl"
+        private const val FILE_TRACKBALL = "trackball.stl"
+        private const val FILE_TRACKBALL_CAP = "trackballCap.stl"
+        private const val FILE_CONTROLLER_HOLDER = "controller_holder.stl"
+        private const val FILE_PLATE = "plate.stl"
     }
 }

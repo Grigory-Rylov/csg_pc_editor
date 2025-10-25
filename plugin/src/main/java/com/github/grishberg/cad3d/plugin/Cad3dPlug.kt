@@ -9,6 +9,11 @@ interface Cad3dPlugin {
         config: SettingsContainer, modifiedKeyboardParts: Set<KeyboardPart>, listener: ResultListener
     )
 
+    fun exportStl(
+        config: SettingsContainer,
+        listener: StlExportListener
+    )
+
     fun onUnload()
 
     val name: String
