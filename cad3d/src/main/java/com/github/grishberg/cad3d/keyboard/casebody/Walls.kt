@@ -425,8 +425,6 @@ class Walls(
         addHull(h, i, p, borderThickness, borderHeight)
         addHull(p, i, j, borderThickness, borderHeight)
         addHull(k, q, t, borderThickness, borderHeight)
-        addHull(p, j, k, borderThickness, borderHeight)
-        addHull(p, k, q, borderThickness, borderHeight)
         addHull(k, t, r, borderThickness, borderHeight)
         addHull(m, l, k, borderThickness, borderHeight)
         addHull(o, k, r, borderThickness, borderHeight)
@@ -435,13 +433,20 @@ class Walls(
         addHull(a, p, u, borderThickness, borderHeight)
     }
 
-    private fun addHull(p0: V3d, p1: V3d, p2: V3d, borderThickness: Double = 1.5, borderHeight: Double) {
+    private fun addHull(
+        p0: V3d,
+        p1: V3d,
+        p2: V3d,
+        borderThickness: Double = 1.5,
+        borderHeight: Double,
+        color: Color = Color.GRAY
+    ) {
         models.add(
             hull(
                 border(p0, borderThickness, borderHeight),
                 border(p1, borderThickness, borderHeight),
                 border(p2, borderThickness, borderHeight),
-            )
+            ).withColor(color)
         )
     }
 
