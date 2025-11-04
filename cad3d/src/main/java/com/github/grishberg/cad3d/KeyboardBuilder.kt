@@ -23,6 +23,7 @@ import com.github.grishberg.cad3d.keyboard.casebody.thumb.ThumbPoints
 import com.github.grishberg.cad3d.keyboard.casebody.thumb.ThumbWalls
 import com.github.grishberg.cad3d.keyboard.casebody.thumb.TwoRows5ButtonsMatrixThumbsBordersBuilder
 import com.github.grishberg.cad3d.keyboard.casebody.thumb.TwoRows5ButtonsThumbWalls
+import com.github.grishberg.cad3d.trackball.TrackballCase
 import com.github.grishberg.cad3d.keyboard.casebody.wall.ControllerHolderWall
 import com.github.grishberg.cad3d.keyboard.casebody.wall.FrontRightToMatrixWallBuilder
 import com.github.grishberg.cad3d.keyboard.casebody.wall.SingleRow3ButtonsFrontRightToMatrixWallBuilder
@@ -98,7 +99,7 @@ class KeyboardBuilder(
 
         val keyPlace = KeyPlace(cfg.keyPlaceConfig)
         val thumbKeyPlace = ThumbKeyPlace(cfg)
-        val trackball = Trackball(cfg, keyPlace)
+        val trackball = Trackball(cfg)
 
         val controllerFactory = ControllerFactory(cfg)
         val controller = controllerFactory.createController()
@@ -189,7 +190,7 @@ class KeyboardBuilder(
                 createWristRest(cfg)
             }
             createIfNeeded(resultsChannel, KeyboardPart.TrackBallHolder, visibleModels) {
-                createTrackballHolder(cfg, trackball)
+                createTrackballHolder(cfg, trackball, keyPlace)
             }
             createIfNeeded(resultsChannel, KeyboardPart.TrackBall, visibleModels) {
                 createTrackBall(cfg, keyPlace)
@@ -199,6 +200,23 @@ class KeyboardBuilder(
             }
             createIfNeeded(resultsChannel, KeyboardPart.TrackBallSensorCap, visibleModels) {
                 createTrackballSensorCap(cfg, keyPlace)
+            }
+            createIfNeeded(resultsChannel, KeyboardPart.TrackBallCaseBody, visibleModels) {
+                createTrackballCase(
+                    cfg, screwWallPlaces,
+                    controllerPlace,
+                    controller,
+                    controllerFactory,
+                )
+            }
+
+            createIfNeeded(resultsChannel, KeyboardPart.TrackBallCasePlate, visibleModels) {
+                createTrackballCasePlate(
+                    cfg, screwWallPlaces,
+                    controllerPlace,
+                    controller,
+                    controllerFactory,
+                )
             }
             createIfNeeded(resultsChannel, KeyboardPart.Controller, visibleModels) {
                 createController(controllerFactory, controllerPlace)
@@ -340,10 +358,9 @@ class KeyboardBuilder(
             trackball = trackball,
         )
         if (cfg.trackball.mode != TrackballMode.None) {
-            val trackBallHolder = Trackball(cfg, keyPlace).createTrackballHolder()
-            tbHolder = trackBallHolder.model
-            result.addAll(trackBallHolder.vertexHolders)
-
+            val tb = Trackball(cfg)
+            val trackBallHolder = tb.placeTrackball(tb.trackBallCaseHolderOrigin(), keyPlace)
+            result.add(fromModel(trackBallHolder, cfg.fn))
         }
 
         result.addAll(caseWalls.vertexHolders)
@@ -393,12 +410,12 @@ class KeyboardBuilder(
     }
 
     private fun createTrackballHolder(
-        cfg: KeyboardConfig, trackball: Trackball,
+        cfg: KeyboardConfig, trackball: Trackball, keyPlace: KeyPlace,
     ): List<VertexHolder> {
         val result = mutableListOf<VertexHolder>()
         val startTime = System.currentTimeMillis()
 
-        val trackBallModelHolder = trackball.create()
+        val trackBallModelHolder = trackball.create(keyPlace)
         result.addAll(trackBallModelHolder.vertexHolders)
         stlModelsCache[KeyboardPart.TrackBallHolder] = mapOf(FILE_TRACKBALL to trackBallModelHolder.model)
         saveModel(cfg, FILE_TRACKBALL, trackBallModelHolder.model)
@@ -409,21 +426,50 @@ class KeyboardBuilder(
     }
 
     private fun createTrackBall(cfg: KeyboardConfig, keyPlace: KeyPlace): List<VertexHolder> {
-        val trackball = Trackball(cfg, keyPlace)
-        return listOf(trackball.createTrackBall())
+        val trackball = Trackball(cfg)
+        return listOf(trackball.createTrackBall(keyPlace))
     }
 
     private fun createTrackballSensorCap(cfg: KeyboardConfig, keyPlace: KeyPlace): List<VertexHolder> {
-        val trackball = Trackball(cfg, keyPlace)
-        val sensorCap = trackball.createSensorCap()
+        val trackball = Trackball(cfg)
+        val sensorCap = trackball.createSensorCap(keyPlace)
         stlModelsCache[KeyboardPart.TrackBallSensorCap] = mapOf(FILE_TRACKBALL_CAP to sensorCap.model)
         saveModel(cfg, FILE_TRACKBALL_CAP, sensorCap.model)
         return sensorCap.vertexHolders
     }
 
+    private fun createTrackballCase(
+        cfg: KeyboardConfig,
+        screwWallPlaces: ScrewWallPlaces,
+        controllerPlace: ControllerPlace,
+        controller: Controller,
+        controllerFactory: ControllerFactory,
+    ): List<VertexHolder> {
+        val trackballCase = TrackballCase(cfg, screwWallPlaces, controllerPlace, controller, controllerFactory)
+        val trackballCaseModel = trackballCase.create()
+        stlModelsCache[KeyboardPart.TrackBallCaseBody] = mapOf(FILE_TRACKBALL_CASE to trackballCaseModel.model)
+        saveModel(cfg, FILE_TRACKBALL_CASE, trackballCaseModel.model)
+        saveModel(cfg, FILE_TRACKBALL_CASE_HOLDER, trackballCase.createHolder())
+        return trackballCaseModel.vertexHolders
+    }
+
+    private fun createTrackballCasePlate(
+        cfg: KeyboardConfig,
+        screwWallPlaces: ScrewWallPlaces,
+        controllerPlace: ControllerPlace,
+        controller: Controller,
+        controllerFactory: ControllerFactory,
+    ): List<VertexHolder> {
+        val trackballCase = TrackballCase(cfg, screwWallPlaces, controllerPlace, controller, controllerFactory)
+        val plate = trackballCase.createPlate()
+        stlModelsCache[KeyboardPart.TrackBallCasePlate] = mapOf(FILE_TRACKBALL_CASE_PLATE to plate.model)
+        saveModel(cfg, FILE_TRACKBALL_CASE_PLATE, plate.model)
+        return plate.vertexHolders
+    }
+
     private fun createTrackballSensor(cfg: KeyboardConfig, keyPlace: KeyPlace): List<VertexHolder> {
-        val trackball = Trackball(cfg, keyPlace)
-        return trackball.createTrackballSensor().vertexHolders
+        val trackball = Trackball(cfg)
+        return trackball.createTrackballSensor(keyPlace).vertexHolders
     }
 
     private fun createController(
@@ -547,7 +593,7 @@ class KeyboardBuilder(
 
         val keyPlace = KeyPlace(cfg.keyPlaceConfig)
         val thumbKeyPlace = ThumbKeyPlace(cfg)
-        val trackball = Trackball(cfg, keyPlace)
+        val trackball = Trackball(cfg)
 
         val controllerFactory = ControllerFactory(cfg)
         val controller = controllerFactory.createController()
@@ -616,6 +662,9 @@ class KeyboardBuilder(
                 if (visibleModels.contains(KeyboardPart.Case)) planned += FILE_CASE
                 if (visibleModels.contains(KeyboardPart.Plate)) planned += FILE_PLATE
                 if (visibleModels.contains(KeyboardPart.TrackBall)) planned += FILE_TRACKBALL
+                if (visibleModels.contains(KeyboardPart.TrackBallCaseBody)) planned += FILE_TRACKBALL_CASE
+                if (visibleModels.contains(KeyboardPart.TrackBallCasePlate)) planned += FILE_TRACKBALL_CASE_PLATE
+
                 stlExportListener?.get()?.onExportPlan(planned)
                 val jobs = mutableListOf<Job>()
                 if (visibleModels.contains(KeyboardPart.KeyMatrix)) {
@@ -662,7 +711,7 @@ class KeyboardBuilder(
                     jobs += launch { createWristRest(cfg) }
                 }
                 if (visibleModels.contains(KeyboardPart.TrackBallHolder)) {
-                    jobs += launch { createTrackballHolder(cfg, trackball) }
+                    jobs += launch { createTrackballHolder(cfg, trackball, keyPlace) }
                 }
                 if (visibleModels.contains(KeyboardPart.TrackBall)) {
                     jobs += launch { createTrackBall(cfg, keyPlace) }
@@ -672,6 +721,28 @@ class KeyboardBuilder(
                 }
                 if (visibleModels.contains(KeyboardPart.TrackBallSensorCap)) {
                     jobs += launch { createTrackballSensorCap(cfg, keyPlace) }
+                }
+                if (visibleModels.contains(KeyboardPart.TrackBallCaseBody)) {
+                    jobs += launch {
+                        createTrackballCase(
+                            cfg,
+                            screwWallPlaces,
+                            controllerPlace,
+                            controller,
+                            controllerFactory,
+                        )
+                    }
+                }
+                if (visibleModels.contains(KeyboardPart.TrackBallCasePlate)) {
+                    jobs += launch {
+                        createTrackballCasePlate(
+                            cfg,
+                            screwWallPlaces,
+                            controllerPlace,
+                            controller,
+                            controllerFactory,
+                        )
+                    }
                 }
                 if (visibleModels.contains(KeyboardPart.Controller)) {
                     jobs += launch { createController(controllerFactory, controllerPlace) }
@@ -779,7 +850,7 @@ class KeyboardBuilder(
         ).createBorders(
             borderThickness = holeBorderThikness, borderHeight = holeBorderHeight
         )
-        val trackballHole = trackball.createTrackballWireHole()
+        val trackballHole = trackball.createTrackballWireHole(keyPlace)
         val holeBorders = Union(holeBordersModels).moveZ((holeBorderHeight - 2.0) / 2.0 + 0.3)
         val usbPortHole =
             controllerPlace.place(controller.placeUsbPort(controllerFactory.createUsbPortHole())).moveY(-2.0)
@@ -880,6 +951,9 @@ class KeyboardBuilder(
         private const val FILE_CASE = "case.stl"
         private const val FILE_TRACKBALL = "trackball.stl"
         private const val FILE_TRACKBALL_CAP = "trackballCap.stl"
+        private const val FILE_TRACKBALL_CASE = "trackball_case.stl"
+        private const val FILE_TRACKBALL_CASE_HOLDER = "trackball_case_holder.stl"
+        private const val FILE_TRACKBALL_CASE_PLATE = "trackball_case_plate.stl"
         private const val FILE_CONTROLLER_HOLDER = "controller_holder.stl"
         private const val FILE_PLATE = "plate.stl"
     }

@@ -41,7 +41,7 @@ data class KeyboardConfig(
 
     val batteryType: BatteryType
         get() = when (controllerType) {
-            ControllerType.SuperMiniNRF52840 -> batteryType
+            ControllerType.SuperMiniNRF52840 -> innerBatteryType
             else -> BatteryType.None
         }
 

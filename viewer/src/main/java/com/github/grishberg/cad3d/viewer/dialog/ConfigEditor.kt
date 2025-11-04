@@ -295,6 +295,11 @@ class ConfigEditor(
             fireTrackballSettingsChanges()
         }
 
+        addDoubleSpinner(panel, "Диаметр винтов крепления:", currentTrackballSettings.controllerScrewDiameter, 0.1..5.0) {
+            currentTrackballSettings = currentTrackballSettings.copy(controllerScrewDiameter = it)
+            fireTrackballSettingsChanges()
+        }
+
         parent.add(panel)
     }
 

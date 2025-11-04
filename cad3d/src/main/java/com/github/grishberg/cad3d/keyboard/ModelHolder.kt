@@ -33,6 +33,17 @@ data class ModelHolder(
 
     constructor(
         cfg: KeyboardConfig, model: Abstract3dModel, vararg partialModels: Abstract3dModel,
-    ) : this(model, partialModels.asList().map { fromModel(it, cfg.fn) })
+    ) : this(model, createVertexHolders(cfg, model, partialModels.asList()))
 
+    private companion object {
+
+        fun createVertexHolders(
+            cfg: KeyboardConfig,
+            model: Abstract3dModel,
+            partialModels: List<Abstract3dModel>,
+        ): List<VertexHolder> {
+            val vertexHolders = partialModels.map { fromModel(it, cfg.fn) }
+            return vertexHolders.ifEmpty { listOf(fromModel(model, cfg.fn)) }
+        }
+    }
 }

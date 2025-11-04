@@ -16,7 +16,7 @@ class SuperMiniNRF52840(
 ) : Controller {
 
     override val width = 17.78
-    override val depth = 35.0
+    override val depth = 35.7
     override val height = 1.7
 
     override val isWireless: Boolean = true

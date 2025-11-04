@@ -103,6 +103,18 @@ class SettingsHolder(
             settings = settings.copy(assemblySettings = settings.assemblySettings.copy(showAmoeba = value))
         }
 
+    var showTrackballCase: Boolean
+        get() = settings.assemblySettings.showTrackballCase
+        set(value) {
+            settings = settings.copy(assemblySettings = settings.assemblySettings.copy(showTrackballCase = value))
+        }
+
+    var showTrackballCasePlate: Boolean
+        get() = settings.assemblySettings.showTrackballCasePlate
+        set(value) {
+            settings = settings.copy(assemblySettings = settings.assemblySettings.copy(showTrackballCasePlate = value))
+        }
+
     private fun createDefaultSettings() = SettingsContainer(
         assemblySettings = AssemblySettings(),
         viewerSettings = createViewerSettings(),
@@ -142,6 +154,7 @@ class SettingsHolder(
             mode = TrackballMode.Back,
             ballDiameter = 25.0,
             bearingDiameter = 3.175,
+            controllerScrewDiameter = 1.3,
         )
     )
 

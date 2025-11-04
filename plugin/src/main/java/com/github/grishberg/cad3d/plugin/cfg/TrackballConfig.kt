@@ -8,4 +8,5 @@ data class TrackballConfig(
     val mode: TrackballMode,
     val ballDiameter: Double,
     val bearingDiameter: Double,
+    val controllerScrewDiameter: Double,
 )

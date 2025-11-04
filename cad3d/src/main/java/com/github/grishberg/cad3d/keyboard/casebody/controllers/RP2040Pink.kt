@@ -21,32 +21,36 @@ class RP2040Pink(
 
     override val isWireless: Boolean = false
 
+    private val topOffset = 1.5
+
     override fun create(controllerPlace: ControllerPlace): ModelHolder {
         val usbPort = placeUsbPort(createUsb())
         val model = Cube(width, depth, height).moveZ(height / 2)
+        val resetButton = Cube(3.3, 4.4, 2.0).move(2, 14.6, -(height/2))
 
         return ModelHolder(
             model.addModel(usbPort),
             fromModel(place(controllerPlace, model), Color.CYAN, cfg.fn),
             fromModel(place(controllerPlace, usbPort), Color.YELLOW, cfg.fn),
+            fromModel(place(controllerPlace, resetButton), Color.RED, cfg.fn),
         )
     }
 
     override fun placeUsbPort(obj: Abstract3dModel): Abstract3dModel {
-        return obj.move(0.0, depth / 2 - 1.0, height / 2 +0.5)
+        return place(controllerPlace, obj).move(0.0, depth / 2 - 1.0, -(height / 2 +2.4))
     }
 
     private fun createUsb(): Abstract3dModel {
         val diameter = 3.2
         val width = 8.34
 
-        val cylinder = Cylinder(5.0, Radius.fromDiameter(diameter)).rotate(Angles3d.xOnly(90.0))
+        val cylinder = Cylinder(7.5, Radius.fromDiameter(diameter)).rotate(Angles3d.xOnly(90.0))
         return Hull(
             cylinder.moveX(-width / 2 + diameter / 2), cylinder.moveX(width / 2 - diameter / 2)
-        ).moveZ(diameter / 2)
+        ).moveZ(diameter / 2).moveY(-2.6)
     }
 
     private fun place(controllerPlace: ControllerPlace, o: Abstract3dModel): Abstract3dModel {
-        return controllerPlace.place(o).moveZ(1.5)
+        return controllerPlace.place(o).moveZ(topOffset)
     }
 }

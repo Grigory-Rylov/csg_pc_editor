@@ -1,51 +1,63 @@
-package com.github.grishberg.cad3d.keyboard;
+package com.github.grishberg.cad3d.keyboard
 
-import eu.printingin3d.javascad.basic.Radius;
-import eu.printingin3d.javascad.coords.V3d;
-import eu.printingin3d.javascad.models.Abstract3dModel;
-import eu.printingin3d.javascad.models.Cube;
-import eu.printingin3d.javascad.models.Cylinder;
-import eu.printingin3d.javascad.models.Hull;
-import eu.printingin3d.javascad.models.Sphere;
-import eu.printingin3d.javascad.tranzitions.Union;
-import java.util.List;
+import eu.printingin3d.javascad.basic.Radius
+import eu.printingin3d.javascad.coords.V3d
+import eu.printingin3d.javascad.models.Abstract3dModel
+import eu.printingin3d.javascad.models.Cube
+import eu.printingin3d.javascad.models.Cylinder
+import eu.printingin3d.javascad.models.Hull
+import eu.printingin3d.javascad.models.Sphere
+import eu.printingin3d.javascad.tranzitions.Union
 
-public class Utils {
+object Utils {
 
-    public static Abstract3dModel union(List<Abstract3dModel> models) {
-        return new Union(models);
+    @JvmStatic
+    fun union(models: List<Abstract3dModel>): Abstract3dModel {
+        return Union(models)
     }
 
-    public static Abstract3dModel union(Abstract3dModel... models) {
-        return new Union(models);
+    @JvmStatic
+    fun union(vararg models: Abstract3dModel): Abstract3dModel {
+        return Union(*models)
     }
 
-    public static Abstract3dModel hull(Abstract3dModel... models) {
-        return new Hull(models);
+    @JvmStatic
+    fun hull(vararg models: Abstract3dModel): Abstract3dModel {
+        return Hull(*models)
     }
 
-    public static Abstract3dModel hull(List<Abstract3dModel> models) {
-        return new Hull(models);
+    @JvmStatic
+    fun hull(models: List<Abstract3dModel>): Abstract3dModel {
+        return Hull(models)
     }
 
-    public static Cube cube(double x, double y, double z) {
-        return new Cube(x, y, z);
+    @JvmStatic
+    fun cube(x: Number, y: Number, z: Number): Cube {
+        return Cube(x.toDouble(), y.toDouble(), z.toDouble())
     }
 
-    public static Cube cube(double size) {
-        return new Cube(size);
+    @JvmStatic
+    fun cube(size: Double): Cube {
+        return Cube(size)
     }
 
-
-    public static Cylinder cylinder(double radius, double height) {
-        return new Cylinder(height, Radius.fromRadius(radius));
+    @JvmStatic
+    fun cylinder(radius: Number, height: Number): Cylinder {
+        return Cylinder(height.toDouble(), Radius.fromRadius(radius.toDouble()))
     }
 
-    public static Sphere sphere(double radius) {
-        return new Sphere(Radius.fromRadius(radius));
+    @JvmStatic
+    fun sphere(radius: Number): Sphere {
+        return Sphere(Radius.fromRadius(radius.toDouble()))
     }
 
-    public static V3d v3d(double x, double y, double z) {
-        return new V3d(x, y, z);
+    @JvmStatic
+    fun v3d(x: Double, y: Double, z: Double): V3d {
+        return V3d(x, y, z)
+    }
+
+    @JvmStatic
+    fun v3d(x: Number, y: Number, z: Number): V3d {
+        return V3d(x.toDouble(), y.toDouble(), z.toDouble())
     }
 }

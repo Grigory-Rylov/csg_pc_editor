@@ -12,5 +12,7 @@ enum class KeyboardPart {
     TrackBallHolder,
     TrackBallSensorCap,
     TrackBallSensor,
+    TrackBallCaseBody,
+    TrackBallCasePlate,
     Amoeba,
 }

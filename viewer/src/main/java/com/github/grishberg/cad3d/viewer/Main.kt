@@ -194,6 +194,14 @@ class Main(title: String?) : JFrame(title), GLEventListener {
             settingsHolder.showAmoeba = it
             rebuildConfigAndRequestRendering(plugins, emptySet())
         }
+        val showTrackballCaseButton = createToggleButton("trackball case", settingsHolder.showTrackballCase) {
+            settingsHolder.showTrackballCase = it
+            rebuildConfigAndRequestRendering(plugins, emptySet())
+        }
+        val showTrackballCasePlateButton = createToggleButton("trackball case plate", settingsHolder.showTrackballCasePlate) {
+            settingsHolder.showTrackballCasePlate = it
+            rebuildConfigAndRequestRendering(plugins, emptySet())
+        }
         val debugButton = createToggleButton("Debug", showDebugInfo) {
             showDebugInfo = it
             if (!it) {
@@ -241,6 +249,8 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         row2.add(showControllerHolderButton)
         row2.add(showControllerButton)
         row2.add(showAmoebaButton)
+        row2.add(showTrackballCaseButton)
+        row2.add(showTrackballCasePlateButton)
 
         row2.add(debugButton)
 
