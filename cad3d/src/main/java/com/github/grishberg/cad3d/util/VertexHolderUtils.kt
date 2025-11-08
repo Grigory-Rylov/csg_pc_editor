@@ -24,7 +24,7 @@ fun fromModel(model: Abstract3dModel, fn: Int): VertexHolder {
     return getVerticesAndColorsAsFloatArray(csg.toFacets())
 }
 
-fun fromPolygons(polygons: MutableList<Polygon>, color: Color): VertexHolder {
+fun fromPolygons(polygons: List<Polygon>, color: Color): VertexHolder {
     val facets: MutableList<Facet> = ArrayList<Facet>()
     for (p in polygons) {
         val triangle3ds = Triangulator.triangulate(p.getVertices(), p.getNormal())
@@ -36,7 +36,7 @@ fun fromPolygons(polygons: MutableList<Polygon>, color: Color): VertexHolder {
     return getVerticesAndColorsAsFloatArray(facets)
 }
 
-private fun getVerticesAndColorsAsFloatArray(facets: MutableList<Facet>): VertexHolder {
+private fun getVerticesAndColorsAsFloatArray(facets: List<Facet>): VertexHolder {
     var verticesCount = 0
     verticesCount = facets.size * 3
 

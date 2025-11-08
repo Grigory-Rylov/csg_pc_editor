@@ -8,6 +8,6 @@ class SwitcherPlace(
 ) {
 
     fun place(model: Abstract3dModel): Abstract3dModel {
-        return controllerPlace.place(model).move(-19.0, controller.depth / 2.0, 4.5)
+        return controllerPlace.place(model).move(-18.0, controller.depth / 2.0 +0.5, 2.5)
     }
 }

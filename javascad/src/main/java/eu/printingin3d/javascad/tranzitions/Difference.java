@@ -40,7 +40,7 @@ public class Difference extends Complex3dModel {
 		
 		this.model1 = model1;
 		this.model2 = model2==null ? Collections.<Abstract3dModel>emptyList() : ListUtils.removeNulls(model2);
-		this.color = model1.getColor();
+		this.setColor(model1.getColor());
 	}
 	
 	/**

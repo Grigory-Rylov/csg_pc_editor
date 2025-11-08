@@ -6,9 +6,11 @@ import com.github.grishberg.cad3d.keyboard.casebody.controllers.battery.NoBatter
 import com.github.grishberg.cad3d.keyboard.casebody.controllers.switcher.Switcher
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
 import com.github.grishberg.cad3d.keyboard.screws.ScrewWallPlaces
+import com.github.grishberg.cad3d.plugin.VertexHolder
 import com.github.grishberg.cad3d.util.fromModel
 import eu.printingin3d.javascad.basic.Radius
 import eu.printingin3d.javascad.coords.Angles3d
+import eu.printingin3d.javascad.enums.Side
 import eu.printingin3d.javascad.models.Abstract3dModel
 import eu.printingin3d.javascad.models.Cube
 import eu.printingin3d.javascad.models.Cylinder
@@ -30,14 +32,17 @@ class ControllerHolderBuilder(
     private val battery: Battery,
 ) {
 
-    fun create(showPreview: Boolean): ModelHolder {
-        var model = createControllerModel()
+    private val verticalPanelWidth = 1.5
+    private val wall = 1.0
 
-        val vertexHolders = mutableListOf(
-            fromModel(
-                model, Color.ORANGE, 20
-            )
-        )
+    fun create(showPreview: Boolean): ModelHolder {
+        var models = createControllerModel()
+        var model: Abstract3dModel = Union(models)
+
+        val vertexHolders = mutableListOf<VertexHolder>()
+        models.forEach {
+            vertexHolders.add(fromModel(it, 20))
+        }
 
         if (controller.isWireless && battery != NoBattery) {
             val batteryHolder = placeBatteryHolder(battery.create())
@@ -63,19 +68,26 @@ class ControllerHolderBuilder(
         return controllerPlace.place(o.rotate(Angles3d.zOnly(25.0))).move(7.0, -battery.depth + 20.7, -4.0)
     }
 
-    private fun createControllerModel(): Abstract3dModel {
-        val width = controller.width
-        val depth = controller.depth
-        val model = createBase()
+    private fun createControllerModel(): List<Abstract3dModel> {
+        val base = createBase().withColor(Color.BISQUE)
         val height = 10.0
         val screwOffset = cfg.screwHolderWallhickness + cfg.screwNutHoleDiameter / 2
         val panelWidth = controllerHolderDimensions.distanceBetweenControllerHolderMountX - 2 * screwOffset - 2.0
-        val verticalWall = Cube(panelWidth, 1.5, height).move(-5.5, depth / 2.0, 4.5)
+        val verticalWall = Cube(panelWidth, verticalPanelWidth, height).align(Side.BACK_IN_CENTER, Side.TOP_OUT, base)
 
+        val holder = createHolder().withColor(Color.LIGHT_BLUE)
 
-        val case = verticalWall.addModel(createHolder()).addModel(createControllerHolderCylinders())
-        return model.addModel(controllerPlace.place(case)).subtractModel(usbHole())
-            .subtractModel(switcherPlace.place(switcher.createSwitcherHole()))
+        val controllerBody = controller.createBody(controllerPlace)
+
+        return listOf(
+            base,
+            createControllerHolderCylinders().align(Side.CENTER, controllerBody).move(0, -0.2, 1.3)
+                .withColor(Color.RED),
+            holder.align(Side.CENTER, controllerBody).align(Side.BOTTOM_IN, base).align(Side.FRONT_OUT, verticalWall)
+                .subtractModel(usbHole()),
+            verticalWall.subtractModel(usbHole()).subtractModel(switcherPlace.place(switcher.createSwitcherHole()))
+                .withColor(Color.YELLOW)
+        )
     }
 
     private fun createControllerHolderCylinders(): Abstract3dModel {
@@ -83,10 +95,9 @@ class ControllerHolderBuilder(
         val length = 2.0
         val cylinder = Cylinder(length, Radius.fromDiameter(diam)).rotate(Angles3d.yOnly(90.0))
         val offset = 7.0
-        val depth = (controller.depth - 1.0) / 2.0
+        val depth = controller.depth / 2.0 + 0.3
         return cylinder.move(-offset, depth, 0.0).addModel(cylinder.move(offset, depth, 0.0))
             .addModel(cylinder.move(offset, -depth, 0.0)).addModel(cylinder.move(-offset, -depth, 0.0))
-            .moveZ(controller.height + 1.5)
     }
 
     private fun usbHole(): Abstract3dModel {
@@ -101,17 +112,21 @@ class ControllerHolderBuilder(
     }
 
     private fun createHolder(): Abstract3dModel {
-
         val holeWidth = controller.width + 0.2
-        val holeDepth = controller.depth + 0.2
+        val holeDepth = controller.depth + 0.7
         val holeHeight = 6.0
-        val height = controller.height + 6.3
-        val body = Cube(controller.width + 3.0, controller.depth + 1, height).moveX(-0.5)
-            .subtractModel(Cube(holeWidth, holeDepth, holeHeight).move(0.0, 1.0, 2.0))
+        val height = controller.height + 7
+        val body = Cube(controller.width + 2 * wall, controller.depth + wall, height)
+            .subtractModel(Cube(holeWidth, holeDepth, holeHeight).move(0.0, wall / 2 + 0.1, 4.3))
             .subtractModel(Cube(30.0, 20.0, 5.0).moveZ(2.5)) // поперечная дырка для вынимания
-            .subtractModel(Cube(controller.width - 3.0, controller.depth - 3.0, 20.0)) // сквозная дырка в держателе
-
-        return body.move(0.0, 0.0, 2.0)
+            .subtractModel(
+                Cube(
+                    controller.width - 2 * wall,
+                    controller.depth - 2 * wall,
+                    20.0
+                ).moveY(wall / 2)
+            ) // сквозная дырка в держателе
+        return body
     }
 
     private fun createBase(): Abstract3dModel {

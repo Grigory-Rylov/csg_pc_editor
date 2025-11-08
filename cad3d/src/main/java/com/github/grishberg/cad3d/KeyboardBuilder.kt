@@ -857,6 +857,7 @@ class KeyboardBuilder(
         val switcherHole = switcherPlace.place(switcherFactory.createSwitcher().createSwitcherHole())
         val usbPortHoleCase =
             controllerPlace.place(controller.placeUsbPort(controllerFactory.createUsbPortCase())).moveY(-1.0)
+                .subtractModel(Cube(40.0, 40.0, 5.0).move(-20,30, -2.5))
 
         val screwBase = ScrewBase(cfg)
         val matrixWallScrewHolder = ScrewsMatrixHolder(cfg, screwBase).create()

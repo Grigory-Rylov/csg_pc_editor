@@ -41,7 +41,7 @@ class ControllerPlace(
         val targetPoint = V3d(p.x, backEdgePoint, 0.0)
         return obj.move(targetPoint.add(V3d(
             15.0,
-            -controller.depth/2 - wallsSettings.borderThickness - 1.0,
-            2.0)))
+            -controller.depth/2 - wallsSettings.borderThickness - 2.1,
+            4.5)))
     }
 }

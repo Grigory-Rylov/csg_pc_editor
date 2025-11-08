@@ -32,6 +32,15 @@ class RP2040Mini(
         )
     }
 
+    override fun createBody(controllerPlace: ControllerPlace): Abstract3dModel {
+        val model = Cube(width, depth, height).moveZ(height / 2)
+        return place(controllerPlace, model).withColor(Color.CYAN)
+    }
+
+    override fun createResetButton(controllerPlace: ControllerPlace): Abstract3dModel? {
+        return null
+    }
+
     override fun placeUsbPort(obj: Abstract3dModel): Abstract3dModel {
         return obj.move(0.0, depth / 2 - 1.0, height / 2)
     }

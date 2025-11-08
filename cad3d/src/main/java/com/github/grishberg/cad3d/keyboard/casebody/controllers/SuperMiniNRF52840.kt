@@ -27,9 +27,14 @@ class SuperMiniNRF52840(
 
         return ModelHolder(
             model.addModel(usbPort),
-            fromModel(place(controllerPlace, model), Color.CYAN, cfg.fn),
+            fromModel(createBody(controllerPlace), cfg.fn),
             fromModel(place(controllerPlace, usbPort), Color.YELLOW, cfg.fn),
         )
+    }
+
+    override fun createBody(controllerPlace: ControllerPlace): Abstract3dModel {
+        val model = Cube(width, depth, height).moveZ(height / 2)
+        return place(controllerPlace, model).withColor(Color.CYAN)
     }
 
     override fun placeUsbPort(obj: Abstract3dModel): Abstract3dModel {

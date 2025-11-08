@@ -54,7 +54,7 @@ public class Union extends Complex3dModel {
      */
     public Union(Color color, List<Abstract3dModel> models) {
         this(new ArrayList<>(models));
-        this.color = color;
+        this.setColor(color);
     }
 
     @Override

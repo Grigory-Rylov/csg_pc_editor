@@ -16,7 +16,7 @@ class RP2040Pink(
 ) : Controller {
 
     override val width = 20.73
-    override val depth = 55.7
+    override val depth = 53.7
     override val height = 1.6
 
     override val isWireless: Boolean = false
@@ -26,18 +26,27 @@ class RP2040Pink(
     override fun create(controllerPlace: ControllerPlace): ModelHolder {
         val usbPort = placeUsbPort(createUsb())
         val model = Cube(width, depth, height).moveZ(height / 2)
-        val resetButton = Cube(3.3, 4.4, 2.0).move(2, 14.6, -(height/2))
+        val resetButton = Cube(3.3, 4.4, 2.0).move(2, 14.6, -(height / 2))
 
         return ModelHolder(
             model.addModel(usbPort),
-            fromModel(place(controllerPlace, model), Color.CYAN, cfg.fn),
+            fromModel(createBody(controllerPlace), cfg.fn),
             fromModel(place(controllerPlace, usbPort), Color.YELLOW, cfg.fn),
             fromModel(place(controllerPlace, resetButton), Color.RED, cfg.fn),
         )
     }
 
+    override fun createBody(controllerPlace: ControllerPlace): Abstract3dModel {
+        return place(controllerPlace, Cube(width, depth, height).moveZ(height / 2)).withColor(Color.CYAN)
+    }
+
+    override fun createResetButton(controllerPlace: ControllerPlace): Abstract3dModel? {
+        val resetButton = Cube(3.3, 4.4, 2.0).move(2, 14.6, -(height / 2))
+        return place(controllerPlace, resetButton).withColor(Color.RED)
+    }
+
     override fun placeUsbPort(obj: Abstract3dModel): Abstract3dModel {
-        return place(controllerPlace, obj).move(0.0, depth / 2 - 1.0, -(height / 2 +2.4))
+        return obj.move(0.0, depth / 2 - 1.0, -(height / 2 + 2.4))
     }
 
     private fun createUsb(): Abstract3dModel {
