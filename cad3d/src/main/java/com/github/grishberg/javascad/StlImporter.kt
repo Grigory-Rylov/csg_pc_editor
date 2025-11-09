@@ -11,8 +11,8 @@ import kotlin.math.abs
 import kotlin.math.roundToInt
 import kotlin.math.sqrt
 
-class STLParser {
-    fun parseBinarySTL(filePath: String): List<Polygon> {
+class StlImporter {
+    fun loadBinarySTL(filePath: String, color: Color = Color.GRAY): List<Polygon> {
         val polygons = mutableListOf<Polygon>()
 
         DataInputStream(FileInputStream(filePath)).use { dis ->
@@ -34,7 +34,7 @@ class STLParser {
             var percentF: Float
             for (i in 0 until numberOfTriangles) {
                 try {
-                    val polygon = readTriangle(dis)
+                    val polygon = readTriangle(dis, color)
                     polygons.add(polygon)
                 } catch (e: Exception) {
                     println("Error reading triangle $i: ${e.message}")
@@ -71,7 +71,7 @@ class STLParser {
             .float
     }
 
-    private fun readTriangle(dis: DataInputStream): Polygon {
+    private fun readTriangle(dis: DataInputStream, color: Color): Polygon {
         // Читаем нормаль (3 * 4 байта = 12 байт)
         val normal = readVector3D(dis)
 
@@ -95,7 +95,7 @@ class STLParser {
             println("Warning: Non-unit normal vector in triangle (length: $length)")
         }
 
-        return Polygon.fromPolygons(vertices, Color.GRAY)
+        return Polygon.fromPolygons(vertices, color)
     }
 
     private fun readVector3D(dis: DataInputStream): V3d {

@@ -23,7 +23,6 @@ import com.github.grishberg.cad3d.keyboard.casebody.thumb.ThumbPoints
 import com.github.grishberg.cad3d.keyboard.casebody.thumb.ThumbWalls
 import com.github.grishberg.cad3d.keyboard.casebody.thumb.TwoRows5ButtonsMatrixThumbsBordersBuilder
 import com.github.grishberg.cad3d.keyboard.casebody.thumb.TwoRows5ButtonsThumbWalls
-import com.github.grishberg.cad3d.trackball.TrackballCase
 import com.github.grishberg.cad3d.keyboard.casebody.wall.ControllerHolderWall
 import com.github.grishberg.cad3d.keyboard.casebody.wall.FrontRightToMatrixWallBuilder
 import com.github.grishberg.cad3d.keyboard.casebody.wall.SingleRow3ButtonsFrontRightToMatrixWallBuilder
@@ -46,12 +45,15 @@ import com.github.grishberg.cad3d.plugin.cfg.KeyboardPart
 import com.github.grishberg.cad3d.plugin.cfg.ThumbClusterMode
 import com.github.grishberg.cad3d.plugin.cfg.TrackballMode
 import com.github.grishberg.cad3d.trackball.Trackball
+import com.github.grishberg.cad3d.trackball.TrackballCase
 import com.github.grishberg.cad3d.util.fromModel
 import com.github.grishberg.javascad.StlExporter
+import com.github.grishberg.javascad.StlImporter
 import eu.printingin3d.javascad.models.Abstract3dModel
 import eu.printingin3d.javascad.models.Cube
 import eu.printingin3d.javascad.models.Cylinder
 import eu.printingin3d.javascad.models.IModel
+import eu.printingin3d.javascad.models.StlModel
 import eu.printingin3d.javascad.tranzitions.Union
 import eu.printingin3d.javascad.utils.Color
 import eu.printingin3d.javascad.vrl.ColorFacetGenerationContext
@@ -161,7 +163,24 @@ class KeyboardBuilder(
         )
 
         val resultsChannel = Channel<List<VertexHolder>>()
+        var additional = 3
         coroutineScope.launch {
+            launch {
+                val stlModel = StlModel(StlImporter().loadBinarySTL("import/Rev_11_-_Slider.stl", Color.PINK))
+                val modelHolder = ModelHolder(cfg, stlModel)
+                resultsChannel.send(modelHolder.vertexHolders)
+            }
+            launch {
+                val stlModel = StlModel(StlImporter().loadBinarySTL("import/Rev_11_-_Keeb_Plate.stl", Color.FIREBRICK))
+                val modelHolder = ModelHolder(cfg, stlModel)
+                resultsChannel.send(modelHolder.vertexHolders)
+            }
+            launch {
+                val stlModel = StlModel(StlImporter().loadBinarySTL("import/Rev_11_-_Slide_Rails.stl", Color.BISQUE))
+                val modelHolder = ModelHolder(cfg, stlModel)
+                resultsChannel.send(modelHolder.vertexHolders)
+            }
+
             createIfNeeded(resultsChannel, KeyboardPart.KeyMatrix, visibleModels) {
                 createMatrix(cfg, keyPlace, thumbKeyPlace, thumbBorders, thumbWalls)
             }
@@ -238,7 +257,7 @@ class KeyboardBuilder(
                 createAmoeba(cfg, keyPlace, thumbKeyPlace)
             }
 
-            val expectedCount = visibleModels.size
+            val expectedCount = visibleModels.size + additional
             launch(mainThreadDispatcher) {
                 var receivedCount = 0
 
@@ -857,7 +876,7 @@ class KeyboardBuilder(
         val switcherHole = switcherPlace.place(switcherFactory.createSwitcher().createSwitcherHole())
         val usbPortHoleCase =
             controllerPlace.place(controller.placeUsbPort(controllerFactory.createUsbPortCase())).moveY(-1.0)
-                .subtractModel(Cube(40.0, 40.0, 5.0).move(-20,30, -2.5))
+                .subtractModel(Cube(40.0, 40.0, 5.0).move(-20, 30, -2.5))
 
         val screwBase = ScrewBase(cfg)
         val matrixWallScrewHolder = ScrewsMatrixHolder(cfg, screwBase).create()
