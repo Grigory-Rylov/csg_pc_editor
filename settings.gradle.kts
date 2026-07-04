@@ -3,7 +3,7 @@ plugins {
 }
 rootProject.name = "Ergonomic_kbd_generator"
 
-include("console", "viewer", "cad3d", "javascad", "plugin", "kbd_core", "common")
+include("console", "viewer", "cad3d", "javascad", "plugin", "kbd_core", "common", "pccase")
 
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
