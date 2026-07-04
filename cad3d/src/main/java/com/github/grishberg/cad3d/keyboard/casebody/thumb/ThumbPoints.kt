@@ -19,17 +19,15 @@ class ThumbPoints(
     thumbKeyPlace: ThumbKeyPlace,
 ) {
 
-    val row2RightFRRightInner = thumbKeyPlace.placeR2(
+    val row2RightFRRightInner = safeThumbModel(thumbKeyPlace.placeR2(
         KeyPlaceholder.placeHolderFrontRight()
             .move(cfg.wallsSettings.verticalOffset + 0.0, 0.0, cfg.wallsSettings.borderZOffset)
-    )
+    ))
 
-    val row2RightFRRightOuter = topBorderObj(
-        thumbKeyPlace.placeR2(
-            KeyPlaceholder.placeHolderFrontRight()
-                .move(0.0, -cfg.wallsSettings.outerVerticalOffset, cfg.wallsSettings.outerBorderZOffset)
-        )
-    )
+    val row2RightFRRightOuter = topBorderObj(safeThumbModel(thumbKeyPlace.placeR2(
+        KeyPlaceholder.placeHolderFrontRight()
+            .move(0.0, -cfg.wallsSettings.outerVerticalOffset, cfg.wallsSettings.outerBorderZOffset)
+    )))
 
     val row1RightFRInner = thumbKeyPlace.placeR(
         KeyPlaceholder.placeHolderFrontRight().move(2.0, 0.0, cfg.wallsSettings.borderZOffset)
@@ -47,4 +45,8 @@ class ThumbPoints(
         return Utils.sphere(cfg.wallsSettings.borderThickness / 2.0).move(obj.move)
     }
 
+    companion object {
+        private val EMPTY_MODEL = eu.printingin3d.javascad.models.Cube(0.1, 0.1, 0.1)
+        fun safeThumbModel(model: Abstract3dModel): Abstract3dModel = model ?: EMPTY_MODEL
+    }
 }

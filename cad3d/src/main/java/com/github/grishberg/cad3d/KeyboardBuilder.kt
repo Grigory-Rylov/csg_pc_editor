@@ -577,6 +577,7 @@ class KeyboardBuilder(
 
     private var stlExportListener: WeakReference<StlExportListener>? = null
     private var isExportMode: Boolean = false
+    private val stlExportThreads = mutableListOf<Thread>()
 
     private fun saveModel(cfg: KeyboardConfig, name: String, model: Abstract3dModel, needCheck: Boolean = false) {
         if (!isExportMode) {
@@ -588,7 +589,7 @@ class KeyboardBuilder(
         }
         val targetPath = File(outDir, name).absolutePath
         stlExportListener?.get()?.onExportStart(name)
-        Thread {
+        val task = Runnable {
             try {
                 val context: FacetGenerationContext = ColorFacetGenerationContext(DEFAULT_COLOR)
                 context.setFn(cfg.stlFn)
@@ -598,12 +599,14 @@ class KeyboardBuilder(
                 )
                 println("End stl exporting $name")
                 stlExportListener?.get()?.onExportFinish(name, true, null)
-            } catch (e: IOException) {
+            } catch (e: Exception) {
                 println("Error while stl exporting $name " + e.message)
                 stlExportListener?.get()?.onExportFinish(name, false, e.message)
-                throw RuntimeException(e)
             }
-        }.start()
+        }
+        val thread = Thread(task, "stl-export-$name")
+        stlExportThreads.add(thread)
+        thread.start()
     }
 
     fun exportStl(cfg: KeyboardConfig, listener: StlExportListener) {
@@ -688,109 +691,193 @@ class KeyboardBuilder(
                 val jobs = mutableListOf<Job>()
                 if (visibleModels.contains(KeyboardPart.KeyMatrix)) {
                     jobs += launch {
-                        // If not cached, build and fill cache
-                        if (stlModelsCache[KeyboardPart.KeyMatrix] == null) {
-                            createMatrix(cfg, keyPlace, thumbKeyPlace, thumbBorders, thumbWalls)
-                        } else {
-                            // Use cache to write files
-                            val cached = stlModelsCache[KeyboardPart.KeyMatrix]!!
-                            cached[FILE_PLACEHOLDER]?.let { saveModel(cfg, FILE_PLACEHOLDER, it) }
-                            cached[FILE_MATRIX]?.let { saveModel(cfg, FILE_MATRIX, it) }
+                        try {
+                            if (stlModelsCache[KeyboardPart.KeyMatrix] == null) {
+                                createMatrix(cfg, keyPlace, thumbKeyPlace, thumbBorders, thumbWalls)
+                            } else {
+                                val cached = stlModelsCache[KeyboardPart.KeyMatrix]!!
+                                cached[FILE_PLACEHOLDER]?.let { saveModel(cfg, FILE_PLACEHOLDER, it) }
+                                cached[FILE_MATRIX]?.let { saveModel(cfg, FILE_MATRIX, it) }
+                            }
+                        } catch (e: Exception) {
+                            println("[ERROR] Failed to export KeyMatrix: ${e.message}")
+                            stlExportListener?.get()?.onExportFinish(FILE_MATRIX, false, e.message)
                         }
                     }
                 }
                 if (visibleModels.contains(KeyboardPart.Case)) {
                     jobs += launch {
-                        if (stlModelsCache[KeyboardPart.Case] == null) {
-                            createCase(
-                                cfg,
-                                keyPlace,
-                                thumbKeyPlace,
-                                screwWallPlaces,
-                                walls,
-                                controllerPlace,
-                                switcherPlace,
-                                controllerFactory,
-                                switcherFactory,
-                                controller,
-                                trackball,
-                                thumbBorders = thumbBorders,
-                                thumbWalls = thumbWalls,
-                            )
-                        } else {
-                            val cached = stlModelsCache[KeyboardPart.Case]!!
-                            cached[FILE_CASE]?.let { saveModel(cfg, FILE_CASE, it) }
+                        try {
+                            if (stlModelsCache[KeyboardPart.Case] == null) {
+                                createCase(
+                                    cfg,
+                                    keyPlace,
+                                    thumbKeyPlace,
+                                    screwWallPlaces,
+                                    walls,
+                                    controllerPlace,
+                                    switcherPlace,
+                                    controllerFactory,
+                                    switcherFactory,
+                                    controller,
+                                    trackball,
+                                    thumbBorders = thumbBorders,
+                                    thumbWalls = thumbWalls,
+                                )
+                            } else {
+                                val cached = stlModelsCache[KeyboardPart.Case]!!
+                                cached[FILE_CASE]?.let { saveModel(cfg, FILE_CASE, it) }
+                            }
+                        } catch (e: Exception) {
+                            println("[ERROR] Failed to export Case: ${e.message}")
+                            stlExportListener?.get()?.onExportFinish(FILE_CASE, false, e.message)
                         }
                     }
                 }
                 if (visibleModels.contains(KeyboardPart.KeyCaps)) {
-                    jobs += launch { createKeyCaps(cfg, keyPlace, thumbKeyPlace) }
+                    jobs += launch {
+                        try {
+                            createKeyCaps(cfg, keyPlace, thumbKeyPlace)
+                        } catch (e: Exception) {
+                            println("[ERROR] Failed to export KeyCaps: ${e.message}")
+                        }
+                    }
                 }
                 if (visibleModels.contains(KeyboardPart.WristRest)) {
-                    jobs += launch { createWristRest(cfg) }
+                    jobs += launch {
+                        try {
+                            createWristRest(cfg)
+                        } catch (e: Exception) {
+                            println("[ERROR] Failed to export WristRest: ${e.message}")
+                        }
+                    }
                 }
                 if (visibleModels.contains(KeyboardPart.TrackBallHolder)) {
-                    jobs += launch { createTrackballHolder(cfg, trackball, keyPlace) }
+                    jobs += launch {
+                        try {
+                            createTrackballHolder(cfg, trackball, keyPlace)
+                        } catch (e: Exception) {
+                            println("[ERROR] Failed to export TrackBallHolder: ${e.message}")
+                            stlExportListener?.get()?.onExportFinish(FILE_TRACKBALL, false, e.message)
+                        }
+                    }
                 }
                 if (visibleModels.contains(KeyboardPart.TrackBall)) {
-                    jobs += launch { createTrackBall(cfg, keyPlace) }
+                    jobs += launch {
+                        try {
+                            createTrackBall(cfg, keyPlace)
+                        } catch (e: Exception) {
+                            println("[ERROR] Failed to export TrackBall: ${e.message}")
+                        }
+                    }
                 }
                 if (visibleModels.contains(KeyboardPart.TrackBallSensor)) {
-                    jobs += launch { createTrackballSensor(cfg, keyPlace) }
+                    jobs += launch {
+                        try {
+                            createTrackballSensor(cfg, keyPlace)
+                        } catch (e: Exception) {
+                            println("[ERROR] Failed to export TrackBallSensor: ${e.message}")
+                        }
+                    }
                 }
                 if (visibleModels.contains(KeyboardPart.TrackBallSensorCap)) {
-                    jobs += launch { createTrackballSensorCap(cfg, keyPlace) }
+                    jobs += launch {
+                        try {
+                            createTrackballSensorCap(cfg, keyPlace)
+                        } catch (e: Exception) {
+                            println("[ERROR] Failed to export TrackBallSensorCap: ${e.message}")
+                            stlExportListener?.get()?.onExportFinish(FILE_TRACKBALL_CAP, false, e.message)
+                        }
+                    }
                 }
                 if (visibleModels.contains(KeyboardPart.TrackBallCaseBody)) {
                     jobs += launch {
-                        createTrackballCase(
-                            cfg,
-                            screwWallPlaces,
-                            controllerPlace,
-                            controller,
-                            controllerFactory,
-                        )
+                        try {
+                            createTrackballCase(
+                                cfg,
+                                screwWallPlaces,
+                                controllerPlace,
+                                controller,
+                                controllerFactory,
+                            )
+                        } catch (e: Exception) {
+                            println("[ERROR] Failed to export TrackBallCase: ${e.message}")
+                            stlExportListener?.get()?.onExportFinish(FILE_TRACKBALL_CASE, false, e.message)
+                        }
                     }
                 }
                 if (visibleModels.contains(KeyboardPart.TrackBallCasePlate)) {
                     jobs += launch {
-                        createTrackballCasePlate(
-                            cfg,
-                            screwWallPlaces,
-                            controllerPlace,
-                            controller,
-                            controllerFactory,
-                        )
+                        try {
+                            createTrackballCasePlate(
+                                cfg,
+                                screwWallPlaces,
+                                controllerPlace,
+                                controller,
+                                controllerFactory,
+                            )
+                        } catch (e: Exception) {
+                            println("[ERROR] Failed to export TrackBallCasePlate: ${e.message}")
+                            stlExportListener?.get()?.onExportFinish(FILE_TRACKBALL_CASE_PLATE, false, e.message)
+                        }
                     }
                 }
                 if (visibleModels.contains(KeyboardPart.Controller)) {
-                    jobs += launch { createController(controllerFactory, controllerPlace) }
+                    jobs += launch {
+                        try {
+                            createController(controllerFactory, controllerPlace)
+                        } catch (e: Exception) {
+                            println("[ERROR] Failed to export Controller: ${e.message}")
+                        }
+                    }
                 }
                 if (visibleModels.contains(KeyboardPart.ControllerHolder)) {
                     jobs += launch {
-                        createControllerHolder(
-                            cfg, controllerPlace, controller, switcherPlace, controllerHolderDimensions, screwWallPlaces
-                        )
+                        try {
+                            createControllerHolder(
+                                cfg, controllerPlace, controller, switcherPlace, controllerHolderDimensions, screwWallPlaces
+                            )
+                        } catch (e: Exception) {
+                            println("[ERROR] Failed to export ControllerHolder: ${e.message}")
+                            stlExportListener?.get()?.onExportFinish(FILE_CONTROLLER_HOLDER, false, e.message)
+                        }
                     }
                 }
                 if (visibleModels.contains(KeyboardPart.Plate)) {
                     jobs += launch {
-                        if (stlModelsCache[KeyboardPart.Plate] == null) {
-                            createPlate(cfg, keyPlace, thumbKeyPlace, wallsSettings, screwWallPlaces)
-                        } else {
-                            val cached = stlModelsCache[KeyboardPart.Plate]!!
-                            cached[FILE_PLATE]?.let { saveModel(cfg, FILE_PLATE, it) }
+                        try {
+                            if (stlModelsCache[KeyboardPart.Plate] == null) {
+                                createPlate(cfg, keyPlace, thumbKeyPlace, wallsSettings, screwWallPlaces)
+                            } else {
+                                val cached = stlModelsCache[KeyboardPart.Plate]!!
+                                cached[FILE_PLATE]?.let { saveModel(cfg, FILE_PLATE, it) }
+                            }
+                        } catch (e: Exception) {
+                            println("[ERROR] Failed to export Plate: ${e.message}")
+                            stlExportListener?.get()?.onExportFinish(FILE_PLATE, false, e.message)
                         }
                     }
                 }
                 if (visibleModels.contains(KeyboardPart.Amoeba)) {
-                    jobs += launch { createAmoeba(cfg, keyPlace, thumbKeyPlace) }
+                    jobs += launch {
+                        try {
+                            createAmoeba(cfg, keyPlace, thumbKeyPlace)
+                        } catch (e: Exception) {
+                            println("[ERROR] Failed to export Amoeba: ${e.message}")
+                        }
+                    }
                 }
                 jobs.joinAll()
-                stlExportListener?.get()?.onAllFinished()
             } finally {
                 isExportMode = false
-                // keep weak reference; GC will clear it when dialog is collected
+                for (t in stlExportThreads) {
+                    try {
+                        t.join(60_000)
+                    } catch (_: InterruptedException) {
+                    }
+                }
+                stlExportThreads.clear()
+                stlExportListener?.get()?.onAllFinished()
             }
         }
     }

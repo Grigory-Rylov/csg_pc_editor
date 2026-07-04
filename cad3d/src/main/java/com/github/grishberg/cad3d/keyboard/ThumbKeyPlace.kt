@@ -121,9 +121,10 @@ class ThumbKeyPlace(private val cfg: KeyboardConfig) {
         )
     }
 
-    // Методы для второго ряда
+    // Методы для второго ряда (только TwoRows5Buttons)
     fun placeR2(obj: Abstract3dModel): Abstract3dModel {
-        val offset = thumbCoordinatesRow2[1] // Правая кнопка второго ряда
+        if (thumbCoordinatesRow2.isEmpty()) return obj.move(0.0, 0.0, -9999.0) // Hide off-screen
+        val offset = thumbCoordinatesRow2[1]
         val arcResult = convertToArc(point = offset, radiusY = row2radiusY, radiusZ = row2radiusZ, secondRowOffset)
         return place(
             obj, 0.0, arcResult.angleY, arcResult.angleZ - 7.0, arcResult.offset.add(V3d(1.0, -1.0, 0.0))
@@ -131,7 +132,8 @@ class ThumbKeyPlace(private val cfg: KeyboardConfig) {
     }
 
     fun placeL2(obj: Abstract3dModel): Abstract3dModel {
-        val offset = thumbCoordinatesRow2[0] // Левая кнопка второго ряда
+        if (thumbCoordinatesRow2.isEmpty()) return obj.move(0.0, 0.0, -9999.0) // Hide off-screen
+        val offset = thumbCoordinatesRow2[0]
         val arcResult = convertToArc(point = offset, radiusY = row2radiusY, radiusZ = row2radiusZ, secondRowOffset)
         return place(
             obj, 0.0, arcResult.angleY, arcResult.angleZ, arcResult.offset
