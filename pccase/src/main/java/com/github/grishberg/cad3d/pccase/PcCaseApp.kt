@@ -63,8 +63,7 @@ fun main(args: Array<String>) {
 
     println("\nBuilding CPU cooler (ARCTIC Freezer 4U-M)...")
     val cooler = Cooler().build()
-        .rotate(Angles3d.zOnly(90.0))
-        .move(-50.0, bottomY + 1.6 + 80.0, -20.0)
+        .move(50.0, bottomY + 1.6 + 80.0, -20.0)
 
     val frameVertCsg = frameVertical.toCSG(frameVertContext)
     val frameHorizCsg = frameHorizontal.toCSG(defaultContext)
