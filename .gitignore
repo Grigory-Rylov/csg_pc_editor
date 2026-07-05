@@ -5,6 +5,7 @@ build/
 !**/src/test/**/build/
 settings.json
 *.stl
+pccase/stl_pccase/
 
 ### IntelliJ IDEA ###
 .idea
