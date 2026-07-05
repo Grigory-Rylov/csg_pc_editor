@@ -1,7 +1,9 @@
 package com.github.grishberg.cad3d.pccase
 
+import eu.printingin3d.javascad.basic.Radius
 import eu.printingin3d.javascad.models.Abstract3dModel
 import eu.printingin3d.javascad.models.Cube
+import eu.printingin3d.javascad.models.Cylinder
 import eu.printingin3d.javascad.tranzitions.Union
 
 class Motherboard {
@@ -71,6 +73,24 @@ class Motherboard {
                 .move(50.0 + i * 14.0, pcbThickness / 2 + 2.5, boardDepth / 2 - 20.0))
         }
 
-        return Union(parts)
+        val board = Union(parts)
+
+        val screwR = 1.5
+        val screwH = 10.0
+        val screwPositions = listOf(
+            -110.0 to -110.0,
+            110.0 to -110.0,
+            -110.0 to 0.0,
+            110.0 to 0.0,
+            -110.0 to 110.0,
+            110.0 to 110.0
+        )
+        val holes = screwPositions.map { (hx, hz) ->
+            Cylinder(screwH, Radius.fromRadius(screwR))
+                .move(hx, 0.0, hz)
+        }
+        val holeSubtract = Union(holes)
+
+        return board.subtractModel(holeSubtract)
     }
 }
