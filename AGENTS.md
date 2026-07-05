@@ -38,6 +38,59 @@ Output: `pccase/stl_pccase/*.stl`
 
 Output: `pccase/stl_pccase/scene.png` (1920×1080, headless Java2D renderer)
 
+## Aluminum Frame Profiles
+
+The frame is built from 20×20mm aluminum extrusion profiles. **Always use
+`AluminumProfile` factory functions when adding new frame beams** — never create
+`Cube` directly for frame members.
+
+### Available profile functions
+
+| Function | Orientation | Length axis |
+|----------|-------------|-------------|
+| `AluminumProfile.vertical(length)` | Along Y | Y |
+| `AluminumProfile.horizontalX(length)` | Along X | X |
+| `AluminumProfile.horizontalZ(length)` | Along Z | Z |
+
+These functions create a `Cube` with 20×20mm cross-section and track each cut
+for the bill of materials report.
+
+### Before building any frame, reset tracking:
+
+```kotlin
+AluminumProfile.reset()
+```
+
+### After building, get the report:
+
+```kotlin
+val report = AluminumProfile.generateReport()
+println(report)
+File("stl_pccase/profile_report.txt").writeText(report)
+```
+
+The report is automatically generated in `PcCaseApp.kt` and saved to
+`pccase/stl_pccase/profile_report.txt` on every run.
+
+### Example usage in PcFrame.kt
+
+```kotlin
+// Vertical corner post
+AluminumProfile.vertical(height).move(-hw + p / 2, hh, -hd + p / 2)
+
+// Horizontal beam along X (e.g. front/back at some Y level)
+AluminumProfile.horizontalX(beamW).move(0.0, midY, -hd + p / 2)
+
+// Horizontal beam along Z (e.g. left/right at some Y level)
+AluminumProfile.horizontalZ(beamD).move(-hw + p / 2, midY, 0.0)
+```
+
+### Bill of Materials report
+
+Every `--render` run produces a `profile_report.txt` listing each cut length,
+orientation, quantity, and total length needed. This is used to order the
+correct amount of 20×20mm aluminum extrusion.
+
 ## 3D Model Development Workflow
 
 ### 1. Edit models
@@ -45,11 +98,12 @@ Output: `pccase/stl_pccase/scene.png` (1920×1080, headless Java2D renderer)
 Model source files are in:
 ```
 pccase/src/main/java/com/github/grishberg/cad3d/pccase/
-├── PcFrame.kt        — Aluminum profile frame
-├── Motherboard.kt    — Supermicro H12SSL-i
-├── Gpu.kt            — RTX 3090
-├── Psu.kt            — ATX power supply
-└── SceneRenderer.kt  — Headless PNG renderer
+├── AluminumProfile.kt — 20×20mm profile builder + BOM tracker
+├── PcFrame.kt         — Aluminum profile frame
+├── Motherboard.kt     — Supermicro H12SSL-i
+├── Gpu.kt             — RTX 3090
+├── Psu.kt             — ATX power supply
+└── SceneRenderer.kt   — Headless PNG renderer
 ```
 
 Each model class has a `build(): Abstract3dModel` method that returns a CSG tree
@@ -61,6 +115,11 @@ built from primitives (`Cube`, `Cylinder`, etc.) combined with `addModel`/`subtr
 // Create primitives
 Cube(width, height, depth)
 Cylinder(height, Radius.fromRadius(r))
+
+// For frame profiles (ALWAYS use these instead of Cube):
+AluminumProfile.vertical(length)
+AluminumProfile.horizontalX(length)
+AluminumProfile.horizontalZ(length)
 
 // Transform (immutable — returns new instance)
 model.move(x, y, z)
@@ -112,6 +171,10 @@ to the user via the MCP `vk-files` tool:
 
 # 3. Send pccase/stl_pccase/scene.png to user via MCP vk-files
 ```
+
+The `--render` run also produces `pccase/stl_pccase/profile_report.txt`
+with the aluminum profile bill of materials. Share this info if the user
+asks about quantities or lengths.
 
 This ensures the user can visually verify each change without running the build locally.
 

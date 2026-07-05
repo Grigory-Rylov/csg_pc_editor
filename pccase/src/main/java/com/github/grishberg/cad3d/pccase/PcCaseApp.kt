@@ -1,6 +1,6 @@
 package com.github.grishberg.cad3d.pccase
 
-import eu.printingin3d.javascad.models.Abstract3dModel
+import eu.printingin3d.javascad.tranzitions.Union
 import eu.printingin3d.javascad.vrl.ColorFacetGenerationContext
 import eu.printingin3d.javascad.vrl.FacetGenerationContext
 import eu.printingin3d.javascad.vrl.CSG
@@ -18,6 +18,9 @@ fun main(args: Array<String>) {
     val defaultContext: FacetGenerationContext = ColorFacetGenerationContext(eu.printingin3d.javascad.utils.Color.GRAY)
     defaultContext.setFn(8)
 
+    val frameVertContext: FacetGenerationContext = ColorFacetGenerationContext(eu.printingin3d.javascad.utils.Color(100, 140, 200))
+    frameVertContext.setFn(8)
+
     val mbContext: FacetGenerationContext = ColorFacetGenerationContext(eu.printingin3d.javascad.utils.Color.GREEN)
     mbContext.setFn(8)
 
@@ -27,11 +30,14 @@ fun main(args: Array<String>) {
     val psuContext: FacetGenerationContext = ColorFacetGenerationContext(eu.printingin3d.javascad.utils.Color(60, 60, 60))
     psuContext.setFn(8)
 
+    AluminumProfile.reset()
+
     println("\nBuilding PC frame (aluminum profiles 20x20mm)...")
-    val frame = PcFrame(
-        width = 530.0, height = 350.0, depth = 330.0,
-        profileSize = 20.0
-    ).build()
+    val frameCfg = PcFrame(
+        width = 530.0, height = 350.0, depth = 330.0
+    )
+    val frameVertical = frameCfg.buildVertical()
+    val frameHorizontal = frameCfg.buildHorizontal()
 
     println("\nBuilding motherboard (Supermicro H12SSL-i)...")
     val mb = Motherboard().build()
@@ -42,17 +48,24 @@ fun main(args: Array<String>) {
     println("\nBuilding PSU...")
     val psu = Psu().build()
 
-    val frameCsg = frame.toCSG(defaultContext)
+    val frameVertCsg = frameVertical.toCSG(frameVertContext)
+    val frameHorizCsg = frameHorizontal.toCSG(defaultContext)
+    val frameCsg = Union(listOf(frameVertical, frameHorizontal)).toCSG(defaultContext)
     val mbCsg = mb.toCSG(mbContext)
     val gpuCsg = gpu.toCSG(gpuContext)
     val psuCsg = psu.toCSG(psuContext)
 
+    val report = AluminumProfile.generateReport()
+    println(report)
+    File(outDir, "profile_report.txt").writeText(report)
+
     if (renderMode) {
         println("\nRendering scene...")
-        val renderer = SceneRenderer()
+        val renderer = SceneRenderer(cameraAngleX = 245.0)
         renderer.renderScene(
             listOf(
-                "frame" to frameCsg,
+                "frame_vertical" to frameVertCsg,
+                "frame_horizontal" to frameHorizCsg,
                 "motherboard" to mbCsg,
                 "gpu" to gpuCsg,
                 "psu" to psuCsg
@@ -86,19 +99,3 @@ private fun exportStl(csg: CSG, outDir: File, fileName: String) {
     }
 }
 
-private fun exportModel(
-    model: Abstract3dModel,
-    context: FacetGenerationContext,
-    outDir: File,
-    fileName: String
-) {
-    val targetPath = File(outDir, fileName).absolutePath
-    try {
-        println("  Exporting $fileName...")
-        StlExporter.saveStl(model.toCSG(context).polygons, targetPath)
-        val size = File(targetPath).length()
-        println("  [OK] $fileName (${size} bytes)")
-    } catch (e: Exception) {
-        println("  [FAIL] $fileName: ${e.message}")
-    }
-}
