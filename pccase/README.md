@@ -1,14 +1,7 @@
-# PC Case Generator
+# PC Case Generator / Viewer
 
-Генератор 3D-моделей корпуса ПК из алюминиевого профиля и комплектующих.
-
-## Модули
-
-| Модуль | Описание |
-|--------|----------|
-| `pccase` | Основной модуль — генерация STL и PNG |
-| `javascad` | 3D-примитивы и библиотека CSG |
-| `cad3d` | STL-экспортёр |
+3D-модель корпуса ПК из алюминиевого профиля 20×20 мм
+с материнской платой, видеокартой и блоком питания.
 
 ## Сборка
 
@@ -18,87 +11,60 @@
 
 ## Запуск
 
-### Экспорт STL (по умолчанию)
+### GUI-режим (интерактивный просмотрщик)
 
-Генерирует 4 STL-файла в папку `pccase/stl_pccase/`:
+Запускает окно с 3D-сценой, управление мышью:
+- **Перетаскивание**: вращение камеры
+- **Ctrl + перетаскивание**: панорамирование
+- **Колёсико мыши**: зум
+- **R**: сброс камеры
 
 ```bash
 ./gradlew pccase:run
 ```
 
-Выходные файлы:
-- `frame.stl` — рама из алюминиевого профиля 20×20 мм (530×350×330 мм)
-- `motherboard.stl` — Supermicro H12SSL-i (ATX, SP3, 8× DDR4)
-- `gpu_rtx3090.stl` — NVIDIA RTX 3090 (3-слот, 313×138×61 мм)
-- `psu.stl` — ATX блок питания (150×86×140 мм)
+### Консольный режим (рендер в PNG)
 
-### Рендер сцены в PNG
-
-Рендерит всю сцену в PNG-файл (1920×1080) без GPU/дисплея:
+Сохраняет сцену в `pccase/stl_pccase/scene.png` (1920×1080),
+не требует дисплея:
 
 ```bash
 ./gradlew pccase:run --args="--render"
 ```
 
-Выходные файлы:
-- `scene.png` — рендер всей сборки с освещением
+## Компоненты
 
-## Параметры корпуса
+| Компонент | Модель | Размеры, мм | Цвет |
+|-----------|--------|-------------|------|
+| Рама | Алюминиевый профиль 20×20 мм | 530×350×330 | Синеватый (стойки) / серый (балки) |
+| Материнская плата | Tyan S8030 (2× SP3, 16× DDR4) | 280×260×1.6 | Зелёный |
+| Видеокарта | Gigabyte RTX 3090 Turbo (blower) | 290×112×38 | Красный |
+| Блок питания | ATX | 150×86×140 | Тёмно-серый |
 
-Редактируются в `PcCaseApp.kt`:
+## Учёт алюминиевого профиля
 
-```kotlin
-val frame = PcFrame(
-    width = 530.0,    // мм, ширина
-    height = 350.0,   // мм, высота
-    depth = 330.0,    // мм, глубина
-    profileSize = 20.0 // мм, сечение профиля
-).build()
-```
-
-## Параметры рендеринга
-
-В `SceneRenderer.kt`:
-
-```kotlin
-SceneRenderer(
-    width = 1920,         // ширина изображения
-    height = 1080,        // высота изображения
-    fov = 45.0,           // угол обзора
-    cameraDistance = 1400.0, // расстояние камеры
-    cameraAngleX = -25.0,   // наклон камеры (вертикаль)
-    cameraAngleY = 35.0     // поворот камеры (горизонталь)
-)
-```
-
-## Структура проекта
+При каждом запуске формируется отчёт `pccase/stl_pccase/profile_report.txt`:
 
 ```
-pccase/
-├── build.gradle.kts
-└── src/main/java/com/github/grishberg/cad3d/pccase/
-    ├── PcCaseApp.kt       # Точка входа CLI
-    ├── PcFrame.kt          # Рама из алюминиевого профиля
-    ├── Motherboard.kt      # Supermicro H12SSL-i
-    ├── Gpu.kt              # RTX 3090
-    ├── Psu.kt              # ATX блок питания
-    └── SceneRenderer.kt    # Софтверный рендерер (Java2D)
+  Horizontal (Z): 290.0mm x 6pcs = 1740.0mm
+  Vertical (Y):   350.0mm x 4pcs = 1400.0mm
+  Horizontal (X): 490.0mm x 6pcs = 2940.0mm
+  Total: 6080.0mm (6.1m)
+  Profile: 20x20mm aluminum extrusion
 ```
 
-## Добавление новых комплектующих
+Используется для заказа профилей нужной длины.
 
-1. Создайте файл `NewComponent.kt` в `pccase/src/main/java/.../pccase/`
-2. Реализуйте метод `build(): Abstract3dModel`
-3. Добавьте вызов в `PcCaseApp.kt`
+## Структура модуля
 
-Пример:
-
-```kotlin
-class NewComponent {
-    fun build(): Abstract3dModel {
-        val parts = mutableListOf<Abstract3dModel>()
-        parts.add(Cube(100.0, 50.0, 20.0).move(0.0, 25.0, 0.0))
-        return Union(parts)
-    }
-}
+```
+pccase/src/main/java/com/github/grishberg/cad3d/pccase/
+├── PcCaseApp.kt          # Точка входа (GUI / --render)
+├── PcCaseViewer.kt       # Интерактивный просмотрщик (Java2D)
+├── SceneRenderer.kt      # Софтверный рендерер (Java2D, PNG)
+├── AluminumProfile.kt    # Фабрика профилей + BOM-трекер
+├── PcFrame.kt            # Рама из профилей
+├── Motherboard.kt        # Tyan S8030
+├── Gpu.kt                # Gigabyte RTX 3090 Turbo
+└── Psu.kt                # ATX блок питания
 ```

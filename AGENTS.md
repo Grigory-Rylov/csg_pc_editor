@@ -22,15 +22,15 @@ pccase/         — PC case generator module (main entry point)
 ./gradlew pccase:build
 ```
 
-## Generate STL Files
+## Run Interactive Viewer (GUI)
+
+Opens a Java2D window with mouse controls (rotate/pan/zoom):
 
 ```bash
 ./gradlew pccase:run
 ```
 
-Output: `pccase/stl_pccase/*.stl`
-
-## Generate Preview Render (PNG)
+## Generate Preview Render (PNG, headless)
 
 ```bash
 ./gradlew pccase:run --args="--render"
@@ -100,10 +100,11 @@ Model source files are in:
 pccase/src/main/java/com/github/grishberg/cad3d/pccase/
 ├── AluminumProfile.kt — 20×20mm profile builder + BOM tracker
 ├── PcFrame.kt         — Aluminum profile frame
-├── Motherboard.kt     — Supermicro H12SSL-i
-├── Gpu.kt             — RTX 3090
+├── Motherboard.kt     — Tyan S8030
+├── Gpu.kt             — Gigabyte RTX 3090 Turbo
 ├── Psu.kt             — ATX power supply
-└── SceneRenderer.kt   — Headless PNG renderer
+├── SceneRenderer.kt   — Headless PNG renderer
+└── PcCaseViewer.kt    — Interactive Java2D viewer (GUI)
 ```
 
 Each model class has a `build(): Abstract3dModel` method that returns a CSG tree

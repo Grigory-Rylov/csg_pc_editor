@@ -8,9 +8,11 @@ import com.github.grishberg.javascad.StlExporter
 import java.io.File
 
 fun main(args: Array<String>) {
-    println("=== PC Case STL Generator ===")
-
     val renderMode = args.contains("--render")
+    val guiMode = !renderMode
+
+    if (guiMode) println("=== PC Case Viewer ===")
+    else println("=== PC Case Render (headless) ===")
 
     val outDir = File("stl_pccase")
     if (!outDir.exists()) outDir.mkdirs()
@@ -65,19 +67,21 @@ fun main(args: Array<String>) {
     println(report)
     File(outDir, "profile_report.txt").writeText(report)
 
+    val sceneModels = listOf(
+        "frame_vertical" to frameVertCsg,
+        "frame_horizontal" to frameHorizCsg,
+        "motherboard" to mbCsg,
+        "gpu" to gpuCsg,
+        "psu" to psuCsg
+    )
+
     if (renderMode) {
         println("\nRendering scene...")
         val renderer = SceneRenderer(cameraAngleX = 245.0)
-        renderer.renderScene(
-            listOf(
-                "frame_vertical" to frameVertCsg,
-                "frame_horizontal" to frameHorizCsg,
-                "motherboard" to mbCsg,
-                "gpu" to gpuCsg,
-                "psu" to psuCsg
-            ),
-            File(outDir, "scene.png")
-        )
+        renderer.renderScene(sceneModels, File(outDir, "scene.png"))
+    } else if (guiMode) {
+        println("\nStarting interactive viewer...")
+        PcCaseViewer().show(sceneModels)
     } else {
         exportStl(frameCsg, outDir, "frame.stl")
         exportStl(mbCsg, outDir, "motherboard.stl")
