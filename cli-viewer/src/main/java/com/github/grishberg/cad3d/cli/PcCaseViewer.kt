@@ -14,6 +14,7 @@ import java.awt.event.KeyListener
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import java.awt.event.MouseWheelEvent
+import java.awt.geom.AffineTransform
 import javax.swing.JCheckBox
 import javax.swing.JFrame
 import javax.swing.JPanel
@@ -26,7 +27,8 @@ import kotlin.math.sqrt
 
 class PcCaseViewer(
     private val windowWidth: Int = 1200,
-    private val windowHeight: Int = 800
+    private val windowHeight: Int = 800,
+    private val textureOverlays: Map<String, TextureOverlay> = emptyMap()
 ) {
     private var allModels: Map<String, CSG> = emptyMap()
     private var visibleModels: Map<String, CSG> = emptyMap()
@@ -200,6 +202,83 @@ class PcCaseViewer(
             val xs = IntArray(face.verts.size) { face.verts[it][0].toInt() }
             val ys = IntArray(face.verts.size) { face.verts[it][1].toInt() }
             g2.fillPolygon(xs, ys, xs.size)
+        }
+
+        renderTextureOverlays(g2)
+    }
+
+    private fun projectToScreen(wx: Double, wy: Double, wz: Double,
+                                 cosRx: Double, sinRx: Double,
+                                 cosRy: Double, sinRy: Double): DoubleArray? {
+        var x = wx; var y = wy; var z = wz
+        var t = y * cosRx - z * sinRx; z = y * sinRx + z * cosRx; y = t
+        t = x * cosRy + z * sinRy; z = -x * sinRy + z * cosRy; x = t
+        z += camDistance
+        if (z <= 1.0) return null
+        val scale = fov * windowWidth / (2.0 * z)
+        return doubleArrayOf(windowWidth / 2.0 + x * scale, windowHeight / 2.0 + y * scale)
+    }
+
+    private fun renderTextureOverlays(g2: Graphics2D) {
+        val rx = Math.toRadians(camAngleX)
+        val ry = Math.toRadians(camAngleY)
+        val cosRx = cos(rx); val sinRx = sin(rx)
+        val cosRy = cos(ry); val sinRy = sin(ry)
+
+        for ((_, overlay) in textureOverlays) {
+            val image = overlay.image
+            val imgW = image.width.toDouble()
+            val imgH = image.height.toDouble()
+
+            var minX = Double.MAX_VALUE; var maxX = -Double.MAX_VALUE
+            var minY = Double.MAX_VALUE; var maxY = -Double.MAX_VALUE
+            for (polygon in overlay.polygons) {
+                for (v in polygon.vertices) {
+                    if (v.x < minX) minX = v.x
+                    if (v.x > maxX) maxX = v.x
+                    if (v.y < minY) minY = v.y
+                    if (v.y > maxY) maxY = v.y
+                }
+            }
+            val worldW = maxX - minX
+            val worldH = maxY - minY
+            if (worldW <= 0 || worldH <= 0) continue
+
+            val mbZ = overlay.polygons.first().vertices.first().z
+            val corners = listOf(
+                projectToScreen(minX, minY, mbZ, cosRx, sinRx, cosRy, sinRy),
+                projectToScreen(maxX, minY, mbZ, cosRx, sinRx, cosRy, sinRy),
+                projectToScreen(minX, maxY, mbZ, cosRx, sinRx, cosRy, sinRy),
+                projectToScreen(maxX, maxY, mbZ, cosRx, sinRx, cosRy, sinRy)
+            )
+            if (corners.any { it == null }) continue
+            val cn = corners.map { it!! }
+
+            val scrMinX = cn.minOf { it[0] }; val scrMaxX = cn.maxOf { it[0] }
+            val scrMinY = cn.minOf { it[1] }; val scrMaxY = cn.maxOf { it[1] }
+
+            val texToScreen = AffineTransform()
+            texToScreen.translate(scrMinX, scrMinY)
+            texToScreen.scale((scrMaxX - scrMinX) / imgW, (scrMaxY - scrMinY) / imgH)
+
+            val savedClip = g2.clip
+            for (polygon in overlay.polygons) {
+                val verts3d = polygon.vertices
+                if (verts3d.size < 3) continue
+
+                val screenPoly = java.awt.Polygon()
+                var valid = true
+                for (v in verts3d) {
+                    val sp = projectToScreen(v.x, v.y, v.z, cosRx, sinRx, cosRy, sinRy)
+                    if (sp == null) { valid = false; break }
+                    screenPoly.addPoint(sp[0].toInt(), sp[1].toInt())
+                }
+                if (!valid || screenPoly.npoints < 3) continue
+
+                g2.clip = screenPoly
+                g2.drawImage(image, texToScreen, null)
+            }
+            g2.clip = savedClip
         }
     }
 

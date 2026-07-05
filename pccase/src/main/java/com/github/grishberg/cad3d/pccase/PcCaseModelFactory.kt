@@ -9,7 +9,11 @@ import eu.printingin3d.javascad.vrl.CSG
 import java.io.File
 
 object PcCaseModelFactory {
-    private val gpuOffsetZ = 150;
+    private val gpuOffsetZ = 170
+
+    const val MB_OFFSET_X = 90.0
+    const val MB_OFFSET_Y = 0.0
+    const val MB_OFFSET_Z = 20.8  // bottomZ + pcbThickness/2 = 20.0 + 0.8
 
     fun buildAll(): Map<String, CSG> {
         val defaultContext: FacetGenerationContext = ColorFacetGenerationContext(eu.printingin3d.javascad.utils.Color.GRAY)
@@ -41,19 +45,26 @@ object PcCaseModelFactory {
         val bottomZ = p / 2 + p / 2
 
         // Building motherboard (Tyan S8030)
-        val mb = Motherboard().build().move(-40.0, 0.0, bottomZ + 1.6 / 2)
+        val mb = Motherboard().build().move(MB_OFFSET_X, MB_OFFSET_Y, MB_OFFSET_Z)
 
         // Building GPU (Gigabyte RTX 3090 Turbo)
-        val gpu = Gpu().build().align(Side.TOP_IN, mb).move(-50.0, 0.0, 0.0)
+        val gpuOffsetX = 50
+        val gpu =
+            Gpu().build().moveX(-gpuOffsetX)
+                .addModel(Gpu().build().moveX(-gpuOffsetX * 2))
+                .addModel(Gpu().build().moveX(-gpuOffsetX * 3))
+                .addModel(Gpu().build().moveX(-gpuOffsetX * 4))
+                .addModel(Gpu().build().moveX(-gpuOffsetX * 5))
+                .align(Side.TOP_OUT, mb).move(70,0,10.0 + gpuOffsetZ)
 
         // Building PSUs (ATX)
         val hd = 165.0
-        val psuY = p / 2 + 150.0 / 2
-        val psuBack = Psu().build().rotate(Angles3d.xOnly(90.0)).move(175.0, hd - 70.0, psuY)
-        val psuFront = Psu().build().rotate(Angles3d.xOnly(90.0)).move(175.0, -hd + 70.0, psuY)
+        val pcuX = -240
+        val psuBack = Psu().build().rotate(Angles3d.xOnly(90.0)).align(Side.TOP_OUT_CENTER, mb).move(pcuX, hd - 70.0, 0)
+        val psuFront = Psu().build().rotate(Angles3d.xOnly(90.0)).align(Side.TOP_OUT_CENTER, mb).move(pcuX, -hd + 70.0, 0)
 
         // Building CPU cooler (ARCTIC Freezer 4U-M)
-        val cooler = Cooler().build().move(50.0, -20.0, bottomZ + 1.6 + 80.0)
+        val cooler = Cooler().build().align(Side.TOP_OUT_CENTER, mb).move(30.0, -20.0, 0.0)
 
         val report = AluminumProfile.generateReport()
         println(report)

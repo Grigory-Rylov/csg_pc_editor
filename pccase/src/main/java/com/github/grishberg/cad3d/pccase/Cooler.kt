@@ -22,11 +22,6 @@ class Cooler {
             .move(10.0, 0.0, 0.0))
 
 
-        // Fan
-        parts.add(Cube(25.0, height - 20.0, depth - 10.0)
-            .move(-hw - 12.5, 0.0, 0.0))
-
-
         return Union(parts)
     }
 }

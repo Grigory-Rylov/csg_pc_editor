@@ -3,6 +3,7 @@ package com.github.grishberg.cad3d.pccase
 import eu.printingin3d.javascad.models.Abstract3dModel
 import eu.printingin3d.javascad.models.Cube
 import eu.printingin3d.javascad.tranzitions.Union
+import eu.printingin3d.javascad.utils.Color
 
 class Gpu {
     private val gpuLength = 290.0   // Y — длинная сторона
@@ -32,25 +33,6 @@ class Gpu {
             val fy = -halfL + 50.0 + i * finSpacing
             parts.add(Cube(gpuThickness - 6.0, 0.8, gpuHeight - 10.0)
                 .move(0.0, fy, 0.0))
-        }
-
-        // Вентилятор на конце Y+ (длинной стороны): X=thickness+4, Y=fanLen, Z=height-4
-        val fanLen = 70.0
-        parts.add(Cube(gpuThickness + 4.0, fanLen, gpuHeight - 4.0)
-            .move(0.0, halfL - fanLen / 2, 0.0))
-
-        // Мотор вентилятора — на верхней грани (Z+), тонкий по Y
-        val fanR = 30.0
-        parts.add(Cube(fanR, 6.0, fanR)
-            .move(0.0, halfL - fanLen / 2, halfH))
-
-        // Лопасти вентилятора — маленькие кубики в плоскости XZ
-        for (i in 0 until 7) {
-            val a = i * (360.0 / 7)
-            val rx = (fanR * 0.35) * Math.cos(Math.toRadians(a))
-            val rz = (fanR * 0.35) * Math.sin(Math.toRadians(a))
-            parts.add(Cube(3.0, 5.0, 3.0)
-                .move(rx, halfL - fanLen / 2, halfH + rz))
         }
 
         // Крепление на конце Y- (PCIe bracket): X=thickness+4, Y=3, Z=height-20

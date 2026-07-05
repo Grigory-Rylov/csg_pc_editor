@@ -9,6 +9,8 @@ import com.jogamp.opengl.GLProfile
 import com.jogamp.opengl.awt.GLCanvas
 import com.jogamp.opengl.fixedfunc.GLLightingFunc
 import com.jogamp.opengl.glu.GLU
+import com.jogamp.opengl.util.texture.Texture
+import com.jogamp.opengl.util.texture.TextureIO
 import com.jogamp.opengl.util.Animator
 import eu.printingin3d.javascad.vrl.CSG
 import java.awt.BorderLayout
@@ -21,6 +23,7 @@ import java.awt.event.MouseEvent
 import java.awt.event.MouseWheelEvent
 import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
+import java.io.File
 import javax.swing.JCheckBox
 import javax.swing.JFrame
 import javax.swing.JPanel
@@ -40,6 +43,9 @@ class Main(title: String?) : JFrame(title), GLEventListener {
     private var camPitch = -90f
     private var camYaw = 0f
     private var camDist = -600f
+
+    private var mbTexture: Texture? = null
+    private var mbTextureBottom: Texture? = null
 
     private val allModels = buildPcCaseModels().mapValues { (_, csg) -> csgToModelData(csg) }.toMutableMap()
     private val visibleModels = allModels.toMutableMap()
@@ -123,6 +129,43 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         gl.glLightfv(GLLightingFunc.GL_LIGHT0, GLLightingFunc.GL_AMBIENT, lightAmbient, 0)
         gl.glLightfv(GLLightingFunc.GL_LIGHT0, GLLightingFunc.GL_DIFFUSE, lightDiffuse, 0)
         gl.glLightfv(GLLightingFunc.GL_LIGHT0, GLLightingFunc.GL_POSITION, lightPosition, 0)
+
+        // Загрузка текстуры материнской платы
+        try {
+            val texFile = listOf(File("motherboard.png"), File("../motherboard.png"))
+                .firstOrNull { it.exists() }
+            if (texFile != null) {
+                mbTexture = TextureIO.newTexture(texFile, false)
+                mbTexture?.setTexParameteri(gl, GL2.GL_TEXTURE_MIN_FILTER, GL2.GL_LINEAR)
+                mbTexture?.setTexParameteri(gl, GL2.GL_TEXTURE_MAG_FILTER, GL2.GL_LINEAR)
+                mbTexture?.setTexParameteri(gl, GL2.GL_TEXTURE_WRAP_S, GL2.GL_CLAMP_TO_EDGE)
+                mbTexture?.setTexParameteri(gl, GL2.GL_TEXTURE_WRAP_T, GL2.GL_CLAMP_TO_EDGE)
+                println("  [OK] Loaded motherboard texture: ${texFile.name} (${mbTexture?.imageWidth}x${mbTexture?.imageHeight})")
+            } else {
+                println("  [WARN] motherboard.png not found, tried: ${File("motherboard.png").absolutePath}, ${File("../motherboard.png").absolutePath}")
+            }
+        } catch (e: Exception) {
+            println("  [WARN] Failed to load motherboard texture: ${e.message}")
+            e.printStackTrace()
+        }
+
+        // Загрузка текстуры нижней стороны материнской платы
+        try {
+            val texFile = listOf(File("motherboard_down.png"), File("../motherboard_down.png"))
+                .firstOrNull { it.exists() }
+            if (texFile != null) {
+                mbTextureBottom = TextureIO.newTexture(texFile, false)
+                mbTextureBottom?.setTexParameteri(gl, GL2.GL_TEXTURE_MIN_FILTER, GL2.GL_LINEAR)
+                mbTextureBottom?.setTexParameteri(gl, GL2.GL_TEXTURE_MAG_FILTER, GL2.GL_LINEAR)
+                mbTextureBottom?.setTexParameteri(gl, GL2.GL_TEXTURE_WRAP_S, GL2.GL_CLAMP_TO_EDGE)
+                mbTextureBottom?.setTexParameteri(gl, GL2.GL_TEXTURE_WRAP_T, GL2.GL_CLAMP_TO_EDGE)
+                println("  [OK] Loaded motherboard bottom texture: ${texFile.name} (${mbTextureBottom?.imageWidth}x${mbTextureBottom?.imageHeight})")
+            } else {
+                println("  [WARN] motherboard_down.png not found")
+            }
+        } catch (e: Exception) {
+            println("  [WARN] Failed to load motherboard_down texture: ${e.message}")
+        }
     }
 
     override fun reshape(drawable: GLAutoDrawable, x: Int, y: Int, width: Int, height: Int) {
@@ -147,6 +190,7 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         gl.glRotatef(camPitch, 1f, 0f, 0f)
         gl.glRotatef(camYaw, 0f, 0f, 1f)
 
+        // Все 3D модели
         for ((_, md) in visibleModels) {
             gl.glBegin(GL2.GL_TRIANGLES)
             var vi = 0
@@ -161,6 +205,11 @@ class Main(title: String?) : JFrame(title), GLEventListener {
             }
             gl.glEnd()
         }
+
+        // Текстуры поверх материнки — depthTest включён, depthMask=false
+        // Текстура рисуется только там где нет других компонентов
+        drawMotherboardBottomTexture(gl)
+        drawMotherboardTexture(gl)
 
         drawAxesOverlay(gl)
         gl.glFlush()
@@ -357,6 +406,74 @@ class Main(title: String?) : JFrame(title), GLEventListener {
     }
 
     private fun buildPcCaseModels(): Map<String, CSG> = PcCaseModelFactory.buildAll()
+
+    private fun drawMotherboardTexture(gl: GL2) {
+        if (!visibleModels.containsKey("motherboard") || mbTexture == null) return
+
+        val mbZ = PcCaseModelFactory.MB_OFFSET_Z.toFloat()
+        val mx = PcCaseModelFactory.MB_OFFSET_X.toFloat()
+        val my = PcCaseModelFactory.MB_OFFSET_Y.toFloat()
+        val hw = 305f / 2
+        val hd = 205.8f / 2
+
+        gl.glActiveTexture(GL2.GL_TEXTURE0)
+        gl.glEnable(GL2.GL_TEXTURE_2D)
+        mbTexture!!.bind(gl)
+        gl.glTexEnvi(GL2.GL_TEXTURE_ENV, GL2.GL_TEXTURE_ENV_MODE, GL2.GL_MODULATE)
+
+        gl.glEnable(GL2.GL_BLEND)
+        gl.glBlendFunc(GL2.GL_SRC_ALPHA, GL2.GL_ONE_MINUS_SRC_ALPHA)
+        gl.glDisable(GL2.GL_LIGHTING)
+        gl.glDisable(GL2.GL_COLOR_MATERIAL)
+        gl.glDepthMask(false)
+
+        gl.glColor4f(1f, 1f, 1f, 0.7f)
+        gl.glBegin(GL2.GL_QUADS)
+        gl.glTexCoord2f(0f, 0f); gl.glVertex3f(mx - hw, my - hd, mbZ)
+        gl.glTexCoord2f(1f, 0f); gl.glVertex3f(mx + hw, my - hd, mbZ)
+        gl.glTexCoord2f(1f, 1f); gl.glVertex3f(mx + hw, my + hd, mbZ)
+        gl.glTexCoord2f(0f, 1f); gl.glVertex3f(mx - hw, my + hd, mbZ)
+        gl.glEnd()
+
+        gl.glDepthMask(true)
+        gl.glDisable(GL2.GL_TEXTURE_2D)
+        gl.glEnable(GL2.GL_COLOR_MATERIAL)
+        gl.glEnable(GL2.GL_LIGHTING)
+    }
+
+    private fun drawMotherboardBottomTexture(gl: GL2) {
+        if (!visibleModels.containsKey("motherboard") || mbTextureBottom == null) return
+
+        val mbZ = (PcCaseModelFactory.MB_OFFSET_Z - 1.6).toFloat()
+        val mx = PcCaseModelFactory.MB_OFFSET_X.toFloat()
+        val my = PcCaseModelFactory.MB_OFFSET_Y.toFloat()
+        val hw = 305f / 2
+        val hd = 205.8f / 2
+
+        gl.glActiveTexture(GL2.GL_TEXTURE0)
+        gl.glEnable(GL2.GL_TEXTURE_2D)
+        mbTextureBottom!!.bind(gl)
+        gl.glTexEnvi(GL2.GL_TEXTURE_ENV, GL2.GL_TEXTURE_ENV_MODE, GL2.GL_MODULATE)
+
+        gl.glEnable(GL2.GL_BLEND)
+        gl.glBlendFunc(GL2.GL_SRC_ALPHA, GL2.GL_ONE_MINUS_SRC_ALPHA)
+        gl.glDisable(GL2.GL_LIGHTING)
+        gl.glDisable(GL2.GL_COLOR_MATERIAL)
+        gl.glDepthMask(false)
+
+        gl.glColor4f(1f, 1f, 1f, 0.7f)
+        gl.glBegin(GL2.GL_QUADS)
+        gl.glTexCoord2f(0f, 0f); gl.glVertex3f(mx - hw, my + hd, mbZ)
+        gl.glTexCoord2f(1f, 0f); gl.glVertex3f(mx + hw, my + hd, mbZ)
+        gl.glTexCoord2f(1f, 1f); gl.glVertex3f(mx + hw, my - hd, mbZ)
+        gl.glTexCoord2f(0f, 1f); gl.glVertex3f(mx - hw, my - hd, mbZ)
+        gl.glEnd()
+
+        gl.glDepthMask(true)
+        gl.glDisable(GL2.GL_TEXTURE_2D)
+        gl.glEnable(GL2.GL_COLOR_MATERIAL)
+        gl.glEnable(GL2.GL_LIGHTING)
+    }
 
     private fun csgToModelData(csg: CSG): ModelData {
         val vertList = mutableListOf<Float>()
