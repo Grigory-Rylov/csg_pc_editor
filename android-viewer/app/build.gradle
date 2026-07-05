@@ -1,0 +1,55 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+}
+
+android {
+    namespace 'com.github.grishberg.cad3d'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.github.grishberg.cad3d"
+        minSdk 24
+        targetSdk 34
+        versionCode 100
+        versionName "1.0"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+}
+
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.9.20"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3"
+
+    implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0"
+
+    implementation fileTree(dir: "libs", include: ["*.jar"])
+    testImplementation 'junit:junit:4.13.2'
+
+    // Базовые зависимости AndroidX
+    implementation 'androidx.core:core-ktx:1.10.1'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+
+    // 3D engine
+    implementation project(':javascad-core')
+
+    // Модуль корпуса ПК
+    implementation project(':pccase')
+}
