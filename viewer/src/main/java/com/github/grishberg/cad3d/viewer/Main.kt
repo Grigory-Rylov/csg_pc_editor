@@ -48,7 +48,7 @@ class Main(title: String?) : JFrame(title), GLEventListener {
 
     private var camPitch = -90f
     private var camYaw = 0f
-    private var camDist = -300f
+    private var camDist = -600f
 
     private val allModels = buildPcCaseModels().mapValues { (_, csg) -> csgToModelData(csg) }.toMutableMap()
     private val visibleModels = allModels.toMutableMap()
@@ -336,8 +336,8 @@ class Main(title: String?) : JFrame(title), GLEventListener {
             val dx = e.x - prevMouseX;
             val dy = e.y - prevMouseY
             if (e.modifiersEx and InputEvent.CTRL_DOWN_MASK == 0) {
-                camYaw -= dx * 0.5f
-                camPitch -= dy * 0.5f
+                camYaw += dx * 0.5f
+                camPitch += dy * 0.5f
             }
             prevMouseX = e.x; prevMouseY = e.y
             glCanvas?.display()
