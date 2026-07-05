@@ -195,7 +195,7 @@ class Main(title: String?) : JFrame(title), GLEventListener {
             glCanvas?.display()
         }
         override fun mouseWheelMoved(e: MouseWheelEvent) {
-            translateZ += e.wheelRotation * 10f
+            translateZ -= e.wheelRotation * 10f
             translateZ = translateZ.coerceIn(-1500f, -50f)
             glCanvas?.display()
         }
