@@ -69,7 +69,7 @@ println(report)
 File("stl_pccase/profile_report.txt").writeText(report)
 ```
 
-The report is automatically generated in `PcCaseApp.kt` and saved to
+The report is automatically generated in `Main.kt` and saved to
 `pccase/stl_pccase/profile_report.txt` on every run.
 
 ### Example usage in PcFrame.kt
@@ -91,12 +91,30 @@ Every `--render` run produces a `profile_report.txt` listing each cut length,
 orientation, quantity, and total length needed. This is used to order the
 correct amount of 20×20mm aluminum extrusion.
 
+## PcCaseViewer API
+
+`PcCaseViewer.show()` accepts a `Map<String, CSG>` where each key identifies a
+component. The GUI displays checkboxes for each component — unchecking hides it:
+
+```kotlin
+val models = mapOf(
+    "frame_vertical" to frameVertCsg,
+    "frame_horizontal" to frameHorizCsg,
+    "motherboard" to mbCsg,
+    "gpu" to gpuCsg,
+    "psu" to psuCsg
+)
+PcCaseViewer().show(models)
+```
+
 ## 3D Model Development Workflow
 
 ### 1. Edit models
 
 Model source files are in:
 ```
+pccase/src/main/java/com/github/grishberg/cad3d/
+├── Main.kt — Entry point (--render or GUI)
 pccase/src/main/java/com/github/grishberg/cad3d/pccase/
 ├── AluminumProfile.kt — 20×20mm profile builder + BOM tracker
 ├── PcFrame.kt         — Aluminum profile frame
@@ -156,6 +174,8 @@ val renderer = SceneRenderer(
 renderer.renderScene(listOf("name" to csg), File("output.png"))
 ```
 
+For the viewer use a `Map` (keys → checkbox labels): `PcCaseViewer().show(mapOf("name" to csg))`
+
 The renderer uses painter's algorithm with flat shading — no GPU required.
 
 ## Post-Modification Requirement
@@ -183,7 +203,7 @@ This ensures the user can visually verify each change without running the build 
 
 1. Create `NewComponent.kt` in the `pccase` package
 2. Implement `fun build(): Abstract3dModel`
-3. Register in `PcCaseApp.kt`:
+3. Register in `Main.kt`:
    ```kotlin
    val newPart = NewComponent().build()
    exportModel(newPart, context, outDir, "new_part.stl")

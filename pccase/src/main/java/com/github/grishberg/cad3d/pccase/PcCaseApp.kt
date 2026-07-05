@@ -67,7 +67,7 @@ fun main(args: Array<String>) {
     println(report)
     File(outDir, "profile_report.txt").writeText(report)
 
-    val sceneModels = listOf(
+    val sceneModels = mapOf(
         "frame_vertical" to frameVertCsg,
         "frame_horizontal" to frameHorizCsg,
         "motherboard" to mbCsg,
@@ -78,7 +78,7 @@ fun main(args: Array<String>) {
     if (renderMode) {
         println("\nRendering scene...")
         val renderer = SceneRenderer(cameraAngleX = 245.0)
-        renderer.renderScene(sceneModels, File(outDir, "scene.png"))
+        renderer.renderScene(sceneModels.entries.map { it.key to it.value }, File(outDir, "scene.png"))
     } else if (guiMode) {
         println("\nStarting interactive viewer...")
         PcCaseViewer().show(sceneModels)

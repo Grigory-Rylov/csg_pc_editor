@@ -11,7 +11,7 @@ dependencies {
 }
 
 application {
-    mainClass.set("com.github.grishberg.cad3d.pccase.PcCaseAppKt")
+    mainClass.set("com.github.grishberg.cad3d.MainKt")
 }
 
 kotlin {

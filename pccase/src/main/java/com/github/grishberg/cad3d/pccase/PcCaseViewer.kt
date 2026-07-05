@@ -1,8 +1,10 @@
 package com.github.grishberg.cad3d.pccase
 
 import eu.printingin3d.javascad.vrl.CSG
+import java.awt.BorderLayout
 import java.awt.Color
 import java.awt.Dimension
+import java.awt.FlowLayout
 import java.awt.Graphics
 import java.awt.Graphics2D
 import java.awt.RenderingHints
@@ -12,23 +14,22 @@ import java.awt.event.KeyListener
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import java.awt.event.MouseWheelEvent
-import java.awt.image.BufferedImage
-import java.io.File
-import javax.imageio.ImageIO
+import javax.swing.JCheckBox
 import javax.swing.JFrame
 import javax.swing.JPanel
 import javax.swing.SwingUtilities
 import kotlin.math.cos
-import kotlin.math.sin
-import kotlin.math.sqrt
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.math.sin
+import kotlin.math.sqrt
 
 class PcCaseViewer(
     private val windowWidth: Int = 1200,
     private val windowHeight: Int = 800
 ) {
-    private var models: List<Pair<String, CSG>> = emptyList()
+    private var allModels: Map<String, CSG> = emptyMap()
+    private var visibleModels: Map<String, CSG> = emptyMap()
     private var camAngleX = 155.0
     private var camAngleY = 35.0
     private var camDistance = 700.0
@@ -37,6 +38,8 @@ class PcCaseViewer(
 
     private var prevMouseX = 0
     private var prevMouseY = 0
+
+    private val checkboxes = mutableMapOf<String, JCheckBox>()
 
     private data class ProjFace(
         val verts: List<DoubleArray>,
@@ -47,12 +50,35 @@ class PcCaseViewer(
 
     private var cachedFaces: List<ProjFace> = emptyList()
 
-    fun show(models: List<Pair<String, CSG>>) {
-        this.models = models
+    fun show(models: Map<String, CSG>) {
+        this.allModels = models
+        this.visibleModels = models
         rebuildFaces()
 
         SwingUtilities.invokeLater {
             val frame = JFrame("PC Case Viewer")
+
+            var viewPanel: JPanel? = null
+
+            val controlPanel = JPanel(FlowLayout(FlowLayout.LEFT))
+            val componentLabels = mapOf(
+                "frame_vertical" to "Frame (vert.)",
+                "frame_horizontal" to "Frame (horiz.)",
+                "motherboard" to "Motherboard",
+                "gpu" to "GPU",
+                "psu" to "PSU"
+            )
+            for ((key, label) in componentLabels) {
+                if (key !in models) continue
+                val cb = JCheckBox(label, true)
+                cb.addActionListener {
+                    updateVisibility()
+                    viewPanel?.repaint()
+                }
+                controlPanel.add(cb)
+                checkboxes[key] = cb
+            }
+
             val panel = object : JPanel() {
                 override fun paintComponent(g: Graphics) {
                     super.paintComponent(g)
@@ -63,34 +89,28 @@ class PcCaseViewer(
                     drawFaces(g2)
                 }
             }
+            viewPanel = panel
             panel.preferredSize = Dimension(windowWidth, windowHeight)
             panel.isFocusable = true
 
             val ml = object : MouseAdapter() {
                 override fun mousePressed(e: MouseEvent) {
-                    prevMouseX = e.x
-                    prevMouseY = e.y
+                    prevMouseX = e.x; prevMouseY = e.y
                 }
                 override fun mouseDragged(e: MouseEvent) {
-                    val dx = e.x - prevMouseX
-                    val dy = e.y - prevMouseY
+                    val dx = e.x - prevMouseX; val dy = e.y - prevMouseY
                     if (e.modifiersEx and InputEvent.CTRL_DOWN_MASK != 0) {
-                        camDistance -= dy * 2.0
-                        camDistance = camDistance.coerceIn(200.0, 3000.0)
+                        camDistance -= dy * 2.0; camDistance = camDistance.coerceIn(200.0, 3000.0)
                     } else {
-                        camAngleX += dy * 0.5
-                        camAngleY += dx * 0.5
+                        camAngleX += dy * 0.5; camAngleY += dx * 0.5
                     }
-                    prevMouseX = e.x
-                    prevMouseY = e.y
-                    rebuildFaces()
-                    panel.repaint()
+                    prevMouseX = e.x; prevMouseY = e.y
+                    rebuildFaces(); panel.repaint()
                 }
                 override fun mouseWheelMoved(e: MouseWheelEvent) {
                     camDistance += e.wheelRotation * 20.0
                     camDistance = camDistance.coerceIn(200.0, 3000.0)
-                    rebuildFaces()
-                    panel.repaint()
+                    rebuildFaces(); panel.repaint()
                 }
             }
             panel.addMouseListener(ml)
@@ -99,22 +119,26 @@ class PcCaseViewer(
             panel.addKeyListener(object : KeyListener {
                 override fun keyTyped(e: KeyEvent) {}
                 override fun keyPressed(e: KeyEvent) {
-                    when (e.keyCode) {
-                        KeyEvent.VK_R -> {
-                            camAngleX = 155.0; camAngleY = 35.0; camDistance = 700.0
-                            rebuildFaces(); panel.repaint()
-                        }
+                    if (e.keyCode == KeyEvent.VK_R) {
+                        camAngleX = 155.0; camAngleY = 35.0; camDistance = 700.0
+                        rebuildFaces(); panel.repaint()
                     }
                 }
                 override fun keyReleased(e: KeyEvent) {}
             })
 
             frame.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
-            frame.contentPane.add(panel)
+            frame.contentPane.add(controlPanel, BorderLayout.NORTH)
+            frame.contentPane.add(panel, BorderLayout.CENTER)
             frame.pack()
             frame.setLocationRelativeTo(null)
             frame.isVisible = true
         }
+    }
+
+    private fun updateVisibility() {
+        visibleModels = allModels.filterKeys { checkboxes[it]?.isSelected == true }
+        rebuildFaces()
     }
 
     private fun rebuildFaces() {
@@ -125,7 +149,7 @@ class PcCaseViewer(
         val cosRy = cos(ry); val sinRy = sin(ry)
         val camDist = camDistance
 
-        for ((_, csg) in models) {
+        for ((_, csg) in visibleModels) {
             for (polygon in csg.polygons) {
                 val verts3d = polygon.vertices
                 if (verts3d.size < 3) continue
@@ -167,18 +191,14 @@ class PcCaseViewer(
     }
 
     private fun drawFaces(g2: Graphics2D) {
-        val w = g2.clipBounds.width.toDouble()
-        val h = g2.clipBounds.height.toDouble()
         for (face in cachedFaces) {
-            val c = face.color
-            val s = face.shade
+            val c = face.color; val s = face.shade
             val r = min(255, (c.getRed() * s).toInt())
             val gv = min(255, (c.getGreen() * s).toInt())
             val b = min(255, (c.getBlue() * s).toInt())
             g2.color = Color(r, gv, b)
-
-            val xs = IntArray(face.verts.size) { (face.verts[it][0]).toInt() }
-            val ys = IntArray(face.verts.size) { (face.verts[it][1]).toInt() }
+            val xs = IntArray(face.verts.size) { face.verts[it][0].toInt() }
+            val ys = IntArray(face.verts.size) { face.verts[it][1].toInt() }
             g2.fillPolygon(xs, ys, xs.size)
         }
     }
