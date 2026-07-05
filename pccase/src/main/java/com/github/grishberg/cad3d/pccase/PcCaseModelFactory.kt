@@ -55,7 +55,7 @@ object PcCaseModelFactory {
                 .addModel(Gpu().build().moveX(-gpuOffsetX * 3))
                 .addModel(Gpu().build().moveX(-gpuOffsetX * 4))
                 .addModel(Gpu().build().moveX(-gpuOffsetX * 5))
-                .align(Side.TOP_OUT, mb).move(70,0,10.0 + gpuOffsetZ)
+                .align(Side.TOP_OUT, mb).move(80,0,10.0 + gpuOffsetZ)
 
         // Building PSUs (ATX)
         val hd = 165.0
@@ -64,7 +64,7 @@ object PcCaseModelFactory {
         val psuFront = Psu().build().rotate(Angles3d.xOnly(90.0)).align(Side.TOP_OUT_CENTER, mb).move(pcuX, -hd + 70.0, 0)
 
         // Building CPU cooler (ARCTIC Freezer 4U-M)
-        val cooler = Cooler().build().align(Side.TOP_OUT_CENTER, mb).move(30.0, -20.0, 0.0)
+        val cooler = Cooler().build().align(Side.TOP_OUT_CENTER, mb).move(65.0, -20.0, 0.0)
 
         val report = AluminumProfile.generateReport()
         println(report)

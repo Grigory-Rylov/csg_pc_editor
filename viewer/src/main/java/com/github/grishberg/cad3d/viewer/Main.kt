@@ -190,15 +190,12 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         gl.glRotatef(camPitch, 1f, 0f, 0f)
         gl.glRotatef(camYaw, 0f, 0f, 1f)
 
-        // Все 3D модели
-        for ((_, md) in visibleModels) {
+        // 1. Материнка — записывает depth на уровне платы
+        visibleModels["motherboard"]?.let { md ->
             gl.glBegin(GL2.GL_TRIANGLES)
-            var vi = 0
-            var ni = 0
+            var vi = 0; var ni = 0
             for (i in 0 until md.verticesCount) {
-                val x = md.vertex[vi++]
-                val y = md.vertex[vi++]
-                val z = md.vertex[vi++]
+                val x = md.vertex[vi++]; val y = md.vertex[vi++]; val z = md.vertex[vi++]
                 gl.glColor4f(md.vertex[vi++], md.vertex[vi++], md.vertex[vi++], md.vertex[vi++])
                 gl.glNormal3f(md.normals[ni++], md.normals[ni++], md.normals[ni++])
                 gl.glVertex3f(x, y, z)
@@ -206,10 +203,39 @@ class Main(title: String?) : JFrame(title), GLEventListener {
             gl.glEnd()
         }
 
-        // Текстуры поверх материнки — depthTest включён, depthMask=false
-        // Текстура рисуется только там где нет других компонентов
-        drawMotherboardBottomTexture(gl)
-        drawMotherboardTexture(gl)
+        // 2. Текстуры — GL_ALWAYS + depthMask=false, рисуются поверх материнки
+        gl.glDepthMask(false)
+        gl.glDepthFunc(GL2.GL_ALWAYS)
+
+        // Определяем какая сторона материнки видна камере
+        // Нормаль верхней грани (0,0,1) после поворота камеры
+        val rx = Math.toRadians(camPitch.toDouble())
+        val ry = Math.toRadians(camYaw.toDouble())
+        val nzAfterRot = Math.cos(rx) * Math.cos(ry)
+        if (nzAfterRot > 0) {
+            // Верхняя сторона видна — рисуем верхнюю текстуру
+            drawMotherboardTexture(gl)
+        } else {
+            // Нижняя сторона видна — рисуем нижнюю текстуру
+            drawMotherboardBottomTexture(gl)
+        }
+
+        gl.glDepthFunc(GL2.GL_LEQUAL)
+        gl.glDepthMask(true)
+
+        // 3. Остальные компоненты — перекрывают текстуру где стоят выше материнки
+        for ((name, md) in visibleModels) {
+            if (name == "motherboard") continue
+            gl.glBegin(GL2.GL_TRIANGLES)
+            var vi = 0; var ni = 0
+            for (i in 0 until md.verticesCount) {
+                val x = md.vertex[vi++]; val y = md.vertex[vi++]; val z = md.vertex[vi++]
+                gl.glColor4f(md.vertex[vi++], md.vertex[vi++], md.vertex[vi++], md.vertex[vi++])
+                gl.glNormal3f(md.normals[ni++], md.normals[ni++], md.normals[ni++])
+                gl.glVertex3f(x, y, z)
+            }
+            gl.glEnd()
+        }
 
         drawAxesOverlay(gl)
         gl.glFlush()
@@ -419,15 +445,11 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         gl.glActiveTexture(GL2.GL_TEXTURE0)
         gl.glEnable(GL2.GL_TEXTURE_2D)
         mbTexture!!.bind(gl)
-        gl.glTexEnvi(GL2.GL_TEXTURE_ENV, GL2.GL_TEXTURE_ENV_MODE, GL2.GL_MODULATE)
+        gl.glTexEnvi(GL2.GL_TEXTURE_ENV, GL2.GL_TEXTURE_ENV_MODE, GL2.GL_REPLACE)
 
-        gl.glEnable(GL2.GL_BLEND)
-        gl.glBlendFunc(GL2.GL_SRC_ALPHA, GL2.GL_ONE_MINUS_SRC_ALPHA)
         gl.glDisable(GL2.GL_LIGHTING)
         gl.glDisable(GL2.GL_COLOR_MATERIAL)
-        gl.glDepthMask(false)
 
-        gl.glColor4f(1f, 1f, 1f, 0.7f)
         gl.glBegin(GL2.GL_QUADS)
         gl.glTexCoord2f(0f, 0f); gl.glVertex3f(mx - hw, my - hd, mbZ)
         gl.glTexCoord2f(1f, 0f); gl.glVertex3f(mx + hw, my - hd, mbZ)
@@ -435,7 +457,6 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         gl.glTexCoord2f(0f, 1f); gl.glVertex3f(mx - hw, my + hd, mbZ)
         gl.glEnd()
 
-        gl.glDepthMask(true)
         gl.glDisable(GL2.GL_TEXTURE_2D)
         gl.glEnable(GL2.GL_COLOR_MATERIAL)
         gl.glEnable(GL2.GL_LIGHTING)
@@ -453,15 +474,11 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         gl.glActiveTexture(GL2.GL_TEXTURE0)
         gl.glEnable(GL2.GL_TEXTURE_2D)
         mbTextureBottom!!.bind(gl)
-        gl.glTexEnvi(GL2.GL_TEXTURE_ENV, GL2.GL_TEXTURE_ENV_MODE, GL2.GL_MODULATE)
+        gl.glTexEnvi(GL2.GL_TEXTURE_ENV, GL2.GL_TEXTURE_ENV_MODE, GL2.GL_REPLACE)
 
-        gl.glEnable(GL2.GL_BLEND)
-        gl.glBlendFunc(GL2.GL_SRC_ALPHA, GL2.GL_ONE_MINUS_SRC_ALPHA)
         gl.glDisable(GL2.GL_LIGHTING)
         gl.glDisable(GL2.GL_COLOR_MATERIAL)
-        gl.glDepthMask(false)
 
-        gl.glColor4f(1f, 1f, 1f, 0.7f)
         gl.glBegin(GL2.GL_QUADS)
         gl.glTexCoord2f(0f, 0f); gl.glVertex3f(mx - hw, my + hd, mbZ)
         gl.glTexCoord2f(1f, 0f); gl.glVertex3f(mx + hw, my + hd, mbZ)
@@ -469,7 +486,6 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         gl.glTexCoord2f(0f, 1f); gl.glVertex3f(mx - hw, my - hd, mbZ)
         gl.glEnd()
 
-        gl.glDepthMask(true)
         gl.glDisable(GL2.GL_TEXTURE_2D)
         gl.glEnable(GL2.GL_COLOR_MATERIAL)
         gl.glEnable(GL2.GL_LIGHTING)
