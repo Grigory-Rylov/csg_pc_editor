@@ -39,14 +39,20 @@ fun main(args: Array<String>) {
     val frameVertical = frameCfg.buildVertical()
     val frameHorizontal = frameCfg.buildHorizontal()
 
-    println("\nBuilding motherboard (Supermicro H12SSL-i)...")
+    val p = AluminumProfile.PROFILE_SIZE
+    val bottomY = p / 2 + p / 2
+
+    println("\nBuilding motherboard (Tyan S8030)...")
     val mb = Motherboard().build()
+        .move(-40.0, bottomY + 1.6 / 2, 0.0)
 
-    println("\nBuilding GPU (RTX 3090)...")
+    println("\nBuilding GPU (Gigabyte RTX 3090 Turbo)...")
     val gpu = Gpu().build()
+        .move(-50.0, bottomY + 1.6 + 112.0 / 2, -65.0)
 
-    println("\nBuilding PSU...")
+    println("\nBuilding PSU (ATX)...")
     val psu = Psu().build()
+        .move(175.0, bottomY + 86.0 / 2, 0.0)
 
     val frameVertCsg = frameVertical.toCSG(frameVertContext)
     val frameHorizCsg = frameHorizontal.toCSG(defaultContext)
