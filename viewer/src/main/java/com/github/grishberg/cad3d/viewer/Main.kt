@@ -46,12 +46,9 @@ class Main(title: String?) : JFrame(title), GLEventListener {
     private var prevMouseX = 0
     private var prevMouseY = 0
 
-    private var rotateX = 0f
-    private var rotateY = -90f
-    private var rotateZ = 0f
-    private var translateX = 0f
-    private var translateY = 0f
-    private var translateZ = -300f
+    private var camPitch = -90f
+    private var camYaw = 0f
+    private var camDist = -300f
 
     private val allModels = buildPcCaseModels().mapValues { (_, csg) -> csgToModelData(csg) }.toMutableMap()
     private val visibleModels = allModels.toMutableMap()
@@ -155,11 +152,9 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         gl.glClear(GL2.GL_COLOR_BUFFER_BIT or GL2.GL_DEPTH_BUFFER_BIT)
         gl.glLoadIdentity()
 
-        gl.glTranslatef(translateX, translateY, translateZ)
-        gl.glPushMatrix()
-        gl.glRotatef(rotateX, 1f, 0f, 0f)
-        gl.glRotatef(rotateY, 0f, 1f, 0f)
-        gl.glRotatef(rotateZ, 0f, 0f, 1f)
+        gl.glTranslatef(0f, 0f, camDist)
+        gl.glRotatef(camPitch, 1f, 0f, 0f)
+        gl.glRotatef(camYaw, 0f, 0f, 1f)
 
         for ((_, md) in visibleModels) {
             gl.glBegin(GL2.GL_TRIANGLES)
@@ -176,8 +171,157 @@ class Main(title: String?) : JFrame(title), GLEventListener {
             gl.glEnd()
         }
 
-        gl.glPopMatrix()
+        drawAxesOverlay(gl)
         gl.glFlush()
+    }
+
+    private fun drawAxesOverlay(gl: GL2) {
+        val prevVp = IntArray(4)
+        gl.glGetIntegerv(GL2.GL_VIEWPORT, prevVp, 0)
+
+        val overlaySize = 260
+        val orthoRange = 4.0f
+        val axisLen = 2.5f
+        val arrowSize = 0.25f
+        val labelSize = 0.2f
+        val labelOffset = 0.5f
+
+        gl.glViewport(0, 0, overlaySize, overlaySize)
+
+        gl.glMatrixMode(GL2.GL_PROJECTION)
+        gl.glPushMatrix()
+        gl.glLoadIdentity()
+        gl.glOrtho(-orthoRange.toDouble(), orthoRange.toDouble(), -orthoRange.toDouble(), orthoRange.toDouble(), -10.0, 10.0)
+
+        gl.glMatrixMode(GL2.GL_MODELVIEW)
+        gl.glPushMatrix()
+        gl.glLoadIdentity()
+
+        gl.glRotatef(camPitch, 1f, 0f, 0f)
+        gl.glRotatef(camYaw, 0f, 0f, 1f)
+
+        gl.glDisable(GL2.GL_LIGHTING)
+        gl.glDisable(GL2.GL_DEPTH_TEST)
+
+        gl.glLineWidth(3.0f)
+
+        drawAxisLine(gl, 0f, 0f, 0f, axisLen, 0f, 0f, 1f, 0f, 0f)
+        drawAxisLine(gl, 0f, 0f, 0f, 0f, 0f, axisLen, 0f, 1f, 0f)
+        drawAxisLine(gl, 0f, 0f, 0f, 0f, axisLen, 0f, 0f, 0f, 1f)
+
+        drawArrowHead(gl, axisLen, 0f, 0f, 1f, 0f, 0f, arrowSize, 1f, 0f, 0f)
+        drawArrowHead(gl, 0f, 0f, axisLen, 0f, 0f, 1f, arrowSize, 0f, 1f, 0f)
+        drawArrowHead(gl, 0f, axisLen, 0f, 0f, 1f, 0f, arrowSize, 0f, 0f, 1f)
+
+        gl.glPopMatrix()
+        gl.glLoadIdentity()
+
+        val lx = rotatePoint(axisLen + labelOffset, 0f, 0f, camPitch, camYaw)
+        val ly = rotatePoint(0f, axisLen + labelOffset, 0f, camPitch, camYaw)
+        val lz = rotatePoint(0f, 0f, axisLen + labelOffset, camPitch, camYaw)
+
+        drawLetterX(gl, lx[0], lx[1], lx[2], labelSize, 1f, 0f, 0f)
+        drawLetterY(gl, ly[0], ly[1], ly[2], labelSize, 0f, 0f, 1f)
+        drawLetterZ(gl, lz[0], lz[1], lz[2], labelSize, 0f, 1f, 0f)
+
+        gl.glLineWidth(1.0f)
+        gl.glEnable(GL2.GL_DEPTH_TEST)
+        gl.glEnable(GL2.GL_LIGHTING)
+
+        gl.glMatrixMode(GL2.GL_PROJECTION)
+        gl.glPopMatrix()
+        gl.glMatrixMode(GL2.GL_MODELVIEW)
+        gl.glViewport(prevVp[0], prevVp[1], prevVp[2], prevVp[3])
+    }
+
+    private fun drawAxisLine(gl: GL2, x1: Float, y1: Float, z1: Float, x2: Float, y2: Float, z2: Float,
+                             r: Float, g: Float, b: Float) {
+        gl.glColor3f(r, g, b)
+        gl.glBegin(GL2.GL_LINES)
+        gl.glVertex3f(x1, y1, z1)
+        gl.glVertex3f(x2, y2, z2)
+        gl.glEnd()
+    }
+
+    private fun drawArrowHead(gl: GL2, tipX: Float, tipY: Float, tipZ: Float,
+                              dirX: Float, dirY: Float, dirZ: Float, size: Float,
+                              r: Float, g: Float, b: Float) {
+        gl.glColor3f(r, g, b)
+        val bx = tipX - dirX * size * 3f
+        val by = tipY - dirY * size * 3f
+        val bz = tipZ - dirZ * size * 3f
+        val s = size
+
+        val perpX1: Float; val perpY1: Float; val perpZ1: Float
+        val perpX2: Float; val perpY2: Float; val perpZ2: Float
+
+        if (Math.abs(dirZ) < 0.9f) {
+            perpX1 = -dirY; perpY1 = dirX; perpZ1 = 0f
+        } else {
+            perpX1 = 0f; perpY1 = -dirZ; perpZ1 = dirY
+        }
+        val len1 = kotlin.math.sqrt(perpX1 * perpX1 + perpY1 * perpY1 + perpZ1 * perpZ1)
+        val nx = perpX1 / len1; val ny = perpY1 / len1; val nz = perpZ1 / len1
+
+        if (Math.abs(dirX) < 0.9f) {
+            perpX2 = 0f; perpY2 = -dirZ; perpZ2 = dirY
+        } else {
+            perpX2 = -dirY; perpY2 = dirX; perpZ2 = 0f
+        }
+        val len2 = kotlin.math.sqrt(perpX2 * perpX2 + perpY2 * perpY2 + perpZ2 * perpZ2)
+        val mx = perpX2 / len2; val my = perpY2 / len2; val mz = perpZ2 / len2
+
+        gl.glBegin(GL2.GL_TRIANGLES)
+        gl.glVertex3f(tipX, tipY, tipZ)
+        gl.glVertex3f(bx + nx * s, by + ny * s, bz + nz * s)
+        gl.glVertex3f(bx - nx * s, by - ny * s, bz - nz * s)
+        gl.glEnd()
+        gl.glBegin(GL2.GL_TRIANGLES)
+        gl.glVertex3f(tipX, tipY, tipZ)
+        gl.glVertex3f(bx + mx * s, by + my * s, bz + mz * s)
+        gl.glVertex3f(bx - mx * s, by - my * s, bz - mz * s)
+        gl.glEnd()
+    }
+
+    private fun drawLetterX(gl: GL2, x: Float, y: Float, z: Float, s: Float,
+                            r: Float, g: Float, b: Float) {
+        gl.glColor3f(r, g, b)
+        gl.glBegin(GL2.GL_LINES)
+        gl.glVertex3f(x - s, y - s, z); gl.glVertex3f(x + s, y + s, z)
+        gl.glVertex3f(x - s, y + s, z); gl.glVertex3f(x + s, y - s, z)
+        gl.glEnd()
+    }
+
+    private fun drawLetterY(gl: GL2, x: Float, y: Float, z: Float, s: Float,
+                            r: Float, g: Float, b: Float) {
+        gl.glColor3f(r, g, b)
+        gl.glBegin(GL2.GL_LINES)
+        gl.glVertex3f(x - s, y + s, z); gl.glVertex3f(x, y, z)
+        gl.glVertex3f(x + s, y + s, z); gl.glVertex3f(x, y, z)
+        gl.glVertex3f(x, y, z); gl.glVertex3f(x, y - s, z)
+        gl.glEnd()
+    }
+
+    private fun drawLetterZ(gl: GL2, x: Float, y: Float, z: Float, s: Float,
+                            r: Float, g: Float, b: Float) {
+        gl.glColor3f(r, g, b)
+        gl.glBegin(GL2.GL_LINES)
+        gl.glVertex3f(x - s, y + s, z); gl.glVertex3f(x + s, y + s, z)
+        gl.glVertex3f(x + s, y + s, z); gl.glVertex3f(x - s, y - s, z)
+        gl.glVertex3f(x - s, y - s, z); gl.glVertex3f(x + s, y - s, z)
+        gl.glEnd()
+    }
+
+    private fun rotatePoint(x: Float, y: Float, z: Float,
+                            pitch: Float, yaw: Float): FloatArray {
+        var x1 = x.toDouble(); var y1 = y.toDouble(); var z1 = z.toDouble()
+        val yawRad = Math.toRadians(yaw.toDouble())
+        val cy = kotlin.math.cos(yawRad); val sy = kotlin.math.sin(yawRad)
+        var t = x1 * cy - y1 * sy; y1 = x1 * sy + y1 * cy; x1 = t
+        val pitchRad = Math.toRadians(pitch.toDouble())
+        val cp = kotlin.math.cos(pitchRad); val sp = kotlin.math.sin(pitchRad)
+        t = y1 * cp - z1 * sp; z1 = y1 * sp + z1 * cp; y1 = t
+        return floatArrayOf(x1.toFloat(), y1.toFloat(), z1.toFloat())
     }
 
     override fun dispose(drawable: GLAutoDrawable) {}
@@ -191,18 +335,17 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         override fun mouseDragged(e: MouseEvent) {
             val dx = e.x - prevMouseX;
             val dy = e.y - prevMouseY
-            if (e.modifiersEx and InputEvent.CTRL_DOWN_MASK != 0) {
-                translateX += dx * 0.5f; translateY -= dy * 0.5f
-            } else {
-                rotateX += dy * 0.5f; rotateY += dx * 0.5f
+            if (e.modifiersEx and InputEvent.CTRL_DOWN_MASK == 0) {
+                camYaw -= dx * 0.5f
+                camPitch -= dy * 0.5f
             }
             prevMouseX = e.x; prevMouseY = e.y
             glCanvas?.display()
         }
 
         override fun mouseWheelMoved(e: MouseWheelEvent) {
-            translateZ -= e.wheelRotation * 10f
-            translateZ = translateZ.coerceIn(-1500f, -50f)
+            camDist -= e.wheelRotation * 10f
+            camDist = camDist.coerceIn(-1500f, -50f)
             glCanvas?.display()
         }
     }
@@ -213,14 +356,8 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         override fun keyPressed(e: KeyEvent) {
             when (e.keyCode) {
                 KeyEvent.VK_R -> {
-                    rotateX = 0f; rotateY = -90f; rotateZ = 0f
-                    translateX = 0f; translateY = 0f; translateZ = -300f
+                    camPitch = -90f; camYaw = 0f; camDist = -300f
                 }
-
-                KeyEvent.VK_LEFT -> translateX -= 5f
-                KeyEvent.VK_RIGHT -> translateX += 5f
-                KeyEvent.VK_UP -> translateY += 5f
-                KeyEvent.VK_DOWN -> translateY -= 5f
             }
             glCanvas?.display()
         }
