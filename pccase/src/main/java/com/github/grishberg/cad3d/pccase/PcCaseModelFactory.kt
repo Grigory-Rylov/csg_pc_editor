@@ -1,6 +1,7 @@
 package com.github.grishberg.cad3d.pccase
 
 import eu.printingin3d.javascad.coords.Angles3d
+import eu.printingin3d.javascad.enums.Side
 import eu.printingin3d.javascad.tranzitions.Union
 import eu.printingin3d.javascad.vrl.ColorFacetGenerationContext
 import eu.printingin3d.javascad.vrl.FacetGenerationContext
@@ -8,6 +9,7 @@ import eu.printingin3d.javascad.vrl.CSG
 import java.io.File
 
 object PcCaseModelFactory {
+    private val gpuOffsetZ = 150;
 
     fun buildAll(): Map<String, CSG> {
         val defaultContext: FacetGenerationContext = ColorFacetGenerationContext(eu.printingin3d.javascad.utils.Color.GRAY)
@@ -42,7 +44,7 @@ object PcCaseModelFactory {
         val mb = Motherboard().build().move(-40.0, 0.0, bottomZ + 1.6 / 2)
 
         // Building GPU (Gigabyte RTX 3090 Turbo)
-        val gpu = Gpu().build().move(-50.0, 0.0, 71.0)
+        val gpu = Gpu().build().align(Side.TOP_IN, mb).move(-50.0, 0.0, 0.0)
 
         // Building PSUs (ATX)
         val hd = 165.0

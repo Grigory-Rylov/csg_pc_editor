@@ -15,64 +15,66 @@ class Motherboard {
         val parts = mutableListOf<Abstract3dModel>()
 
         // Плата лежит в плоскости XY, толщиной по Z
-        parts.add(Cube(boardWidth, boardDepth, pcbThickness))
+        val pcb = Cube(boardWidth, boardDepth, pcbThickness)
+        parts.add(pcb)
 
-        val cpu1X = -50.0
-        val cpu2X = 50.0
+        /*
+        // CPU socket SP3 — один сокет, лежит в XY, высота по Z
+        val cpuX = -50.0
         val cpuY = -20.0
+        parts.add(Cube(62.0, 62.0, 8.0)
+            .move(cpuX, cpuY, pcbThickness / 2 + 4.0))
 
-        for (cx in listOf(cpu1X, cpu2X)) {
-            parts.add(Cube(62.0, 8.0, 62.0)
-                .move(cx, pcbThickness / 2 + 4.0, cpuY))
-        }
-
+        // DIMM слоты (возле CPU, по обе стороны, вдоль Y)
         val dimmLength = 130.0
         val dimmWidth = 5.0
         val dimmHeight = 32.0
-        for (cx in listOf(cpu1X, cpu2X)) {
-            for (i in 0 until 4) {
-                parts.add(Cube(dimmWidth, dimmLength, dimmHeight)
-                    .move(cx - 35.0 - i * 7.0, pcbThickness / 2 + 16.0, 30.0))
-            }
-            for (i in 0 until 4) {
-                parts.add(Cube(dimmWidth, dimmLength, dimmHeight)
-                    .move(cx + 35.0 + i * 7.0, pcbThickness / 2 + 16.0, 30.0))
-            }
+        for (i in 0 until 4) {
+            parts.add(Cube(dimmWidth, dimmLength, dimmHeight)
+                .move(cpuX - 35.0 - i * 7.0, 30.0, pcbThickness / 2 + 16.0))
+        }
+        for (i in 0 until 4) {
+            parts.add(Cube(dimmWidth, dimmLength, dimmHeight)
+                .move(cpuX + 35.0 + i * 7.0, 30.0, pcbThickness / 2 + 16.0))
         }
 
+        // PCIe слоты — стоят вертикально вдоль X, отверстие по Y, высота по Z
         val numPcie = 4
         val pcieSpacing = 25.0
         val pcieStartY = -90.0
         for (i in 0 until numPcie) {
-            parts.add(Cube(120.0, 12.0, 5.0)
-                .move(-35.0, pcbThickness / 2 + 6.0, pcieStartY + i * pcieSpacing))
+            parts.add(Cube(120.0, 5.0, 12.0)
+                .move(-35.0, pcieStartY + i * pcieSpacing, pcbThickness / 2 + 6.0))
         }
 
-        for (cx in listOf(cpu1X, cpu2X)) {
-            parts.add(Cube(15.0, 80.0, 12.0)
-                .move(cx - 48.0, pcbThickness / 2 + 6.0, -10.0))
-            parts.add(Cube(15.0, 80.0, 12.0)
-                .move(cx + 48.0, pcbThickness / 2 + 6.0, -10.0))
-        }
+        // Радиаторные крепления возле CPU
+        parts.add(Cube(15.0, 80.0, 12.0)
+            .move(cpuX - 48.0, -10.0, pcbThickness / 2 + 6.0))
+        parts.add(Cube(15.0, 80.0, 12.0)
+            .move(cpuX + 48.0, -10.0, pcbThickness / 2 + 6.0))
 
+        // Чипсет
         parts.add(Cube(25.0, 25.0, 6.0)
-            .move(0.0, pcbThickness / 2 + 3.0, 85.0))
+            .move(0.0, 85.0, pcbThickness / 2 + 3.0))
 
+        // Задняя панель I/O
         parts.add(Cube(boardWidth - 60, 12.0, 50.0)
-            .move(0.0, pcbThickness / 2 + 25.0, boardDepth / 2 - 6.0))
+            .move(0.0, boardDepth / 2 - 6.0, pcbThickness / 2 + 25.0))
 
+        // SATA контроллер
         parts.add(Cube(45.0, 22.0, 10.0)
-            .move(100.0, pcbThickness / 2 + 5.0, -80.0))
+            .move(100.0, -80.0, pcbThickness / 2 + 5.0))
 
-        for (cx in listOf(cpu1X, cpu2X)) {
-            parts.add(Cube(10.0, 10.0, 8.0)
-                .move(cx, pcbThickness / 2 + 4.0, -boardDepth / 2 + 25.0))
-        }
+        // Крепления кулера возле CPU
+        parts.add(Cube(10.0, 10.0, 8.0)
+            .move(cpuX, -boardDepth / 2 + 25.0, pcbThickness / 2 + 4.0))
 
+        // Фронтальная панель (пины)
         for (i in 0 until 6) {
             parts.add(Cube(10.0, 5.0, 5.0)
-                .move(50.0 + i * 14.0, pcbThickness / 2 + 2.5, boardDepth / 2 - 20.0))
+                .move(50.0 + i * 14.0, boardDepth / 2 - 20.0, pcbThickness / 2 + 2.5))
         }
+*/
 
         val board = Union(parts)
 
@@ -92,7 +94,6 @@ class Motherboard {
                 .move(hx, hy, 0.0)
         }
         val holeSubtract = Union(holes)
-
         return board.subtractModel(holeSubtract)
     }
 }
