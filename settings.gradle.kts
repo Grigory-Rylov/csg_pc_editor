@@ -1,7 +1,7 @@
 plugins {
     id("org.gradle.toolchains.foojay-resolver-convention") version "0.8.0"
 }
-rootProject.name = "Ergonomic_kbd_generator"
+rootProject.name = "PC frame viewer"
 
 include("console", "viewer", "cad3d", "javascad", "plugin", "kbd_core", "common", "pccase")
 
