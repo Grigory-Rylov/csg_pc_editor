@@ -6,7 +6,6 @@ import com.github.grishberg.cad3d.pccase.Gpu
 import com.github.grishberg.cad3d.pccase.Motherboard
 import com.github.grishberg.cad3d.pccase.PcFrame
 import com.github.grishberg.cad3d.pccase.Psu
-import eu.printingin3d.javascad.coords.Angles3d
 import com.jogamp.opengl.GL2
 import com.jogamp.opengl.GLAutoDrawable
 import com.jogamp.opengl.GLCapabilities
@@ -16,10 +15,11 @@ import com.jogamp.opengl.awt.GLCanvas
 import com.jogamp.opengl.fixedfunc.GLLightingFunc
 import com.jogamp.opengl.glu.GLU
 import com.jogamp.opengl.util.Animator
+import eu.printingin3d.javascad.coords.Angles3d
 import eu.printingin3d.javascad.utils.Color as JcColor
+import eu.printingin3d.javascad.vrl.CSG
 import eu.printingin3d.javascad.vrl.ColorFacetGenerationContext
 import eu.printingin3d.javascad.vrl.FacetGenerationContext
-import eu.printingin3d.javascad.vrl.CSG
 import java.awt.BorderLayout
 import java.awt.FlowLayout
 import java.awt.event.InputEvent
@@ -35,9 +35,7 @@ import javax.swing.JFrame
 import javax.swing.JPanel
 
 data class ModelData(
-    val vertex: FloatArray,
-    val normals: FloatArray,
-    val verticesCount: Int
+    val vertex: FloatArray, val normals: FloatArray, val verticesCount: Int
 )
 
 class Main(title: String?) : JFrame(title), GLEventListener {
@@ -185,11 +183,14 @@ class Main(title: String?) : JFrame(title), GLEventListener {
     override fun dispose(drawable: GLAutoDrawable) {}
 
     private inner class GlCanvasMouseListener : MouseAdapter() {
+
         override fun mousePressed(e: MouseEvent) {
             prevMouseX = e.x; prevMouseY = e.y
         }
+
         override fun mouseDragged(e: MouseEvent) {
-            val dx = e.x - prevMouseX; val dy = e.y - prevMouseY
+            val dx = e.x - prevMouseX;
+            val dy = e.y - prevMouseY
             if (e.modifiersEx and InputEvent.CTRL_DOWN_MASK != 0) {
                 translateX += dx * 0.5f; translateY -= dy * 0.5f
             } else {
@@ -198,6 +199,7 @@ class Main(title: String?) : JFrame(title), GLEventListener {
             prevMouseX = e.x; prevMouseY = e.y
             glCanvas?.display()
         }
+
         override fun mouseWheelMoved(e: MouseWheelEvent) {
             translateZ -= e.wheelRotation * 10f
             translateZ = translateZ.coerceIn(-1500f, -50f)
@@ -206,6 +208,7 @@ class Main(title: String?) : JFrame(title), GLEventListener {
     }
 
     private inner class GlCanvasKeyListener : KeyListener {
+
         override fun keyTyped(e: KeyEvent) {}
         override fun keyPressed(e: KeyEvent) {
             when (e.keyCode) {
@@ -213,6 +216,7 @@ class Main(title: String?) : JFrame(title), GLEventListener {
                     rotateX = 0f; rotateY = -90f; rotateZ = 0f
                     translateX = 0f; translateY = 0f; translateZ = -300f
                 }
+
                 KeyEvent.VK_LEFT -> translateX -= 5f
                 KeyEvent.VK_RIGHT -> translateX += 5f
                 KeyEvent.VK_UP -> translateY += 5f
@@ -220,51 +224,47 @@ class Main(title: String?) : JFrame(title), GLEventListener {
             }
             glCanvas?.display()
         }
+
         override fun keyReleased(e: KeyEvent) {}
     }
 
-    companion object {
-        @JvmStatic
-        fun main(args: Array<String>) {
-            com.github.grishberg.cad3d.viewer.Main("PC Case Viewer (OpenGL)")
-        }
+    private fun buildPcCaseModels(): Map<String, CSG> {
+        val defaultContext: FacetGenerationContext = ColorFacetGenerationContext(JcColor.GRAY).apply { setFn(8) }
+        val frameVertContext: FacetGenerationContext =
+            ColorFacetGenerationContext(JcColor(100, 140, 200)).apply { setFn(8) }
+        val mbContext: FacetGenerationContext = ColorFacetGenerationContext(JcColor.GREEN).apply { setFn(8) }
+        val gpuContext: FacetGenerationContext = ColorFacetGenerationContext(JcColor(200, 30, 30)).apply { setFn(8) }
+        val psuContext: FacetGenerationContext = ColorFacetGenerationContext(JcColor(60, 60, 60)).apply { setFn(8) }
+        val coolerContext: FacetGenerationContext =
+            ColorFacetGenerationContext(JcColor(180, 180, 180)).apply { setFn(8) }
+
+        AluminumProfile.reset()
+
+        val frameCfg = PcFrame(width = 530.0, height = 350.0, depth = 330.0)
+        val frameVertical = frameCfg.buildVertical()
+        val frameHorizontal = frameCfg.buildHorizontal()
+
+        val p = AluminumProfile.PROFILE_SIZE
+        val bottomY = p / 2 + p / 2
+
+        val mb = Motherboard().build().move(-40.0, bottomY + 1.6 / 2, 0.0)
+        val gpu = Gpu().build().rotate(Angles3d.yOnly(-90.0)).move(-50.0, 15.0 + 112.0 / 2, 0.0)
+        val hd = 165.0
+        val psuY = p / 2 + 150.0 / 2
+        val psu1 = Psu().build().rotate(Angles3d.zOnly(90.0)).move(175.0, psuY, hd - 70.0)
+        val psu2 = Psu().build().rotate(Angles3d.zOnly(90.0)).move(175.0, psuY, -hd + 70.0)
+        val cooler = Cooler().build().rotate(Angles3d.zOnly(90.0)).move(50.0, bottomY + 1.6 + 80.0, -20.0)
+
+        return mapOf(
+            "frame_vertical" to frameVertical.toCSG(frameVertContext),
+            "frame_horizontal" to frameHorizontal.toCSG(defaultContext),
+            "motherboard" to mb.toCSG(mbContext),
+            "gpu" to gpu.toCSG(gpuContext),
+            "psu_back" to psu1.toCSG(psuContext),
+            "psu_front" to psu2.toCSG(psuContext),
+            "cooler" to cooler.toCSG(coolerContext)
+        )
     }
-
-        private fun buildPcCaseModels(): Map<String, CSG> {
-            val defaultContext: FacetGenerationContext = ColorFacetGenerationContext(JcColor.GRAY).apply { setFn(8) }
-            val frameVertContext: FacetGenerationContext = ColorFacetGenerationContext(JcColor(100, 140, 200)).apply { setFn(8) }
-            val mbContext: FacetGenerationContext = ColorFacetGenerationContext(JcColor.GREEN).apply { setFn(8) }
-            val gpuContext: FacetGenerationContext = ColorFacetGenerationContext(JcColor(200, 30, 30)).apply { setFn(8) }
-            val psuContext: FacetGenerationContext = ColorFacetGenerationContext(JcColor(60, 60, 60)).apply { setFn(8) }
-            val coolerContext: FacetGenerationContext = ColorFacetGenerationContext(JcColor(180, 180, 180)).apply { setFn(8) }
-
-            AluminumProfile.reset()
-
-            val frameCfg = PcFrame(width = 530.0, height = 350.0, depth = 330.0)
-            val frameVertical = frameCfg.buildVertical()
-            val frameHorizontal = frameCfg.buildHorizontal()
-
-            val p = AluminumProfile.PROFILE_SIZE
-            val bottomY = p / 2 + p / 2
-
-            val mb = Motherboard().build().move(-40.0, bottomY + 1.6 / 2, 0.0)
-            val gpu = Gpu().build().rotate(Angles3d.yOnly(-90.0)).move(-50.0, 15.0 + 112.0 / 2, 0.0)
-            val hd = 165.0
-            val psuY = p / 2 + 150.0 / 2
-            val psu1 = Psu().build().rotate(Angles3d.zOnly(90.0)).move(175.0, psuY, hd - 70.0)
-            val psu2 = Psu().build().rotate(Angles3d.zOnly(90.0)).move(175.0, psuY, -hd + 70.0)
-            val cooler = Cooler().build().rotate(Angles3d.zOnly(90.0)).move(50.0, bottomY + 1.6 + 80.0, -20.0)
-
-            return mapOf(
-                "frame_vertical" to frameVertical.toCSG(frameVertContext),
-                "frame_horizontal" to frameHorizontal.toCSG(defaultContext),
-                "motherboard" to mb.toCSG(mbContext),
-                "gpu" to gpu.toCSG(gpuContext),
-                "psu_back" to psu1.toCSG(psuContext),
-                "psu_front" to psu2.toCSG(psuContext),
-                "cooler" to cooler.toCSG(coolerContext)
-            )
-        }
 
     private fun csgToModelData(csg: CSG): ModelData {
         val vertList = mutableListOf<Float>()
@@ -303,9 +303,7 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         }
 
         return ModelData(
-            vertex = vertList.toFloatArray(),
-            normals = normList.toFloatArray(),
-            verticesCount = triCount
+            vertex = vertList.toFloatArray(), normals = normList.toFloatArray(), verticesCount = triCount
         )
     }
 }
