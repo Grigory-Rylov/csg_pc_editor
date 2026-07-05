@@ -46,12 +46,12 @@ class Main(title: String?) : JFrame(title), GLEventListener {
     private var prevMouseX = 0
     private var prevMouseY = 0
 
-    private var rotateX = -25f
-    private var rotateY = 0f
+    private var rotateX = 0f
+    private var rotateY = -90f
     private var rotateZ = 0f
     private var translateX = 0f
     private var translateY = 0f
-    private var translateZ = -500f
+    private var translateZ = -300f
 
     private val allModels = buildPcCaseModels().mapValues { (_, csg) -> csgToModelData(csg) }.toMutableMap()
     private val visibleModels = allModels.toMutableMap()
@@ -206,8 +206,8 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         override fun keyPressed(e: KeyEvent) {
             when (e.keyCode) {
                 KeyEvent.VK_R -> {
-                    rotateX = -25f; rotateY = 0f; rotateZ = 0f
-                    translateX = 0f; translateY = 0f; translateZ = -500f
+                    rotateX = 0f; rotateY = -90f; rotateZ = 0f
+                    translateX = 0f; translateY = 0f; translateZ = -300f
                 }
                 KeyEvent.VK_LEFT -> translateX -= 5f
                 KeyEvent.VK_RIGHT -> translateX += 5f
