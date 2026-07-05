@@ -47,9 +47,8 @@ class PcFrame(
         // Motherboard support rails (along Z, under screw positions)
         val mbX1 = -150.0
         val mbX2 = 70.0
-        val mbZspan = 220.0
-        beams.add(AluminumProfile.horizontalZ(mbZspan).move(mbX1, p / 2, 0.0))
-        beams.add(AluminumProfile.horizontalZ(mbZspan).move(mbX2, p / 2, 0.0))
+        beams.add(AluminumProfile.horizontalZ(beamD).move(mbX1, p / 2, 0.0))
+        beams.add(AluminumProfile.horizontalZ(beamD).move(mbX2, p / 2, 0.0))
 
         // Middle shelf (~40% height)
         val midY = height * 0.4
