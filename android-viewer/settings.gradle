@@ -17,5 +17,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "CsgBspSample"
 include ':app'
-include ':pccase'
 include ':javascad-core'

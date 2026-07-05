@@ -1,4 +1,4 @@
-package com.github.grishberg.cad3d.pccase
+package com.github.grishberg.cad3d.cli
 
 import eu.printingin3d.javascad.vrl.CSG
 import java.awt.BorderLayout

@@ -13,30 +13,49 @@ preview PNG images without a display or GPU.
 javascad/       — Core 3D modeling library (CSG, primitives, STL I/O)
 cad3d/          — STL exporter (StlExporter, PolygonValidator, Triangulator)
 plugin/         — Plugin interfaces (SettingsContainer, StlExportListener)
-pccase/         — PC case generator module (main entry point)
+pccase/         — PC case model definitions (no AWT/Swing, Android-compatible)
+cli-viewer/     — CLI entry point, SceneRenderer (Java2D PNG), PcCaseViewer (Swing GUI)
+viewer/         — JOGL OpenGL viewer
 ```
+
+**Key separation:**
+- `pccase/` — pure model library, no platform-specific dependencies (usable from Android)
+- `cli-viewer/` — desktop tools: rendering, GUI, STL export
 
 ## Build
 
 ```bash
+# Build all modules
+./gradlew build
+
+# Build just the model library
 ./gradlew pccase:build
+
+# Build the CLI viewer
+./gradlew cli-viewer:build
 ```
 
-## Run Interactive Viewer (GUI)
+## Run Interactive Viewer (Swing GUI)
 
-Opens an OpenGL (JOGL) window with mouse controls (rotate/pan/zoom), component checkboxes:
+Opens a Java2D window with mouse controls (rotate/pan/zoom), component checkboxes:
 
 ```bash
-./gradlew pccase:run
+./gradlew cli-viewer:run
 ```
 
 ## Generate Preview Render (PNG, headless)
 
 ```bash
-./gradlew pccase:run --args="--render"
+./gradlew cli-viewer:run --args="--render"
 ```
 
-Output: `pccase/stl_pccase/scene.png` (1920×1080, headless Java2D renderer)
+Output: `cli-viewer/stl_pccase/scene.png` (1920×1080, headless Java2D renderer)
+
+## Run JOGL OpenGL Viewer
+
+```bash
+./gradlew viewer:run
+```
 
 ## Aluminum Frame Profiles
 
@@ -69,8 +88,8 @@ println(report)
 File("stl_pccase/profile_report.txt").writeText(report)
 ```
 
-The report is automatically generated in `Main.kt` and saved to
-`pccase/stl_pccase/profile_report.txt` on every run.
+The report is automatically generated in `PcCaseModelFactory` and saved to
+`cli-viewer/stl_pccase/profile_report.txt` on every run.
 
 ### Example usage in PcFrame.kt
 
@@ -87,18 +106,15 @@ AluminumProfile.horizontalZ(beamD).move(-hw + p / 2, midY, 0.0)
 
 ### Bill of Materials report
 
-Every `--render` run produces a `profile_report.txt` listing each cut length,
+Every `--render` run produces `cli-viewer/stl_pccase/profile_report.txt` listing each cut length,
 orientation, quantity, and total length needed. This is used to order the
 correct amount of 20×20mm aluminum extrusion.
 
 ## Main entry point
 
-`com.github.grishberg.cad3d.Main` is the main class. Without arguments it launches
-the JOGL OpenGL viewer with checkboxes for each component. With `--render` it
+`com.github.grishberg.cad3d.cli.PcCaseAppKt` is the main class. Without arguments it launches
+the Swing Java2D viewer with checkboxes for each component. With `--render` it
 uses the headless Java2D renderer to produce `scene.png`.
-
-The viewer builds models internally and converts CSG polygons to vertex arrays
-for OpenGL rendering (fixed-function GL2 pipeline with lighting).
 
 ## 3D Model Development Workflow
 
@@ -106,16 +122,19 @@ for OpenGL rendering (fixed-function GL2 pipeline with lighting).
 
 Model source files are in:
 ```
-pccase/src/main/java/com/github/grishberg/cad3d/
-├── Main.kt — Entry point (--render or GUI)
 pccase/src/main/java/com/github/grishberg/cad3d/pccase/
-├── AluminumProfile.kt — 20×20mm profile builder + BOM tracker
-├── PcFrame.kt         — Aluminum profile frame
-├── Motherboard.kt     — Tyan S8030
-├── Gpu.kt             — Gigabyte RTX 3090 Turbo
-├── Psu.kt             — ATX power supply
-├── SceneRenderer.kt   — Headless PNG renderer
-└── PcCaseViewer.kt    — Interactive Java2D viewer (GUI)
+├── AluminumProfile.kt   — 20×20mm profile builder + BOM tracker
+├── PcFrame.kt           — Aluminum profile frame
+├── Motherboard.kt       — Tyan S8030
+├── Gpu.kt               — Gigabyte RTX 3090 Turbo
+├── Psu.kt               — ATX power supply
+├── Cooler.kt            — CPU cooler
+└── PcCaseModelFactory.kt — Builds all models into CSG map
+
+cli-viewer/src/main/java/com/github/grishberg/cad3d/cli/
+├── PcCaseApp.kt         — Entry point (--render or GUI)
+├── SceneRenderer.kt     — Headless PNG renderer
+└── PcCaseViewer.kt      — Interactive Java2D viewer (GUI)
 ```
 
 Each model class has a `build(): Abstract3dModel` method that returns a CSG tree
@@ -178,15 +197,15 @@ to the user via the MCP `vk-files` tool:
 
 ```bash
 # 1. Build
-./gradlew pccase:build
+./gradlew cli-viewer:build
 
 # 2. Generate render
-./gradlew pccase:run --args="--render"
+./gradlew cli-viewer:run --args="--render"
 
-# 3. Send pccase/stl_pccase/scene.png to user via MCP vk-files
+# 3. Send cli-viewer/stl_pccase/scene.png to user via MCP vk-files
 ```
 
-The `--render` run also produces `pccase/stl_pccase/profile_report.txt`
+The `--render` run also produces `cli-viewer/stl_pccase/profile_report.txt`
 with the aluminum profile bill of materials. Share this info if the user
 asks about quantities or lengths.
 
@@ -194,11 +213,11 @@ This ensures the user can visually verify each change without running the build 
 
 ## Adding a New Component
 
-1. Create `NewComponent.kt` in the `pccase` package
+1. Create `NewComponent.kt` in `pccase/src/.../pccase/`
 2. Implement `fun build(): Abstract3dModel`
-3. Register in `Main.kt`:
+3. Register in `PcCaseModelFactory.kt`:
    ```kotlin
    val newPart = NewComponent().build()
-   exportModel(newPart, context, outDir, "new_part.stl")
+   // add to returned map
    ```
 4. Build, render, and send the PNG via MCP `vk-files`

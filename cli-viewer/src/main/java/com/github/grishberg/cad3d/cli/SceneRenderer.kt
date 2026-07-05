@@ -1,4 +1,4 @@
-package com.github.grishberg.cad3d.pccase
+package com.github.grishberg.cad3d.cli
 
 import eu.printingin3d.javascad.vrl.CSG
 import eu.printingin3d.javascad.utils.Color as JSCadColor
@@ -33,7 +33,7 @@ class SceneRenderer(
 
         val projected = mutableListOf<ProjFace>()
 
-        for ((name, csg) in models) {
+        for ((_, csg) in models) {
             for (polygon in csg.polygons) {
                 val verts3d = polygon.vertices
                 if (verts3d.size < 3) continue

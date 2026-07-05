@@ -50,6 +50,5 @@ dependencies {
     // 3D engine
     implementation project(':javascad-core')
 
-    // Модуль корпуса ПК
-    implementation project(':pccase')
+
 }

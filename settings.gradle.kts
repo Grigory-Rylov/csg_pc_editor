@@ -3,7 +3,7 @@ plugins {
 }
 rootProject.name = "PC frame viewer"
 
-include("console", "viewer", "cad3d", "javascad", "plugin", "kbd_core", "common", "pccase")
+include("console", "viewer", "cad3d", "javascad", "plugin", "kbd_core", "common", "pccase", "cli-viewer")
 
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
