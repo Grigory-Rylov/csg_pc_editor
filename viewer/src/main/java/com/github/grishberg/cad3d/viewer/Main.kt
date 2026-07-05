@@ -5,6 +5,7 @@ import com.github.grishberg.cad3d.pccase.Gpu
 import com.github.grishberg.cad3d.pccase.Motherboard
 import com.github.grishberg.cad3d.pccase.PcFrame
 import com.github.grishberg.cad3d.pccase.Psu
+import eu.printingin3d.javascad.coords.Angles3d
 import com.jogamp.opengl.GL2
 import com.jogamp.opengl.GLAutoDrawable
 import com.jogamp.opengl.GLCapabilities
@@ -243,7 +244,7 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         val bottomY = p / 2 + p / 2
 
         val mb = Motherboard().build().move(-40.0, bottomY + 1.6 / 2, 0.0)
-        val gpu = Gpu().build().move(-50.0, bottomY + 1.6 + 112.0 / 2, -65.0)
+        val gpu = Gpu().build().rotate(Angles3d.zOnly(90.0)).move(-50.0, 15.0 + 290.0 / 2, -65.0)
         val psu = Psu().build().move(175.0, bottomY + 86.0 / 2, 0.0)
 
         return mapOf(

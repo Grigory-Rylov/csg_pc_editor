@@ -1,5 +1,6 @@
 package com.github.grishberg.cad3d.pccase
 
+import eu.printingin3d.javascad.coords.Angles3d
 import eu.printingin3d.javascad.tranzitions.Union
 import eu.printingin3d.javascad.vrl.ColorFacetGenerationContext
 import eu.printingin3d.javascad.vrl.FacetGenerationContext
@@ -50,7 +51,8 @@ fun main(args: Array<String>) {
 
     println("\nBuilding GPU (Gigabyte RTX 3090 Turbo)...")
     val gpu = Gpu().build()
-        .move(-50.0, bottomY + 1.6 + 112.0 / 2, -65.0)
+        .rotate(Angles3d.zOnly(90.0))
+        .move(-50.0, 15.0 + 290.0 / 2, -65.0)
 
     println("\nBuilding PSU (ATX)...")
     val psu = Psu().build()
