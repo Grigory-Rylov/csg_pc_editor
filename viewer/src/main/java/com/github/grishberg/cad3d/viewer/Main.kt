@@ -100,7 +100,8 @@ class Main(title: String?) : JFrame(title), GLEventListener {
             "frame_horizontal" to "Frame (horiz.)",
             "motherboard" to "Motherboard",
             "gpu" to "GPU",
-            "psu" to "PSU",
+            "psu_back" to "PSU (back)",
+            "psu_front" to "PSU (front)",
             "cooler" to "Cooler"
         )
         for ((key, label) in labels) {
@@ -248,7 +249,10 @@ class Main(title: String?) : JFrame(title), GLEventListener {
 
             val mb = Motherboard().build().move(-40.0, bottomY + 1.6 / 2, 0.0)
             val gpu = Gpu().build().rotate(Angles3d.yOnly(-90.0)).move(-50.0, 15.0 + 112.0 / 2, 0.0)
-            val psu = Psu().build().move(175.0, bottomY + 86.0 / 2, 0.0)
+            val hd = 165.0
+            val psuY = p / 2 + 150.0 / 2
+            val psu1 = Psu().build().rotate(Angles3d.zOnly(90.0)).move(175.0, psuY, hd - 70.0)
+            val psu2 = Psu().build().rotate(Angles3d.zOnly(90.0)).move(175.0, psuY, -hd + 70.0)
             val cooler = Cooler().build().rotate(Angles3d.zOnly(90.0)).move(50.0, bottomY + 1.6 + 80.0, -20.0)
 
             return mapOf(
@@ -256,7 +260,8 @@ class Main(title: String?) : JFrame(title), GLEventListener {
                 "frame_horizontal" to frameHorizontal.toCSG(defaultContext),
                 "motherboard" to mb.toCSG(mbContext),
                 "gpu" to gpu.toCSG(gpuContext),
-                "psu" to psu.toCSG(psuContext),
+                "psu_back" to psu1.toCSG(psuContext),
+                "psu_front" to psu2.toCSG(psuContext),
                 "cooler" to cooler.toCSG(coolerContext)
             )
         }

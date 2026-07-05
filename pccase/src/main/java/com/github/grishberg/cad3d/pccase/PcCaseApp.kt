@@ -57,12 +57,19 @@ fun main(args: Array<String>) {
         .rotate(Angles3d.yOnly(-90.0))
         .move(-50.0, 15.0 + 112.0 / 2, 0.0)
 
-    println("\nBuilding PSU (ATX)...")
-    val psu = Psu().build()
-        .move(175.0, bottomY + 86.0 / 2, 0.0)
+    println("\nBuilding PSUs (ATX)...")
+    val hd = 165.0
+    val psuY = p / 2 + 150.0 / 2
+    val psuBack = Psu().build()
+        .rotate(Angles3d.zOnly(90.0))
+        .move(175.0, psuY, hd - 70.0)
+    val psuFront = Psu().build()
+        .rotate(Angles3d.zOnly(90.0))
+        .move(175.0, psuY, -hd + 70.0)
 
     println("\nBuilding CPU cooler (ARCTIC Freezer 4U-M)...")
     val cooler = Cooler().build()
+        .rotate(Angles3d.zOnly(90.0))
         .move(50.0, bottomY + 1.6 + 80.0, -20.0)
 
     val frameVertCsg = frameVertical.toCSG(frameVertContext)
@@ -70,7 +77,8 @@ fun main(args: Array<String>) {
     val frameCsg = Union(listOf(frameVertical, frameHorizontal)).toCSG(defaultContext)
     val mbCsg = mb.toCSG(mbContext)
     val gpuCsg = gpu.toCSG(gpuContext)
-    val psuCsg = psu.toCSG(psuContext)
+    val psuBackCsg = psuBack.toCSG(psuContext)
+    val psuFrontCsg = psuFront.toCSG(psuContext)
     val coolerCsg = cooler.toCSG(coolerContext)
 
     val report = AluminumProfile.generateReport()
@@ -82,7 +90,8 @@ fun main(args: Array<String>) {
         "frame_horizontal" to frameHorizCsg,
         "motherboard" to mbCsg,
         "gpu" to gpuCsg,
-        "psu" to psuCsg,
+        "psu_back" to psuBackCsg,
+        "psu_front" to psuFrontCsg,
         "cooler" to coolerCsg
     )
 
@@ -97,7 +106,8 @@ fun main(args: Array<String>) {
         exportStl(frameCsg, outDir, "frame.stl")
         exportStl(mbCsg, outDir, "motherboard.stl")
         exportStl(gpuCsg, outDir, "gpu_rtx3090.stl")
-        exportStl(psuCsg, outDir, "psu.stl")
+        exportStl(psuBackCsg, outDir, "psu_back.stl")
+        exportStl(psuFrontCsg, outDir, "psu_front.stl")
         exportStl(coolerCsg, outDir, "cooler.stl")
 
         println("\n=== All models generated ===")
