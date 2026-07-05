@@ -33,6 +33,9 @@ fun main(args: Array<String>) {
     val psuContext: FacetGenerationContext = ColorFacetGenerationContext(eu.printingin3d.javascad.utils.Color(60, 60, 60))
     psuContext.setFn(8)
 
+    val coolerContext: FacetGenerationContext = ColorFacetGenerationContext(eu.printingin3d.javascad.utils.Color(180, 180, 180))
+    coolerContext.setFn(8)
+
     AluminumProfile.reset()
 
     println("\nBuilding PC frame (aluminum profiles 20x20mm)...")
@@ -58,12 +61,17 @@ fun main(args: Array<String>) {
     val psu = Psu().build()
         .move(175.0, bottomY + 86.0 / 2, 0.0)
 
+    println("\nBuilding CPU cooler (ARCTIC Freezer 4U-M)...")
+    val cooler = Cooler().build()
+        .move(-50.0, bottomY + 1.6 + 80.0, -20.0)
+
     val frameVertCsg = frameVertical.toCSG(frameVertContext)
     val frameHorizCsg = frameHorizontal.toCSG(defaultContext)
     val frameCsg = Union(listOf(frameVertical, frameHorizontal)).toCSG(defaultContext)
     val mbCsg = mb.toCSG(mbContext)
     val gpuCsg = gpu.toCSG(gpuContext)
     val psuCsg = psu.toCSG(psuContext)
+    val coolerCsg = cooler.toCSG(coolerContext)
 
     val report = AluminumProfile.generateReport()
     println(report)
@@ -74,7 +82,8 @@ fun main(args: Array<String>) {
         "frame_horizontal" to frameHorizCsg,
         "motherboard" to mbCsg,
         "gpu" to gpuCsg,
-        "psu" to psuCsg
+        "psu" to psuCsg,
+        "cooler" to coolerCsg
     )
 
     if (renderMode) {
@@ -89,6 +98,7 @@ fun main(args: Array<String>) {
         exportStl(mbCsg, outDir, "motherboard.stl")
         exportStl(gpuCsg, outDir, "gpu_rtx3090.stl")
         exportStl(psuCsg, outDir, "psu.stl")
+        exportStl(coolerCsg, outDir, "cooler.stl")
 
         println("\n=== All models generated ===")
         println("Output directory: ${outDir.absolutePath}")

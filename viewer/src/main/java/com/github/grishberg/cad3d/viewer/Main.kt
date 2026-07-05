@@ -1,6 +1,7 @@
 package com.github.grishberg.cad3d.viewer
 
 import com.github.grishberg.cad3d.pccase.AluminumProfile
+import com.github.grishberg.cad3d.pccase.Cooler
 import com.github.grishberg.cad3d.pccase.Gpu
 import com.github.grishberg.cad3d.pccase.Motherboard
 import com.github.grishberg.cad3d.pccase.PcFrame
@@ -99,7 +100,8 @@ class Main(title: String?) : JFrame(title), GLEventListener {
             "frame_horizontal" to "Frame (horiz.)",
             "motherboard" to "Motherboard",
             "gpu" to "GPU",
-            "psu" to "PSU"
+            "psu" to "PSU",
+            "cooler" to "Cooler"
         )
         for ((key, label) in labels) {
             val cb = JCheckBox(label, true)
@@ -227,34 +229,37 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         }
     }
 
-    private fun buildPcCaseModels(): Map<String, CSG> {
-        val defaultContext: FacetGenerationContext = ColorFacetGenerationContext(JcColor.GRAY).apply { setFn(8) }
-        val frameVertContext: FacetGenerationContext = ColorFacetGenerationContext(JcColor(100, 140, 200)).apply { setFn(8) }
-        val mbContext: FacetGenerationContext = ColorFacetGenerationContext(JcColor.GREEN).apply { setFn(8) }
-        val gpuContext: FacetGenerationContext = ColorFacetGenerationContext(JcColor(200, 30, 30)).apply { setFn(8) }
-        val psuContext: FacetGenerationContext = ColorFacetGenerationContext(JcColor(60, 60, 60)).apply { setFn(8) }
+        private fun buildPcCaseModels(): Map<String, CSG> {
+            val defaultContext: FacetGenerationContext = ColorFacetGenerationContext(JcColor.GRAY).apply { setFn(8) }
+            val frameVertContext: FacetGenerationContext = ColorFacetGenerationContext(JcColor(100, 140, 200)).apply { setFn(8) }
+            val mbContext: FacetGenerationContext = ColorFacetGenerationContext(JcColor.GREEN).apply { setFn(8) }
+            val gpuContext: FacetGenerationContext = ColorFacetGenerationContext(JcColor(200, 30, 30)).apply { setFn(8) }
+            val psuContext: FacetGenerationContext = ColorFacetGenerationContext(JcColor(60, 60, 60)).apply { setFn(8) }
+            val coolerContext: FacetGenerationContext = ColorFacetGenerationContext(JcColor(180, 180, 180)).apply { setFn(8) }
 
-        AluminumProfile.reset()
+            AluminumProfile.reset()
 
-        val frameCfg = PcFrame(width = 530.0, height = 350.0, depth = 330.0)
-        val frameVertical = frameCfg.buildVertical()
-        val frameHorizontal = frameCfg.buildHorizontal()
+            val frameCfg = PcFrame(width = 530.0, height = 350.0, depth = 330.0)
+            val frameVertical = frameCfg.buildVertical()
+            val frameHorizontal = frameCfg.buildHorizontal()
 
-        val p = AluminumProfile.PROFILE_SIZE
-        val bottomY = p / 2 + p / 2
+            val p = AluminumProfile.PROFILE_SIZE
+            val bottomY = p / 2 + p / 2
 
-        val mb = Motherboard().build().move(-40.0, bottomY + 1.6 / 2, 0.0)
-        val gpu = Gpu().build().rotate(Angles3d.zOnly(90.0)).move(-50.0, 15.0 + 290.0 / 2, -65.0)
-        val psu = Psu().build().move(175.0, bottomY + 86.0 / 2, 0.0)
+            val mb = Motherboard().build().move(-40.0, bottomY + 1.6 / 2, 0.0)
+            val gpu = Gpu().build().rotate(Angles3d.zOnly(90.0)).move(-50.0, 15.0 + 290.0 / 2, -65.0)
+            val psu = Psu().build().move(175.0, bottomY + 86.0 / 2, 0.0)
+            val cooler = Cooler().build().move(-50.0, bottomY + 1.6 + 80.0, -20.0)
 
-        return mapOf(
-            "frame_vertical" to frameVertical.toCSG(frameVertContext),
-            "frame_horizontal" to frameHorizontal.toCSG(defaultContext),
-            "motherboard" to mb.toCSG(mbContext),
-            "gpu" to gpu.toCSG(gpuContext),
-            "psu" to psu.toCSG(psuContext)
-        )
-    }
+            return mapOf(
+                "frame_vertical" to frameVertical.toCSG(frameVertContext),
+                "frame_horizontal" to frameHorizontal.toCSG(defaultContext),
+                "motherboard" to mb.toCSG(mbContext),
+                "gpu" to gpu.toCSG(gpuContext),
+                "psu" to psu.toCSG(psuContext),
+                "cooler" to cooler.toCSG(coolerContext)
+            )
+        }
 
     private fun csgToModelData(csg: CSG): ModelData {
         val vertList = mutableListOf<Float>()
