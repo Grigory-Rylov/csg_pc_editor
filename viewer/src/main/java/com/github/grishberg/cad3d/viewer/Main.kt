@@ -247,9 +247,9 @@ class Main(title: String?) : JFrame(title), GLEventListener {
             val bottomY = p / 2 + p / 2
 
             val mb = Motherboard().build().move(-40.0, bottomY + 1.6 / 2, 0.0)
-            val gpu = Gpu().build().rotate(Angles3d.yOnly(90.0)).move(-50.0, 15.0 + 112.0 / 2, -65.0)
+            val gpu = Gpu().build().rotate(Angles3d.yOnly(-90.0)).move(-50.0, 15.0 + 112.0 / 2, 0.0)
             val psu = Psu().build().move(175.0, bottomY + 86.0 / 2, 0.0)
-            val cooler = Cooler().build().move(-50.0, bottomY + 1.6 + 80.0, -20.0)
+            val cooler = Cooler().build().rotate(Angles3d.zOnly(90.0)).move(-50.0, bottomY + 1.6 + 80.0, -20.0)
 
             return mapOf(
                 "frame_vertical" to frameVertical.toCSG(frameVertContext),

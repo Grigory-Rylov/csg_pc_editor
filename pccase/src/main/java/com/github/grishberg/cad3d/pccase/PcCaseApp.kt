@@ -54,8 +54,8 @@ fun main(args: Array<String>) {
 
     println("\nBuilding GPU (Gigabyte RTX 3090 Turbo)...")
     val gpu = Gpu().build()
-        .rotate(Angles3d.yOnly(90.0))
-        .move(-50.0, 15.0 + 112.0 / 2, -65.0)
+        .rotate(Angles3d.yOnly(-90.0))
+        .move(-50.0, 15.0 + 112.0 / 2, 0.0)
 
     println("\nBuilding PSU (ATX)...")
     val psu = Psu().build()
@@ -63,6 +63,7 @@ fun main(args: Array<String>) {
 
     println("\nBuilding CPU cooler (ARCTIC Freezer 4U-M)...")
     val cooler = Cooler().build()
+        .rotate(Angles3d.zOnly(90.0))
         .move(-50.0, bottomY + 1.6 + 80.0, -20.0)
 
     val frameVertCsg = frameVertical.toCSG(frameVertContext)
