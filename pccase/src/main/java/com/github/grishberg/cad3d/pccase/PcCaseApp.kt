@@ -52,10 +52,9 @@ fun main(args: Array<String>) {
     val mb = Motherboard().build()
         .move(-40.0, bottomY + 1.6 / 2, 0.0)
 
-    println("\nBuilding GPU (Gigabyte RTX 3090 Turbo)...")
-    val gpu = Gpu().build()
-        .rotate(Angles3d.yOnly(-90.0))
-        .move(-50.0, 15.0 + 112.0 / 2, 0.0)
+   println("\nBuilding GPU (Gigabyte RTX 3090 Turbo)...")
+     val gpu = Gpu().build()
+         .move(-50.0, 71.0, 150.0)
 
     println("\nBuilding PSUs (ATX)...")
     val hd = 165.0

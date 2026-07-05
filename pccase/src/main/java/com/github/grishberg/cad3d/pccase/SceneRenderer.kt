@@ -13,7 +13,7 @@ class SceneRenderer(
     private val width: Int = 1920,
     private val height: Int = 1080,
     private val fov: Double = 45.0,
-    private val cameraDistance: Double = 40000.0,
+    private val cameraDistance: Double = 39800.0,
     private val cameraAngleX: Double = 155.0,
     private val cameraAngleY: Double = 35.0
 ) {
