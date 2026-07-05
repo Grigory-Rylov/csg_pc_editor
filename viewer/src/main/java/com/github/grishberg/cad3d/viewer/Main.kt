@@ -1,16 +1,10 @@
 package com.github.grishberg.cad3d.viewer
 
-import com.github.grishberg.cad3d.debug.DebugCmd
-import com.github.grishberg.cad3d.keyboard.ControlPointsController
-import com.github.grishberg.cad3d.plugin.Cad3dPlugin
-import com.github.grishberg.cad3d.plugin.ResultListener
-import com.github.grishberg.cad3d.plugin.VertexHolder
-import com.github.grishberg.cad3d.plugin.cfg.KeyboardPart
-import com.github.grishberg.cad3d.plugins.PluginManager
-import com.github.grishberg.cad3d.plugins.PluginManagerImpl
-import com.github.grishberg.cad3d.viewer.debug.DebugVisualizerImpl
-import com.github.grishberg.cad3d.viewer.dialog.ConfigEditor
-import com.github.grishberg.cad3d.viewer.dialog.StlExportDialog
+import com.github.grishberg.cad3d.pccase.AluminumProfile
+import com.github.grishberg.cad3d.pccase.Gpu
+import com.github.grishberg.cad3d.pccase.Motherboard
+import com.github.grishberg.cad3d.pccase.PcFrame
+import com.github.grishberg.cad3d.pccase.Psu
 import com.jogamp.opengl.GL2
 import com.jogamp.opengl.GLAutoDrawable
 import com.jogamp.opengl.GLCapabilities
@@ -20,414 +14,138 @@ import com.jogamp.opengl.awt.GLCanvas
 import com.jogamp.opengl.fixedfunc.GLLightingFunc
 import com.jogamp.opengl.glu.GLU
 import com.jogamp.opengl.util.Animator
+import eu.printingin3d.javascad.utils.Color as JcColor
+import eu.printingin3d.javascad.vrl.ColorFacetGenerationContext
+import eu.printingin3d.javascad.vrl.FacetGenerationContext
+import eu.printingin3d.javascad.vrl.CSG
 import java.awt.BorderLayout
-import java.awt.Color
-import java.awt.Dimension
 import java.awt.FlowLayout
 import java.awt.event.InputEvent
 import java.awt.event.KeyEvent
 import java.awt.event.KeyListener
+import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
-import java.awt.event.MouseListener
-import java.awt.event.MouseMotionListener
 import java.awt.event.MouseWheelEvent
-import java.awt.event.MouseWheelListener
 import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
-import java.io.File
-import javax.swing.BoxLayout
-import javax.swing.JButton
 import javax.swing.JCheckBox
 import javax.swing.JFrame
-import javax.swing.JLabel
 import javax.swing.JPanel
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
+
+data class ModelData(
+    val vertex: FloatArray,
+    val normals: FloatArray,
+    val verticesCount: Int
+)
 
 class Main(title: String?) : JFrame(title), GLEventListener {
 
-    //    protected GLWindow window;
-    private val animator: Animator = Animator()
-
-    //public Caps caps;
-    // Установка позиции источника света
-    var lightPosition = floatArrayOf(0.0f, 1f, 0.5f, 1.0f)
-    private val settingsHolder = SettingsHolder(SETTINGS_FILE)
-
-    private val vertexHolderList: MutableList<VertexHolder> = ArrayList()
+    private val animator = Animator()
     private val glu = GLU()
+    private var glCanvas: GLCanvas? = null
     private var prevMouseX = 0
     private var prevMouseY = 0
-    private val pointsController = ControlPointsController()
-    private var glCanvas: GLCanvas? = null
 
-    //    private val sceneBuilder: SceneBuilder
-    private val debugVisualizer = DebugVisualizerImpl()
-    private val debugCommands = mutableListOf<DebugCmd>()
+    private var rotateX = -25f
+    private var rotateY = 0f
+    private var rotateZ = 0f
+    private var translateX = 0f
+    private var translateY = 0f
+    private var translateZ = -500f
 
-    private var showDebugInfo = false
-    private var currentDebugCommandIndex = 0
-    private lateinit var debugNavigationPanel: JPanel
-    private lateinit var debugInfoLabel: JLabel
-    private lateinit var helpLabel: JLabel
-    private lateinit var statusLabel: JLabel
-    private lateinit var prevDebugButton: JButton
-    private lateinit var nextDebugButton: JButton
-    private val pluginManager: PluginManager
-    private val coroutineScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
-    private var plugins: List<Cad3dPlugin> = emptyList()
+    private val allModels = buildPcCaseModels().mapValues { (_, csg) -> csgToModelData(csg) }.toMutableMap()
+    private val visibleModels = allModels.toMutableMap()
 
     init {
-        settingsHolder.loadSettings()
-
-        val pluginsDir = File("cad3d/build/libs")
-        setup()
-
-
-        pluginManager = PluginManagerImpl(pluginsDir)
-        pluginManager.setOnPluginLoadedListener(object : PluginManager.OnPluginLoadedListener {
-            override fun onPluginsLoaded(newPlugins: List<Cad3dPlugin>) {
-                plugins = newPlugins
-                rebuildConfigAndRequestRendering(plugins, emptySet())
-            }
-        })
-
-        pluginManager.start()
-    }
-
-    fun setup() {
-        layout = BorderLayout()
-        // Создаем панель управления
-        val controlPanel = createControlPanel()
-
-        // Создаем панель навигации по debug командам
-        createDebugNavigationPanel()
+        title ?: "PC Case Viewer (OpenGL)"
 
         val glProfile = GLProfile.get(GLProfile.GL2)
         val glCapabilities = GLCapabilities(glProfile)
         glCapabilities.depthBits = 24
 
-        // 2. Создание GLCanvas с явным конструктором
         glCanvas = GLCanvas(glCapabilities)
         glCanvas!!.addGLEventListener(this)
-        val mouseListener = GlCanvasMouseListener()
-        glCanvas!!.addMouseListener(mouseListener)
-        glCanvas!!.addMouseMotionListener(mouseListener)
-        glCanvas!!.addMouseWheelListener(mouseListener)
+        val ml = GlCanvasMouseListener()
+        glCanvas!!.addMouseListener(ml)
+        glCanvas!!.addMouseMotionListener(ml)
+        glCanvas!!.addMouseWheelListener(ml)
         glCanvas!!.addKeyListener(GlCanvasKeyListener())
+        glCanvas!!.isFocusable = true
+
         defaultCloseOperation = EXIT_ON_CLOSE
         animator.add(glCanvas)
         animator.start()
-        contentPane.add(glCanvas, BorderLayout.CENTER)
-        contentPane.add(controlPanel, BorderLayout.NORTH)
-        contentPane.add(debugNavigationPanel, BorderLayout.SOUTH)
 
-        // Обработка закрытия окна
+        val boxes = createCheckboxes()
+        contentPane.add(boxes, BorderLayout.NORTH)
+        contentPane.add(glCanvas, BorderLayout.CENTER)
+
         addWindowListener(object : WindowAdapter() {
             override fun windowClosing(e: WindowEvent) {
-                pluginManager.stop()
-                settingsHolder.saveSettings()
-                if (animator.isAnimating) {
-                    animator.stop()
-                }
+                if (animator.isAnimating) animator.stop()
                 dispose()
             }
         })
         setSize(1200, 800)
         isVisible = true
-        requestRender()
     }
 
-    private fun createControlPanel(): JPanel {
-        // Создаем основную панель с вертикальным BoxLayout
-        val controlPanel = JPanel()
-        controlPanel.layout = BoxLayout(controlPanel, BoxLayout.Y_AXIS)
-
-        // Создаем две панели для строк
-        val row1 = JPanel(FlowLayout(FlowLayout.LEFT))
-        val row2 = JPanel(FlowLayout(FlowLayout.LEFT))
-
-        // Создаем кнопки (код создания кнопок остается прежним)
-        val keysButton = createToggleButton("Клавиши", settingsHolder.settingsShowCaps) {
-            settingsHolder.settingsShowCaps = it
-            rebuildConfigAndRequestRendering(plugins, emptySet())
-        }
-        val caseButton = createToggleButton("Корпус", settingsHolder.settingsShowCase) {
-            settingsHolder.settingsShowCase = it
-            rebuildConfigAndRequestRendering(plugins, emptySet())
-        }
-        val matrixButton = createToggleButton("Матрица", settingsHolder.settingsShowMatrix) {
-            settingsHolder.settingsShowMatrix = it
-            rebuildConfigAndRequestRendering(plugins, emptySet())
-        }
-        val plateButton = createToggleButton("Поддон", settingsHolder.settingsShowPlate) {
-            settingsHolder.settingsShowPlate = it
-            rebuildConfigAndRequestRendering(plugins, emptySet())
-        }
-        val wristRestButton = createToggleButton("Держатель рук", settingsHolder.settingsShowWristRest) {
-            settingsHolder.settingsShowWristRest = it
-            rebuildConfigAndRequestRendering(plugins, emptySet())
-        }
-        val trackballButton = createToggleButton("Трэкбол", settingsHolder.settingsTrackball) {
-            settingsHolder.settingsTrackball = it
-            rebuildConfigAndRequestRendering(plugins, emptySet())
-        }
-        val trackballSensorButton = createToggleButton("Сенсор ТБ", settingsHolder.showTrackballSensor) {
-            settingsHolder.showTrackballSensor = it
-            rebuildConfigAndRequestRendering(plugins, emptySet())
-        }
-        val trackballSensorCapButton = createToggleButton("Крышка сенсора ТБ", settingsHolder.showTrackballSensorCap) {
-            settingsHolder.showTrackballSensorCap = it
-            rebuildConfigAndRequestRendering(plugins, emptySet())
-        }
-        val showControllerHolderButton =
-            createToggleButton("Держатель контроллера", settingsHolder.showControllerHolder) {
-                settingsHolder.showControllerHolder = it
-                rebuildConfigAndRequestRendering(plugins, emptySet())
+    private fun createCheckboxes(): JPanel {
+        val panel = JPanel(FlowLayout(FlowLayout.LEFT))
+        val boxes = mutableMapOf<String, JCheckBox>()
+        val labels = listOf(
+            "frame_vertical" to "Frame (vert.)",
+            "frame_horizontal" to "Frame (horiz.)",
+            "motherboard" to "Motherboard",
+            "gpu" to "GPU",
+            "psu" to "PSU"
+        )
+        for ((key, label) in labels) {
+            val cb = JCheckBox(label, true)
+            cb.addActionListener {
+                visibleModels.clear()
+                visibleModels.putAll(allModels.filterKeys { k -> boxes[k]?.isSelected ?: true })
+                glCanvas?.display()
             }
-        val showControllerButton = createToggleButton("Контроллера", settingsHolder.showController) {
-            settingsHolder.showController = it
-            rebuildConfigAndRequestRendering(plugins, emptySet())
+            boxes[key] = cb
+            panel.add(cb)
         }
-        val showAmoebaButton = createToggleButton("Амебы", settingsHolder.showAmoeba) {
-            settingsHolder.showAmoeba = it
-            rebuildConfigAndRequestRendering(plugins, emptySet())
-        }
-        val showTrackballCaseButton = createToggleButton("trackball case", settingsHolder.showTrackballCase) {
-            settingsHolder.showTrackballCase = it
-            rebuildConfigAndRequestRendering(plugins, emptySet())
-        }
-        val showTrackballCasePlateButton = createToggleButton("trackball case plate", settingsHolder.showTrackballCasePlate) {
-            settingsHolder.showTrackballCasePlate = it
-            rebuildConfigAndRequestRendering(plugins, emptySet())
-        }
-        val debugButton = createToggleButton("Debug", showDebugInfo) {
-            showDebugInfo = it
-            if (!it) {
-                debugVisualizer.clearVisualization()
-            } else {
-                addDebugCommands()
-                updateDebugDisplay()
-            }
-            updateDebugNavigationState()
-        }
-
-        val configButton = JButton("Конфигурации")
-        configButton.addActionListener {
-            showConfigDialog()
-        }
-
-        val exportStlButton = JButton("Экспорт STL")
-        exportStlButton.addActionListener {
-            val dialog = StlExportDialog(this)
-            plugins.forEach { plugin ->
-                plugin.exportStl(settingsHolder.settings, dialog)
-            }
-            dialog.isVisible = true
-        }
-
-        // --- Распределяем кнопки по строкам ---
-        // Вы можете изменить это распределение в зависимости от того, какие кнопки вам
-        // нужны чаще и должны быть на верхнем ряду.
-
-        // Верхний ряд (row1)
-        row1.add(configButton)
-        row1.add(exportStlButton)
-        row1.add(keysButton)
-        row1.add(caseButton)
-        row1.add(matrixButton)
-        row1.add(plateButton)
-        row1.add(wristRestButton)
-        row1.add(trackballButton)
-        row1.add(trackballSensorButton)
-        // row1.add(trackballSensorCapButton) // Можно перенести на вторую строку, если не помещается
-
-        // Нижний ряд (row2)
-        // Добавим оставшиеся кнопки на вторую строку
-        row2.add(trackballSensorCapButton) // Перенесли сюда
-        row2.add(showControllerHolderButton)
-        row2.add(showControllerButton)
-        row2.add(showAmoebaButton)
-        row2.add(showTrackballCaseButton)
-        row2.add(showTrackballCasePlateButton)
-
-        row2.add(debugButton)
-
-        // Добавляем строки на основную панель
-        controlPanel.add(row1)
-        controlPanel.add(row2)
-        return controlPanel
+        return panel
     }
 
-    private fun createDebugNavigationPanel() {
-        debugNavigationPanel = JPanel()
-        debugNavigationPanel.layout = FlowLayout(FlowLayout.CENTER)
-        debugNavigationPanel.preferredSize = Dimension(1200, 40)
+    override fun init(drawable: GLAutoDrawable) {
+        val gl = drawable.gl.gL2
+        gl.glShadeModel(GL2.GL_SMOOTH)
+        gl.glClearColor(0.1f, 0.1f, 0.15f, 0f)
+        gl.glClearDepth(1.0)
+        gl.glEnable(GL2.GL_DEPTH_TEST)
+        gl.glDepthFunc(GL2.GL_LEQUAL)
+        gl.glHint(GL2.GL_PERSPECTIVE_CORRECTION_HINT, GL2.GL_NICEST)
 
-        // Кнопка "Предыдущая"
-        prevDebugButton = JButton("◀ Пред.")
-        prevDebugButton.preferredSize = Dimension(80, 30)
-        prevDebugButton.addActionListener {
-            if (debugCommands.isNotEmpty()) {
-                currentDebugCommandIndex = (currentDebugCommandIndex - 1 + debugCommands.size) % debugCommands.size
-                updateDebugDisplay()
-            }
-        }
+        gl.glEnable(GLLightingFunc.GL_LIGHTING)
+        gl.glEnable(GLLightingFunc.GL_LIGHT0)
+        gl.glEnable(GL2.GL_COLOR_MATERIAL)
+        gl.glColorMaterial(GL2.GL_FRONT_AND_BACK, GL2.GL_AMBIENT_AND_DIFFUSE)
 
-        // Кнопка "Следующая"  
-        nextDebugButton = JButton("След. ▶")
-        nextDebugButton.preferredSize = Dimension(80, 30)
-        nextDebugButton.addActionListener {
-            if (debugCommands.isNotEmpty()) {
-                currentDebugCommandIndex = (currentDebugCommandIndex + 1) % debugCommands.size
-                updateDebugDisplay()
-            }
-        }
-
-        // Информационная метка
-        debugInfoLabel = JLabel("Debug: выключен")
-        debugInfoLabel.preferredSize = Dimension(350, 30)
-
-        // Метка статуса рендеринга
-        statusLabel = JLabel("Готово")
-        statusLabel.preferredSize = Dimension(200, 30)
-
-        // Подсказка о горячих клавишах
-        helpLabel = JLabel("Горячие клавиши: R - вкл/выкл debug, Q/E - переключение команд")
-        helpLabel.preferredSize = Dimension(400, 30)
-
-        debugNavigationPanel.add(statusLabel)
-        debugNavigationPanel.add(prevDebugButton)
-        debugNavigationPanel.add(debugInfoLabel)
-        debugNavigationPanel.add(nextDebugButton)
-        debugNavigationPanel.add(helpLabel)
-
-        // Изначально кнопки отключены
-        updateDebugNavigationState()
-
-        // Панель не видна, если debug выключен
-        // Панель всегда видима, статус слева, debug-инфо по флагу
-        debugNavigationPanel.isVisible = true
+        val lightAmbient = floatArrayOf(0.3f, 0.3f, 0.3f, 1.0f)
+        val lightDiffuse = floatArrayOf(1.0f, 1.0f, 1.0f, 1.0f)
+        val lightPosition = floatArrayOf(200f, 400f, 300f, 1.0f)
+        gl.glLightfv(GLLightingFunc.GL_LIGHT0, GLLightingFunc.GL_AMBIENT, lightAmbient, 0)
+        gl.glLightfv(GLLightingFunc.GL_LIGHT0, GLLightingFunc.GL_DIFFUSE, lightDiffuse, 0)
+        gl.glLightfv(GLLightingFunc.GL_LIGHT0, GLLightingFunc.GL_POSITION, lightPosition, 0)
     }
 
-    private fun showConfigDialog() {
-        // Создание и отображение редактора
-        val configDialog = ConfigEditor(
-            settingsHolder.settings, onKeyboardSettingsChanged = {
-            settingsHolder.updateSettings(it)
-            rebuildConfigAndRequestRendering(
-                plugins, setOf(
-                    KeyboardPart.KeyMatrix,
-                    KeyboardPart.KeyCaps, KeyboardPart.Case, KeyboardPart.Plate,
-                )
-            )
-        },
-
-            onThumbClusterSettingsChanged = {
-                settingsHolder.updateSettings(it)
-                rebuildConfigAndRequestRendering(
-                    plugins, setOf(
-                        KeyboardPart.KeyMatrix,
-                        KeyboardPart.KeyCaps, KeyboardPart.Case, KeyboardPart.Plate,
-                    )
-                )
-            }, onTrackballSettingsChanged = {
-                settingsHolder.updateSettings(it)
-                rebuildConfigAndRequestRendering(
-                    plugins, setOf(
-                        KeyboardPart.TrackBall,
-                        KeyboardPart.TrackBallSensor, KeyboardPart.TrackBallHolder, KeyboardPart.TrackBallSensorCap,
-                        KeyboardPart.Case,
-                    )
-                )
-            })
-        configDialog.isVisible = true
-    }
-
-    private fun rebuildConfigAndRequestRendering(plugins: List<Cad3dPlugin>, modifiedKeyboardParts: Set<KeyboardPart>) {
-        plugins.forEach {
-            println("Request from ${it.name} , ver ${it.version}")
-            // Показать статус: Рендеринг
-            setRenderingStatus(true)
-            it.requestModels(
-                settingsHolder.settings, modifiedKeyboardParts, object : ResultListener {
-                    override fun onReady(result: List<VertexHolder>, complete: Boolean) {
-                        vertexHolderList.clear()
-                        vertexHolderList.addAll(result)
-                        if (complete) {
-                            setRenderingStatus(false)
-                        }
-                        requestRender()
-                    }
-                })
-        }
-    }
-
-    private fun addDebugCommands() {
-        currentDebugCommandIndex = 0
-        updateDebugNavigationState()
-    }
-
-    private fun updateDebugNavigationState() {
-        prevDebugButton.isEnabled = showDebugInfo
-        nextDebugButton.isEnabled = showDebugInfo
-        debugInfoLabel.isVisible = showDebugInfo
-        prevDebugButton.isVisible = showDebugInfo
-        nextDebugButton.isVisible = showDebugInfo
-        helpLabel.isVisible = showDebugInfo
-
-        if (showDebugInfo && debugCommands.isNotEmpty()) {
-            val currentCmd = debugCommands[currentDebugCommandIndex]
-            debugInfoLabel.text =
-                "Debug (${currentDebugCommandIndex + 1}/${debugCommands.size}): ${currentCmd.description}"
-        } else {
-            debugInfoLabel.text = "Debug: выключен"
-        }
-
-        // Обновляем layout окна при изменении видимости панели
-        debugNavigationPanel.revalidate()
-        debugNavigationPanel.repaint()
-        contentPane.revalidate()
-        contentPane.repaint()
-    }
-
-    private fun setRenderingStatus(isRendering: Boolean) {
-        statusLabel.text = if (isRendering) "Рендеринг" else "Готово"
-        statusLabel.background = if (isRendering) Color.ORANGE else Color.GREEN
-    }
-
-    private fun updateDebugDisplay() {
-        debugVisualizer.clearVisualization()
-
-        if (showDebugInfo && debugCommands.isNotEmpty()) {
-            // Рендерим статические debug объекты
-
-            // Рендерим только текущую debug команду
-            val currentCmd = debugCommands[currentDebugCommandIndex]
-            debugVisualizer.applyDebugVisualization(currentCmd)
-        }
-
-        updateDebugNavigationState()
-    }
-
-    private fun requestRender() {
-        glCanvas?.display()
-    }
-
-    private fun createToggleButton(text: String, initialState: Boolean, onChanged: (Boolean) -> Unit): JCheckBox {
-        val button = JCheckBox(text, initialState)
-        button.addActionListener { onChanged(button.isSelected) }
-
-        // Автоматический расчет ширины на основе текста
-        val metrics = button.getFontMetrics(button.font)
-        val textWidth = metrics.stringWidth(text)
-        val preferredWidth = minOf(textWidth + 40, 300) // Максимум 300px
-
-        button.preferredSize = Dimension(preferredWidth, 30)
-        button.minimumSize = Dimension(100, 30)
-
-        return button
+    override fun reshape(drawable: GLAutoDrawable, x: Int, y: Int, width: Int, height: Int) {
+        var h = height
+        val gl = drawable.gl.gL2
+        if (h <= 0) h = 1
+        gl.glViewport(0, 0, width, h)
+        gl.glMatrixMode(GL2.GL_PROJECTION)
+        gl.glLoadIdentity()
+        val aspect = width.toFloat() / h
+        glu.gluPerspective(45f, aspect, 0.1f, 2000f)
+        gl.glMatrixMode(GL2.GL_MODELVIEW)
+        gl.glLoadIdentity()
     }
 
     override fun display(drawable: GLAutoDrawable) {
@@ -435,225 +153,148 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         gl.glClear(GL2.GL_COLOR_BUFFER_BIT or GL2.GL_DEPTH_BUFFER_BIT)
         gl.glLoadIdentity()
 
-        // Устанавливаем GL контекст для debug визуализатора
-        debugVisualizer.setGL(gl)
-
-        // Установка материала для куба
-        val materialDiffuse = floatArrayOf(0.7f, 0.7f, 0.7f, 1.0f)
-        gl.glMaterialfv(GL2.GL_FRONT, GLLightingFunc.GL_DIFFUSE, materialDiffuse, 0)
-
-        // Перемещение куба в нужное место
-        gl.glTranslatef(settingsHolder.translateX, settingsHolder.translateY, settingsHolder.translateZ)
+        gl.glTranslatef(translateX, translateY, translateZ)
         gl.glPushMatrix()
-        gl.glRotatef(settingsHolder.rotateX, 1.0f, 0.0f, 0.0f)
-        gl.glRotatef(settingsHolder.rotateY, 0.0f, 1.0f, 0.0f)
-        gl.glRotatef(settingsHolder.rotateZ, 0.0f, 0.0f, 1.0f)
-        for (vertexHolder in vertexHolderList) {
+        gl.glRotatef(rotateX, 1f, 0f, 0f)
+        gl.glRotatef(rotateY, 0f, 1f, 0f)
+        gl.glRotatef(rotateZ, 0f, 0f, 1f)
+
+        for ((_, md) in visibleModels) {
             gl.glBegin(GL2.GL_TRIANGLES)
-            var normalArrayIndex = 0
-            var vertexArrayIndex = 0
-            val vert = vertexHolder.vertex
-            val normals = vertexHolder.normals
-            for (i in 0 until vertexHolder.verticesCount) {
-                val x = vert[vertexArrayIndex++]
-                val y = vert[vertexArrayIndex++]
-                val z = vert[vertexArrayIndex++]
-                gl.glColor4f(
-                    vert[vertexArrayIndex++],
-                    vert[vertexArrayIndex++],
-                    vert[vertexArrayIndex++],
-                    vert[vertexArrayIndex++]
-                )
-                gl.glNormal3f(
-                    normals[normalArrayIndex++], normals[normalArrayIndex++], normals[normalArrayIndex++]
-                )
+            var vi = 0
+            var ni = 0
+            for (i in 0 until md.verticesCount) {
+                val x = md.vertex[vi++]
+                val y = md.vertex[vi++]
+                val z = md.vertex[vi++]
+                gl.glColor4f(md.vertex[vi++], md.vertex[vi++], md.vertex[vi++], md.vertex[vi++])
+                gl.glNormal3f(md.normals[ni++], md.normals[ni++], md.normals[ni++])
                 gl.glVertex3f(x, y, z)
             }
             gl.glEnd()
         }
 
-        // Рендерим debug объекты если они включены (ВНУТРИ трансформаций)
-        if (showDebugInfo) {
-            debugVisualizer.renderDebugObjects()
-        }
-
-        gl.glPopMatrix() // Возвращаемся к исходной матрице
-
+        gl.glPopMatrix()
         gl.glFlush()
     }
 
-    override fun dispose(drawable: GLAutoDrawable) {
-        // TODO Auto-generated method stub
-    }
+    override fun dispose(drawable: GLAutoDrawable) {}
 
-    private fun initializeProgram(gl: GL2) {
-        println("initializeProgram")
-        val vertexShaderSource = ShaderLoader.loadShader("/shader_vertex_104.txt")
-        val fragmentShaderSource = ShaderLoader.loadShader("/shader_fragment_104.txt")
-        val shaderProgram = ShaderProgram(gl, vertexShaderSource, fragmentShaderSource)
-        shaderProgram.use(gl)
-        val error = gl.glGetError()
-        if (error != 0) {
-            println("Error while setting shaders : $error")
+    private inner class GlCanvasMouseListener : MouseAdapter() {
+        override fun mousePressed(e: MouseEvent) {
+            prevMouseX = e.x; prevMouseY = e.y
         }
-    }
-
-    override fun init(drawable: GLAutoDrawable) {
-        val gl = drawable.gl.gL2
-        init(gl)
-    }
-
-    protected fun init(gl: GL2) {
-        println("init gl2")
-        gl.glShadeModel(GL2.GL_SMOOTH)
-        gl.glClearColor(0f, 0f, 0f, 0f)
-        gl.glClearDepth(1.0)
-        gl.glEnable(GL2.GL_DEPTH_TEST)
-        gl.glDepthFunc(GL2.GL_LEQUAL)
-        gl.glHint(GL2.GL_PERSPECTIVE_CORRECTION_HINT, GL2.GL_NICEST)
-
-        // Включение освещения
-        gl.glEnable(GLLightingFunc.GL_LIGHTING)
-        gl.glEnable(GLLightingFunc.GL_LIGHT0)
-        gl.glEnable(GL2.GL_COLOR_MATERIAL)
-        gl.glColorMaterial(GL2.GL_FRONT_AND_BACK, GL2.GL_AMBIENT_AND_DIFFUSE)
-
-        // Настройка света
-        val lightAmbient = floatArrayOf(0.2f, 0.2f, 0.2f, 1.0f)
-        val lightDiffuse = floatArrayOf(1.0f, 1.0f, 1.0f, 1.0f)
-        gl.glLightfv(GLLightingFunc.GL_LIGHT0, GLLightingFunc.GL_AMBIENT, lightAmbient, 0)
-        gl.glLightfv(GLLightingFunc.GL_LIGHT0, GLLightingFunc.GL_DIFFUSE, lightDiffuse, 0)
-        gl.glLightfv(GLLightingFunc.GL_LIGHT0, GLLightingFunc.GL_POSITION, lightPosition, 0)
-        initializeProgram(gl)
-    }
-
-    override fun reshape(drawable: GLAutoDrawable, x: Int, y: Int, width: Int, height: Int) {
-        var height = height
-        val gl = drawable.gl.gL2
-        if (height <= 0) {
-            height = 1
-        }
-        val h = width.toFloat() / height.toFloat()
-        gl.glViewport(0, 0, width, height)
-        gl.glMatrixMode(GL2.GL_PROJECTION)
-        gl.glLoadIdentity()
-        val aspect = width.toFloat() / height
-        val fov = 45.0f
-        val near = 0.1f
-        val far = 1400.0f
-        glu.gluPerspective(fov, aspect, near, far)
-        gl.glMatrixMode(GL2.GL_MODELVIEW)
-        gl.glLoadIdentity()
-    }
-
-    // ------------------------------------------------
-    private inner class GlCanvasMouseListener : MouseListener, MouseMotionListener, MouseWheelListener {
-
-        override fun mouseClicked(mouseEvent: MouseEvent) {}
-        override fun mouseEntered(mouseEvent: MouseEvent) {}
-        override fun mouseExited(mouseEvent: MouseEvent) {}
-        override fun mousePressed(mouseEvent: MouseEvent) {
-            prevMouseX = mouseEvent.x
-            prevMouseY = mouseEvent.y
-        }
-
-        override fun mouseReleased(mouseEvent: MouseEvent) {}
-
-        /// motion
         override fun mouseDragged(e: MouseEvent) {
-            val currentMouseX = e.x
-            val currentMouseY = e.y
-            val deltaX = currentMouseX - prevMouseX
-            val deltaY = currentMouseY - prevMouseY
+            val dx = e.x - prevMouseX; val dy = e.y - prevMouseY
             if (e.modifiersEx and InputEvent.CTRL_DOWN_MASK != 0) {
-                // Смещение объекта при зажатом Control
-                settingsHolder.translateX += deltaX * MOUSE_TRANSLATE_SENSITIVITY
-                settingsHolder.translateY -= deltaY * MOUSE_TRANSLATE_SENSITIVITY
+                translateX += dx * 0.5f; translateY -= dy * 0.5f
             } else {
-                settingsHolder.rotateX += deltaY.toFloat()
-                settingsHolder.rotateZ += deltaX.toFloat()
+                rotateX += dy * 0.5f; rotateY += dx * 0.5f
             }
-            prevMouseX = currentMouseX
-            prevMouseY = currentMouseY
-            requestRender()
+            prevMouseX = e.x; prevMouseY = e.y
+            glCanvas?.display()
         }
-
-        override fun mouseMoved(e: MouseEvent) {}
         override fun mouseWheelMoved(e: MouseWheelEvent) {
-            val notches = e.wheelRotation
-
-            // Управление смещением с помощью Ctrl
-            if (e.modifiersEx and InputEvent.CTRL_DOWN_MASK != 0) {
-                // При зажатом Ctrl - изменение масштаба
-            } else {
-                // Без Ctrl - перемещение по осям
-                settingsHolder.translateZ -= notches * ZOOM_SENSITIVITY
-            }
-
-            // Ограничиваем диапазон значений (опционально)
-            settingsHolder.translateZ = Math.max(ZOOM_MIN_OFFSET, Math.min(settingsHolder.translateZ, ZOOM_MAX_OFFSET))
-            requestRender()
+            translateZ += e.wheelRotation * 10f
+            translateZ = translateZ.coerceIn(-1500f, -50f)
+            glCanvas?.display()
         }
     }
 
     private inner class GlCanvasKeyListener : KeyListener {
-
         override fun keyTyped(e: KeyEvent) {}
         override fun keyPressed(e: KeyEvent) {
-            val keyCode = e.keyCode
-            when (keyCode) {
-                KeyEvent.VK_A, KeyEvent.VK_LEFT -> settingsHolder.translateX -= TRANSLATE_STEP
-                KeyEvent.VK_D, KeyEvent.VK_RIGHT -> settingsHolder.translateX += TRANSLATE_STEP
-                KeyEvent.VK_W, KeyEvent.VK_UP -> settingsHolder.translateY += TRANSLATE_STEP
-                KeyEvent.VK_S, KeyEvent.VK_DOWN -> settingsHolder.translateY -= TRANSLATE_STEP
-
-                // Горячие клавиши для debug навигации
-                KeyEvent.VK_Q -> {
-                    if (showDebugInfo && debugCommands.isNotEmpty()) {
-                        currentDebugCommandIndex =
-                            (currentDebugCommandIndex - 1 + debugCommands.size) % debugCommands.size
-                        updateDebugDisplay()
-                    }
-                }
-
-                KeyEvent.VK_E -> {
-                    if (showDebugInfo && debugCommands.isNotEmpty()) {
-                        currentDebugCommandIndex = (currentDebugCommandIndex + 1) % debugCommands.size
-                        updateDebugDisplay()
-                    }
-                }
-
+            when (e.keyCode) {
                 KeyEvent.VK_R -> {
-                    // Переключение debug режима
-                    showDebugInfo = !showDebugInfo
-                    if (!showDebugInfo) {
-                        debugVisualizer.clearVisualization()
-                        //debugCommands.clear()
-                    } else {
-                        addDebugCommands()
-                        updateDebugDisplay()
-                    }
-                    updateDebugNavigationState()
+                    rotateX = -25f; rotateY = 0f; rotateZ = 0f
+                    translateX = 0f; translateY = 0f; translateZ = -500f
                 }
+                KeyEvent.VK_LEFT -> translateX -= 5f
+                KeyEvent.VK_RIGHT -> translateX += 5f
+                KeyEvent.VK_UP -> translateY += 5f
+                KeyEvent.VK_DOWN -> translateY -= 5f
             }
-            requestRender()
+            glCanvas?.display()
         }
-
         override fun keyReleased(e: KeyEvent) {}
     }
 
     companion object {
-
-        private const val ZOOM_SENSITIVITY = 5.0f
-        private const val ZOOM_MIN_OFFSET = -1200.0f
-        private const val ZOOM_MAX_OFFSET = 0.0f
-        private const val SETTINGS_FILE = "settings.json"
-        private const val MOUSE_TRANSLATE_SENSITIVITY = 0.5f // Чувствительность смещения
-        private const val TRANSLATE_STEP = 5.0f // Шаг смещения
-
         @JvmStatic
         fun main(args: Array<String>) {
-            Main("Генератор эргономичной клавиатуры от Grishberg")
+            com.github.grishberg.cad3d.viewer.Main("PC Case Viewer (OpenGL)")
         }
+    }
+
+    private fun buildPcCaseModels(): Map<String, CSG> {
+        val defaultContext: FacetGenerationContext = ColorFacetGenerationContext(JcColor.GRAY).apply { setFn(8) }
+        val frameVertContext: FacetGenerationContext = ColorFacetGenerationContext(JcColor(100, 140, 200)).apply { setFn(8) }
+        val mbContext: FacetGenerationContext = ColorFacetGenerationContext(JcColor.GREEN).apply { setFn(8) }
+        val gpuContext: FacetGenerationContext = ColorFacetGenerationContext(JcColor(200, 30, 30)).apply { setFn(8) }
+        val psuContext: FacetGenerationContext = ColorFacetGenerationContext(JcColor(60, 60, 60)).apply { setFn(8) }
+
+        AluminumProfile.reset()
+
+        val frameCfg = PcFrame(width = 530.0, height = 350.0, depth = 330.0)
+        val frameVertical = frameCfg.buildVertical()
+        val frameHorizontal = frameCfg.buildHorizontal()
+
+        val p = AluminumProfile.PROFILE_SIZE
+        val bottomY = p / 2 + p / 2
+
+        val mb = Motherboard().build().move(-40.0, bottomY + 1.6 / 2, 0.0)
+        val gpu = Gpu().build().move(-50.0, bottomY + 1.6 + 112.0 / 2, -65.0)
+        val psu = Psu().build().move(175.0, bottomY + 86.0 / 2, 0.0)
+
+        return mapOf(
+            "frame_vertical" to frameVertical.toCSG(frameVertContext),
+            "frame_horizontal" to frameHorizontal.toCSG(defaultContext),
+            "motherboard" to mb.toCSG(mbContext),
+            "gpu" to gpu.toCSG(gpuContext),
+            "psu" to psu.toCSG(psuContext)
+        )
+    }
+
+    private fun csgToModelData(csg: CSG): ModelData {
+        val vertList = mutableListOf<Float>()
+        val normList = mutableListOf<Float>()
+        var triCount = 0
+
+        for (polygon in csg.polygons) {
+            val verts = polygon.vertices
+            if (verts.size < 3) continue
+            val nx = polygon.normal.x.toFloat()
+            val ny = polygon.normal.y.toFloat()
+            val nz = polygon.normal.z.toFloat()
+            val cr = polygon.color.getRed() / 255f
+            val cg = polygon.color.getGreen() / 255f
+            val cb = polygon.color.getBlue() / 255f
+            val ca = polygon.color.getAlpha() / 255f
+
+            val v0 = verts[0]
+            for (i in 1 until verts.size - 1) {
+                val v1 = verts[i]
+                val v2 = verts[i + 1]
+                for (v in listOf(v0, v1, v2)) {
+                    vertList.add(v.x.toFloat())
+                    vertList.add(v.y.toFloat())
+                    vertList.add(v.z.toFloat())
+                    vertList.add(cr)
+                    vertList.add(cg)
+                    vertList.add(cb)
+                    vertList.add(ca)
+                    normList.add(nx)
+                    normList.add(ny)
+                    normList.add(nz)
+                }
+                triCount += 3
+            }
+        }
+
+        return ModelData(
+            vertex = vertList.toFloatArray(),
+            normals = normList.toFloatArray(),
+            verticesCount = triCount
+        )
     }
 }

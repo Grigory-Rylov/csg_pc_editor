@@ -9,6 +9,7 @@ dependencies {
     implementation(project(":cad3d"))
     implementation(project(":javascad"))
     implementation(project(":plugin"))
+    implementation(project(":pccase"))
 
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-swing:1.8.0")
@@ -24,7 +25,7 @@ dependencies {
 }
 
 application {
-    mainClass.set("org.example.viewer.MainKt")
+    mainClass.set("com.github.grishberg.cad3d.viewer.Main")
     // Suppress JOGL AppContext reflective access warnings on JDK 17+
     applicationDefaultJvmArgs = listOf(
         "--add-exports=java.desktop/sun.awt=ALL-UNNAMED",

@@ -1,0 +1,9 @@
+=== Aluminum Profile Bill of Materials ===
+
+  Horizontal (Z): 290.0mm x 6pcs = 1740.0mm
+  Vertical (Y): 350.0mm x 4pcs = 1400.0mm
+  Horizontal (X): 490.0mm x 6pcs = 2940.0mm
+
+  Total: 6080.0mm (6.1m)
+  Profile: 20x20mm aluminum extrusion
+=========================================
