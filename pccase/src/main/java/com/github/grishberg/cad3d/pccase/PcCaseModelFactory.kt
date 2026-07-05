@@ -30,34 +30,38 @@ object PcCaseModelFactory {
 
         AluminumProfile.reset()
 
-        println("\nBuilding PC frame (aluminum profiles 20x20mm)...")
-        val frameCfg = PcFrame(width = 530.0, height = 350.0, depth = 330.0)
+        // Building PC frame (aluminum profiles 20x20mm)
+        val frameCfg = PcFrame(width = 530.0, depth = 330.0, height = 350.0)
         val frameVertical = frameCfg.buildVertical()
         val frameHorizontal = frameCfg.buildHorizontal()
 
         val p = AluminumProfile.PROFILE_SIZE
-        val bottomY = p / 2 + p / 2
+        val bottomZ = p / 2 + p / 2
 
-        println("\nBuilding motherboard (Tyan S8030)...")
-        val mb = Motherboard().build().move(-40.0, bottomY + 1.6 / 2, 0.0)
+        // Building motherboard (Tyan S8030)
+        val mb = Motherboard().build().move(-40.0, 0.0, bottomZ + 1.6 / 2)
 
-        println("\nBuilding GPU (Gigabyte RTX 3090 Turbo)...")
-        val gpu = Gpu().build().move(-50.0, 71.0, 150.0)
+        // Building GPU (Gigabyte RTX 3090 Turbo)
+        val gpu = Gpu().build().move(-50.0, 0.0, 71.0)
 
-        println("\nBuilding PSUs (ATX)...")
+        // Building PSUs (ATX)
         val hd = 165.0
         val psuY = p / 2 + 150.0 / 2
-        val psuBack = Psu().build().rotate(Angles3d.zOnly(90.0)).move(175.0, psuY, hd - 70.0)
-        val psuFront = Psu().build().rotate(Angles3d.zOnly(90.0)).move(175.0, psuY, -hd + 70.0)
+        val psuBack = Psu().build().rotate(Angles3d.xOnly(90.0)).move(175.0, hd - 70.0, psuY)
+        val psuFront = Psu().build().rotate(Angles3d.xOnly(90.0)).move(175.0, -hd + 70.0, psuY)
 
-        println("\nBuilding CPU cooler (ARCTIC Freezer 4U-M)...")
-        val cooler = Cooler().build().rotate(Angles3d.zOnly(90.0)).move(50.0, bottomY + 1.6 + 80.0, -20.0)
+        // Building CPU cooler (ARCTIC Freezer 4U-M)
+        val cooler = Cooler().build().move(50.0, -20.0, bottomZ + 1.6 + 80.0)
 
         val report = AluminumProfile.generateReport()
         println(report)
-        File("stl_pccase").let { dir ->
-            if (!dir.exists()) dir.mkdirs()
-            File(dir, "profile_report.txt").writeText(report)
+        try {
+            File("stl_pccase").let { dir ->
+                if (!dir.exists()) dir.mkdirs()
+                File(dir, "profile_report.txt").writeText(report)
+            }
+        } catch (_: Exception) {
+            // non-critical — may fail on Android
         }
 
         return mapOf(

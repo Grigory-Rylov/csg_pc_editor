@@ -20,10 +20,9 @@ import com.github.grishberg.cad3d.ui.DebugVisualizer
 import com.github.grishberg.cad3d.ui.DebugVisualizerImpl
 import com.github.grishberg.cad3d.ui.LogListViewLogger
 import com.github.grishberg.cad3d.util.DebugGenerator
-import com.github.grishberg.cad3d.util.SceneBuilder
-import com.github.grishberg.cad3d.util.SceneBuilderKeyboard
+import com.github.grishberg.cad3d.util.PcCaseSceneBuilder
 
-import com.github.grishberg.cad3d.util.SceneBuilderTest
+import com.github.grishberg.cad3d.util.SceneBuilder
 
 class Cad3dActivity : Activity() {
 
@@ -90,7 +89,7 @@ class Cad3dActivity : Activity() {
             windowManager.defaultDisplay.getMetrics(displayMetrics)
 
             // Set the renderer to our demo renderer, defined below.
-            val builder: SceneBuilder = SceneBuilderTest(debugRecorder)
+            val builder: SceneBuilder = PcCaseSceneBuilder()
             //DebugGenerator(debugRecorder).generate()
 
             mRenderer = MultipleObjectsRenderer(

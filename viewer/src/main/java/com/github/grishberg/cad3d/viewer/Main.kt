@@ -1,11 +1,6 @@
 package com.github.grishberg.cad3d.viewer
 
-import com.github.grishberg.cad3d.pccase.AluminumProfile
-import com.github.grishberg.cad3d.pccase.Cooler
-import com.github.grishberg.cad3d.pccase.Gpu
-import com.github.grishberg.cad3d.pccase.Motherboard
-import com.github.grishberg.cad3d.pccase.PcFrame
-import com.github.grishberg.cad3d.pccase.Psu
+import com.github.grishberg.cad3d.pccase.PcCaseModelFactory
 import com.jogamp.opengl.GL2
 import com.jogamp.opengl.GLAutoDrawable
 import com.jogamp.opengl.GLCapabilities
@@ -15,11 +10,7 @@ import com.jogamp.opengl.awt.GLCanvas
 import com.jogamp.opengl.fixedfunc.GLLightingFunc
 import com.jogamp.opengl.glu.GLU
 import com.jogamp.opengl.util.Animator
-import eu.printingin3d.javascad.coords.Angles3d
-import eu.printingin3d.javascad.utils.Color as JcColor
 import eu.printingin3d.javascad.vrl.CSG
-import eu.printingin3d.javascad.vrl.ColorFacetGenerationContext
-import eu.printingin3d.javascad.vrl.FacetGenerationContext
 import java.awt.BorderLayout
 import java.awt.FlowLayout
 import java.awt.event.InputEvent
@@ -365,43 +356,7 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         override fun keyReleased(e: KeyEvent) {}
     }
 
-    private fun buildPcCaseModels(): Map<String, CSG> {
-        val defaultContext: FacetGenerationContext = ColorFacetGenerationContext(JcColor.GRAY).apply { setFn(8) }
-        val frameVertContext: FacetGenerationContext =
-            ColorFacetGenerationContext(JcColor(100, 140, 200)).apply { setFn(8) }
-        val mbContext: FacetGenerationContext = ColorFacetGenerationContext(JcColor.GREEN).apply { setFn(8) }
-        val gpuContext: FacetGenerationContext = ColorFacetGenerationContext(JcColor(200, 30, 30)).apply { setFn(8) }
-        val psuContext: FacetGenerationContext = ColorFacetGenerationContext(JcColor(60, 60, 60)).apply { setFn(8) }
-        val coolerContext: FacetGenerationContext =
-            ColorFacetGenerationContext(JcColor(180, 180, 180)).apply { setFn(8) }
-
-        AluminumProfile.reset()
-
-        val frameCfg = PcFrame(width = 530.0, height = 350.0, depth = 330.0)
-        val frameVertical = frameCfg.buildVertical()
-        val frameHorizontal = frameCfg.buildHorizontal()
-
-        val p = AluminumProfile.PROFILE_SIZE
-        val bottomY = p / 2 + p / 2
-
-        val mb = Motherboard().build().move(-40.0, bottomY + 1.6 / 2, 0.0)
-        val gpu = Gpu().build().rotate(Angles3d.yOnly(-90.0)).move(-50.0, 15.0 + 112.0 / 2, 0.0)
-        val hd = 165.0
-        val psuY = p / 2 + 150.0 / 2
-        val psu1 = Psu().build().rotate(Angles3d.zOnly(90.0)).move(175.0, psuY, hd - 70.0)
-        val psu2 = Psu().build().rotate(Angles3d.zOnly(90.0)).move(175.0, psuY, -hd + 70.0)
-        val cooler = Cooler().build().rotate(Angles3d.zOnly(90.0)).move(50.0, bottomY + 1.6 + 80.0, -20.0)
-
-        return mapOf(
-            "frame_vertical" to frameVertical.toCSG(frameVertContext),
-            "frame_horizontal" to frameHorizontal.toCSG(defaultContext),
-            "motherboard" to mb.toCSG(mbContext),
-            "gpu" to gpu.toCSG(gpuContext),
-            "psu_back" to psu1.toCSG(psuContext),
-            "psu_front" to psu2.toCSG(psuContext),
-            "cooler" to cooler.toCSG(coolerContext)
-        )
-    }
+    private fun buildPcCaseModels(): Map<String, CSG> = PcCaseModelFactory.buildAll()
 
     private fun csgToModelData(csg: CSG): ModelData {
         val vertList = mutableListOf<Float>()

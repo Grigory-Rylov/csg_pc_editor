@@ -19,7 +19,7 @@ fun main(args: Array<String>) {
 
     if (renderMode) {
         println("\nRendering scene...")
-        val renderer = SceneRenderer(cameraAngleX = 245.0)
+        val renderer = SceneRenderer(cameraAngleX = 35.0, cameraAngleY = 25.0)
         renderer.renderScene(sceneModels.entries.map { it.key to it.value }, File(outDir, "scene.png"))
     } else if (guiMode) {
         println("\nStarting interactive viewer...")

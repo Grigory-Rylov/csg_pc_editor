@@ -7,8 +7,8 @@ import eu.printingin3d.javascad.models.Cylinder
 import eu.printingin3d.javascad.tranzitions.Union
 
 class Motherboard {
-    private val boardWidth = 280.0   // X — ширина платы
-    private val boardDepth = 260.0   // Y — длина/глубина платы  
+    private val boardWidth = 305.0   // X — ширина платы
+    private val boardDepth = 205.8   // Y — длина/глубина платы
     private val pcbThickness = 1.6     // Z — толщина PCB (вертикальная ось)
 
     fun build(): Abstract3dModel {
@@ -44,7 +44,7 @@ class Motherboard {
         val pcieSpacing = 25.0
         val pcieStartY = -90.0
         for (i in 0 until numPcie) {
-            parts.add(Cube(120.0, 5.0, 12.0)
+            parts.add(Cube(120.0, 12.0, 5.0)
                 .move(-35.0, pcbThickness / 2 + 6.0, pcieStartY + i * pcieSpacing))
         }
 

@@ -4,8 +4,9 @@ build/
 !**/src/test/**/build/
 settings.json
 *.stl
-cli-viewer/stl_pccase/
-
+pccase/stl_pccase/*
+cli-viewer/stl_pccase/*
+stl_pccase/*
 ### IntelliJ IDEA ###
 .idea
 *.iws

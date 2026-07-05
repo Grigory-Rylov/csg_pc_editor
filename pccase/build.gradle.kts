@@ -5,7 +5,6 @@ plugins {
 
 dependencies {
     implementation(project(":javascad"))
-    implementation(project(":cad3d"))
 }
 
 kotlin {
