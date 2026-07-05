@@ -24,7 +24,7 @@ pccase/         — PC case generator module (main entry point)
 
 ## Run Interactive Viewer (GUI)
 
-Opens a Java2D window with mouse controls (rotate/pan/zoom):
+Opens an OpenGL (JOGL) window with mouse controls (rotate/pan/zoom), component checkboxes:
 
 ```bash
 ./gradlew pccase:run
@@ -91,21 +91,14 @@ Every `--render` run produces a `profile_report.txt` listing each cut length,
 orientation, quantity, and total length needed. This is used to order the
 correct amount of 20×20mm aluminum extrusion.
 
-## PcCaseViewer API
+## Main entry point
 
-`PcCaseViewer.show()` accepts a `Map<String, CSG>` where each key identifies a
-component. The GUI displays checkboxes for each component — unchecking hides it:
+`com.github.grishberg.cad3d.Main` is the main class. Without arguments it launches
+the JOGL OpenGL viewer with checkboxes for each component. With `--render` it
+uses the headless Java2D renderer to produce `scene.png`.
 
-```kotlin
-val models = mapOf(
-    "frame_vertical" to frameVertCsg,
-    "frame_horizontal" to frameHorizCsg,
-    "motherboard" to mbCsg,
-    "gpu" to gpuCsg,
-    "psu" to psuCsg
-)
-PcCaseViewer().show(models)
-```
+The viewer builds models internally and converts CSG polygons to vertex arrays
+for OpenGL rendering (fixed-function GL2 pipeline with lighting).
 
 ## 3D Model Development Workflow
 
