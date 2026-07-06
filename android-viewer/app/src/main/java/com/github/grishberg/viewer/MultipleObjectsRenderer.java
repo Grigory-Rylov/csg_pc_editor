@@ -636,16 +636,33 @@ public class MultipleObjectsRenderer implements GLSurfaceView.Renderer, Controll
             mapDebugPointsToScreen();
         }
 
-        for (BuffersContainer buffersContainer : targetBuffers) {
+        // Determine motherboard index from builder
+        int mbIdx = -1;
+        if (sceneBuilder instanceof PcCaseSceneBuilder) {
+            mbIdx = ((PcCaseSceneBuilder) sceneBuilder).getMotherboardIndex();
+        }
+
+        // 1. Draw motherboard first — writes depth at mb level
+        if (mbIdx >= 0 && mbIdx < targetBuffers.size()) {
             if (wireframeOnly) {
-                drawWireframe(buffersContainer);
+                drawWireframe(targetBuffers.get(mbIdx));
             } else {
-                drawTriangle(buffersContainer);
+                drawTriangle(targetBuffers.get(mbIdx));
             }
         }
 
-        // Draw motherboard texture overlay
+        // 2. Draw texture overlay — GL_ALWAYS + depthMask=false
         drawMotherboardTexture(mMVPMatrix);
+
+        // 3. Draw other models — overwrite texture where they're in front
+        for (int i = 0; i < targetBuffers.size(); i++) {
+            if (i == mbIdx) continue;
+            if (wireframeOnly) {
+                drawWireframe(targetBuffers.get(i));
+            } else {
+                drawTriangle(targetBuffers.get(i));
+            }
+        }
 
         drawLight();
         
