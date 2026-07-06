@@ -221,6 +221,8 @@ public class MultipleObjectsRenderer implements GLSurfaceView.Renderer, Controll
     private FloatBuffer topQuadTexCoordBuffer;
     private FloatBuffer bottomQuadVertexBuffer;
     private FloatBuffer bottomQuadTexCoordBuffer;
+    private boolean needUpdateQuadBuffers = false;
+    private float pendingQuadMx = 0f, pendingQuadMy = 0f, pendingQuadMbz = 0f;
 
     private final Handler handler = new Handler(Looper.getMainLooper());
     public MultipleObjectsRenderer(Context context, SceneBuilder builder, Runnable invalidator) {
@@ -243,6 +245,16 @@ public class MultipleObjectsRenderer implements GLSurfaceView.Renderer, Controll
                 }
                 targetBuffers = newBuffers;
                 debugPoints = newDebugPoints;
+
+                // Queue texture quad update on GL thread
+                if (sceneBuilder instanceof PcCaseSceneBuilder) {
+                    PcCaseSceneBuilder pcb = (PcCaseSceneBuilder) sceneBuilder;
+                    pendingQuadMx = pcb.getMotherboardX();
+                    pendingQuadMy = pcb.getMotherboardY();
+                    pendingQuadMbz = pcb.getMotherboardZ();
+                    needUpdateQuadBuffers = true;
+                }
+
                 handler.post(new Runnable() {
                     @Override
                     public void run() {
@@ -464,7 +476,11 @@ public class MultipleObjectsRenderer implements GLSurfaceView.Renderer, Controll
         // Setup texture shader program
         setupTextureProgram();
         loadTextures();
-        setupQuadBuffers();
+        setupQuadBuffers(
+            (float) PcCaseModelFactory.MB_OFFSET_X,
+            (float) PcCaseModelFactory.MB_OFFSET_Y,
+            (float) PcCaseModelFactory.MB_OFFSET_Z
+        );
     }
 
     private void setupTextureProgram() {
@@ -522,11 +538,8 @@ public class MultipleObjectsRenderer implements GLSurfaceView.Renderer, Controll
         return textureHandle[0];
     }
 
-    private void setupQuadBuffers() {
-        float mbZ = (float) PcCaseModelFactory.MB_OFFSET_Z;
-        float mbZBottom = (float) (PcCaseModelFactory.MB_OFFSET_Z - 1.6);
-        float mx = (float) PcCaseModelFactory.MB_OFFSET_X;
-        float my = (float) PcCaseModelFactory.MB_OFFSET_Y;
+    private void setupQuadBuffers(float mx, float my, float mbZ) {
+        float mbZBottom = mbZ - 1.6f;
         float hw = 305f / 2f;
         float hd = 205.8f / 2f;
 
@@ -651,6 +664,10 @@ public class MultipleObjectsRenderer implements GLSurfaceView.Renderer, Controll
         }
 
         // 2. Draw texture overlay — GL_ALWAYS + depthMask=false
+        if (needUpdateQuadBuffers) {
+            setupQuadBuffers(pendingQuadMx, pendingQuadMy, pendingQuadMbz);
+            needUpdateQuadBuffers = false;
+        }
         drawMotherboardTexture(mMVPMatrix);
 
         // 3. Draw other models — overwrite texture where they're in front

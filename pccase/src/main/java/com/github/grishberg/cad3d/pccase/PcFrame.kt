@@ -6,7 +6,8 @@ import eu.printingin3d.javascad.tranzitions.Union
 class PcFrame(
     private val width: Double,
     private val depth: Double,
-    private val height: Double
+    private val height: Double,
+    private val levels: List<Double> = emptyList()
 ) {
     fun buildVertical(): Abstract3dModel {
         val p = AluminumProfile.PROFILE_SIZE
@@ -50,12 +51,17 @@ class PcFrame(
         beams.add(AluminumProfile.vertical(beamD).move(mbX1, 0.0, p / 2))
         beams.add(AluminumProfile.vertical(beamD).move(mbX2, 0.0, p / 2))
 
-        // Middle shelf (~40% height)
-        val midZ = height * 0.4
-        beams.add(AluminumProfile.horizontalX(beamW).move(0.0, -hd + p / 2, midZ))
-        beams.add(AluminumProfile.horizontalX(beamW).move(0.0, hd - p / 2, midZ))
-        beams.add(AluminumProfile.vertical(beamD).move(-hw + p / 2, 0.0, midZ))
-        beams.add(AluminumProfile.vertical(beamD).move(hw - p / 2, 0.0, midZ))
+        // PSU support rails (left side, bottom, along Y)
+        beams.add(AluminumProfile.vertical(beamD).move(-280.0, 0.0, p / 2))
+        beams.add(AluminumProfile.vertical(beamD).move(-200.0, 0.0, p / 2))
+
+        // Intermediate levels
+        for (levelZ in levels) {
+            beams.add(AluminumProfile.horizontalX(beamW).move(0.0, -hd + p / 2, levelZ))
+            beams.add(AluminumProfile.horizontalX(beamW).move(0.0, hd - p / 2, levelZ))
+            beams.add(AluminumProfile.vertical(beamD).move(-hw + p / 2, 0.0, levelZ))
+            beams.add(AluminumProfile.vertical(beamD).move(hw - p / 2, 0.0, levelZ))
+        }
 
         return Union(beams)
     }

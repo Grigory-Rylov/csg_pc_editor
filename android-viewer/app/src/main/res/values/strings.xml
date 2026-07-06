@@ -11,4 +11,8 @@
 
     <string name="prev_10_debug">&lt; 10</string>
     <string name="next_10_debug">&gt; 10</string>
+    <string name="edit_script">Script</string>
+    <string name="edit_script_title">Edit Script</string>
+    <string name="dialog_ok">OK</string>
+    <string name="dialog_cancel">Cancel</string>
 </resources>

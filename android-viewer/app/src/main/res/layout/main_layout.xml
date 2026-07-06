@@ -8,6 +8,31 @@
 		android:layout_width="match_parent"
 		android:layout_height="match_parent" />
 
+	<!-- Toolbar поверх GL-вью -->
+	<LinearLayout
+		android:id="@+id/toolbar"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:layout_gravity="top"
+		android:background="#CC000000"
+		android:gravity="end"
+		android:orientation="horizontal"
+		android:padding="4dp">
+
+		<Button
+			android:id="@+id/edit_script_button"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:text="Script"
+			android:textColor="#FFFFFF"
+			android:textSize="14sp"
+			android:background="#4488FF"
+			android:paddingStart="16dp"
+			android:paddingEnd="16dp"
+			android:paddingTop="6dp"
+			android:paddingBottom="6dp" />
+	</LinearLayout>
+
 
 	<com.github.grishberg.viewer.DebugOverlayView
 		android:id="@+id/debug_overlay"

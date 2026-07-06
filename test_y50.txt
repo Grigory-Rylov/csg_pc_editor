@@ -1,0 +1,7 @@
+# PC Case Configuration
+frame (w=530 d=330 h=350 l=140)
+motherboard (x=90 y=50 z=20.8)
+gpu (x=0 z=100 n=5 s=55)
+psu (x=-240 y=95 r=90)
+psu (x=-240 y=-95 r=90)
+cooler (x=65 y=-20 z=7)

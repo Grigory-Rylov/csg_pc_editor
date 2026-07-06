@@ -78,16 +78,21 @@ class Motherboard {
 
         val board = Union(parts)
 
-        // Отверстия для винтов — по оси Z (вертикально через плату XY)
+        // Отверстия для винтов — Tyan S8030 single-socket SP3 ATX (305×205.8)
         val screwR = 1.5
         val screwH = 10.0
         val screwPositions = listOf(
-            -110.0 to -110.0,
-            110.0 to -110.0,
-            -110.0 to 0.0,
-            110.0 to 0.0,
-            -110.0 to 110.0,
-            110.0 to 110.0
+            // Rear I/O area (Y+ edge)
+            -100.0 to 93.0,
+             100.0 to 93.0,
+               0.0 to 93.0,
+            // Front edge / PCIe area (Y- edge)
+            -100.0 to -93.0,
+             100.0 to -93.0,
+               0.0 to -93.0,
+            // CPU support (near socket at X~50, Y~-20)
+            -120.0 to -20.0,
+             -80.0 to -20.0,
         )
         val holes = screwPositions.map { (hx, hy) ->
             Cylinder(screwH, Radius.fromRadius(screwR))

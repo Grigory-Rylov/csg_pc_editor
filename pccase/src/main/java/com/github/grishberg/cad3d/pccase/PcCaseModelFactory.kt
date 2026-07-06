@@ -1,7 +1,6 @@
 package com.github.grishberg.cad3d.pccase
 
 import eu.printingin3d.javascad.coords.Angles3d
-import eu.printingin3d.javascad.enums.Side
 import eu.printingin3d.javascad.tranzitions.Union
 import eu.printingin3d.javascad.vrl.ColorFacetGenerationContext
 import eu.printingin3d.javascad.vrl.FacetGenerationContext
@@ -9,13 +8,15 @@ import eu.printingin3d.javascad.vrl.CSG
 import java.io.File
 
 object PcCaseModelFactory {
-    private val gpuOffsetZ = 170
-
     const val MB_OFFSET_X = 90.0
     const val MB_OFFSET_Y = 0.0
-    const val MB_OFFSET_Z = 20.8  // bottomZ + pcbThickness/2 = 20.0 + 0.8
+    const val MB_OFFSET_Z = 20.8
 
     fun buildAll(): Map<String, CSG> {
+        return buildAll(SceneConfig.DEFAULT)
+    }
+
+    fun buildAll(config: SceneConfig): Map<String, CSG> {
         val defaultContext: FacetGenerationContext = ColorFacetGenerationContext(eu.printingin3d.javascad.utils.Color.GRAY)
         defaultContext.setFn(8)
 
@@ -36,35 +37,23 @@ object PcCaseModelFactory {
 
         AluminumProfile.reset()
 
-        // Building PC frame (aluminum profiles 20x20mm)
-        val frameCfg = PcFrame(width = 530.0, depth = 330.0, height = 350.0)
+        val frameCfg = PcFrame(
+            width = config.frameWidth,
+            depth = config.frameDepth,
+            height = config.frameHeight,
+            levels = config.frameLevels
+        )
         val frameVertical = frameCfg.buildVertical()
         val frameHorizontal = frameCfg.buildHorizontal()
 
-        val p = AluminumProfile.PROFILE_SIZE
-        val bottomZ = p / 2 + p / 2
+        val results = mutableMapOf<String, CSG>()
+        results["frame_vertical"] = frameVertical.toCSG(frameVertContext)
+        results["frame_horizontal"] = frameHorizontal.toCSG(defaultContext)
 
-        // Building motherboard (Tyan S8030)
-        val mb = Motherboard().build().move(MB_OFFSET_X, MB_OFFSET_Y, MB_OFFSET_Z)
-
-        // Building GPU (Gigabyte RTX 3090 Turbo)
-        val gpuOffsetX = 50
-        val gpu =
-            Gpu().build().moveX(-gpuOffsetX)
-                .addModel(Gpu().build().moveX(-gpuOffsetX * 2))
-                .addModel(Gpu().build().moveX(-gpuOffsetX * 3))
-                .addModel(Gpu().build().moveX(-gpuOffsetX * 4))
-                .addModel(Gpu().build().moveX(-gpuOffsetX * 5))
-                .align(Side.TOP_OUT, mb).move(80,0,10.0 + gpuOffsetZ)
-
-        // Building PSUs (ATX)
-        val hd = 165.0
-        val pcuX = -240
-        val psuBack = Psu().build().rotate(Angles3d.xOnly(90.0)).align(Side.TOP_OUT_CENTER, mb).move(pcuX, hd - 70.0, 0)
-        val psuFront = Psu().build().rotate(Angles3d.xOnly(90.0)).align(Side.TOP_OUT_CENTER, mb).move(pcuX, -hd + 70.0, 0)
-
-        // Building CPU cooler (ARCTIC Freezer 4U-M)
-        val cooler = Cooler().build().align(Side.TOP_OUT_CENTER, mb).move(65.0, -20.0, 7.0)
+        val modelBuilder = ComponentModelBuilder(config.components)
+        modelBuilder.build().forEach { (name, model, context) ->
+            results[name] = model.toCSG(context)
+        }
 
         val report = AluminumProfile.generateReport()
         println(report)
@@ -77,14 +66,54 @@ object PcCaseModelFactory {
             // non-critical — may fail on Android
         }
 
-        return mapOf(
-            "frame_vertical" to frameVertical.toCSG(frameVertContext),
-            "frame_horizontal" to frameHorizontal.toCSG(defaultContext),
-            "motherboard" to mb.toCSG(mbContext),
-            "gpu" to gpu.toCSG(gpuContext),
-            "psu_back" to psuBack.toCSG(psuContext),
-            "psu_front" to psuFront.toCSG(psuContext),
-            "cooler" to cooler.toCSG(coolerContext)
-        )
+        return results
+    }
+
+    private class ComponentModelBuilder(components: List<ComponentPlacement>) {
+        private val result = mutableListOf<Triple<String, eu.printingin3d.javascad.models.Abstract3dModel, FacetGenerationContext>>()
+
+        init {
+            val mbContext = ColorFacetGenerationContext(eu.printingin3d.javascad.utils.Color.GREEN).apply { setFn(8) }
+            val gpuContext = ColorFacetGenerationContext(eu.printingin3d.javascad.utils.Color(200, 30, 30)).apply { setFn(8) }
+            val psuContext = ColorFacetGenerationContext(eu.printingin3d.javascad.utils.Color(60, 60, 60)).apply { setFn(8) }
+            val coolerContext = ColorFacetGenerationContext(eu.printingin3d.javascad.utils.Color(180, 180, 180)).apply { setFn(8) }
+
+            for (cp in components) {
+                when (cp.type) {
+                    "motherboard" -> {
+                        val model = Motherboard().build().move(cp.x, cp.y, cp.z)
+                        result.add(Triple("motherboard", model, mbContext))
+                    }
+                    "gpu" -> {
+                        val parts = mutableListOf<eu.printingin3d.javascad.models.Abstract3dModel>()
+                        for (i in 0 until cp.count) {
+                            val offset = if (cp.count > 1) i * cp.spacing else 0.0
+                            parts.add(Gpu().build().move(
+                                cp.x + offset,
+                                cp.y,
+                                cp.z
+                            ))
+                        }
+                        val model = if (parts.size == 1) parts[0] else Union(parts)
+                        result.add(Triple("gpu", model, gpuContext))
+                    }
+                    "psu" -> {
+                        var model = Psu().build()
+                        if (cp.rotation != 0.0) {
+                            model = model.rotate(Angles3d.xOnly(cp.rotation))
+                        }
+                        model = model.move(cp.x, cp.y, cp.z)
+                        val name = "psu_${result.size}"
+                        result.add(Triple(name, model, psuContext))
+                    }
+                    "cooler" -> {
+                        val model = Cooler().build().move(cp.x, cp.y, cp.z)
+                        result.add(Triple("cooler", model, coolerContext))
+                    }
+                }
+            }
+        }
+
+        fun build(): List<Triple<String, eu.printingin3d.javascad.models.Abstract3dModel, FacetGenerationContext>> = result
     }
 }
