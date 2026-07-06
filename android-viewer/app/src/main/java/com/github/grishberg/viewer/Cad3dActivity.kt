@@ -1,15 +1,18 @@
 package com.github.grishberg.viewer
 
-import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
 import android.util.DisplayMetrics
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import android.widget.Button
 import android.widget.CheckBox
 import android.widget.CompoundButton
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
 import com.github.grishberg.cad3d.R
 import com.github.grishberg.cad3d.pccase.AluminumProfile
 import com.github.grishberg.cad3d.pccase.PcCaseModelFactory
@@ -18,7 +21,7 @@ import com.github.grishberg.cad3d.pccase.SceneConfigParser
 import com.github.grishberg.cad3d.util.PcCaseSceneBuilder
 import com.github.grishberg.cad3d.util.SceneBuilder
 
-class Cad3dActivity : Activity() {
+class Cad3dActivity : AppCompatActivity() {
 
     private var mGLSurfaceView: CustomGLSurfaceView? = null
     private var mRenderer: MultipleObjectsRenderer? = null
@@ -60,25 +63,9 @@ class Cad3dActivity : Activity() {
                 mRenderer?.setWireframeOnly(isChecked)
             }
 
-            // Menu toggle
-            val menuPopup = findViewById<View>(R.id.menu_popup)
-            findViewById<Button>(R.id.menu_button).setOnClickListener {
-                menuPopup.visibility = if (menuPopup.visibility == View.GONE) View.VISIBLE else View.GONE
-            }
-
-            // Editor action
-            findViewById<Button>(R.id.menu_editor).setOnClickListener {
-                menuPopup.visibility = View.GONE
-                val intent = Intent(this, ScriptEditorActivity::class.java)
-                intent.putExtra(EXTRA_SCRIPT, lastValidScript)
-                startActivityForResult(intent, REQUEST_SCRIPT_EDITOR)
-            }
-
-            // Report action
-            findViewById<Button>(R.id.menu_report).setOnClickListener {
-                menuPopup.visibility = View.GONE
-                showProfileReport()
-            }
+            // Set up AppBar (Toolbar)
+            val toolbar = findViewById<Toolbar>(R.id.toolbar)
+            setSupportActionBar(toolbar)
 
             // Apply saved script on startup
             SceneConfigParser().parse(lastValidScript).onSuccess { config ->
@@ -92,6 +79,27 @@ class Cad3dActivity : Activity() {
     override fun onResume() {
         super.onResume()
         mGLSurfaceView?.onResume()
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.main_menu, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.action_editor -> {
+                val intent = Intent(this, ScriptEditorActivity::class.java)
+                intent.putExtra(EXTRA_SCRIPT, lastValidScript)
+                startActivityForResult(intent, REQUEST_SCRIPT_EDITOR)
+                true
+            }
+            R.id.action_report -> {
+                showProfileReport()
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
     }
 
     override fun onPause() {
