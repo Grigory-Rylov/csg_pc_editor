@@ -15,6 +15,6 @@ dependencyResolutionManagement {
 }
 
 
-rootProject.name = "CsgBspSample"
+rootProject.name = "Pc viewer android"
 include ':app'
 include ':javascad-core'
