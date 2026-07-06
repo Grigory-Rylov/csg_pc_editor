@@ -43,6 +43,7 @@ class AluminumProfile private constructor(
             sb.appendLine()
 
             var totalLength = 0.0
+            var totalPieces = 0
             for ((key, count) in grouped) {
                 val (length, orientation) = key
                 val label = when (orientation) {
@@ -52,12 +53,15 @@ class AluminumProfile private constructor(
                 }
                 val total = length * count
                 totalLength += total
+                totalPieces += count
                 sb.appendLine("  $label: ${length}mm x ${count}pcs = ${total}mm")
             }
 
             sb.appendLine()
-            sb.appendLine("  Total: ${totalLength}mm (${"%.1f".format(totalLength / 1000.0)}m)")
-            sb.appendLine("  Profile: 20x20mm aluminum extrusion")
+            sb.appendLine("  Всего кусков: $totalPieces")
+            sb.appendLine("  Всего резов: $totalPieces")
+            sb.appendLine("  Общая длина: ${totalLength}mm (${"%.1f".format(totalLength / 1000.0)}m)")
+            sb.appendLine("  Профиль: 20x20mm")
             sb.appendLine("=========================================")
             return sb.toString()
         }

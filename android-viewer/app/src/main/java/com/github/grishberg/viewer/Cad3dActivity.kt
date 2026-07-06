@@ -1,6 +1,7 @@
 package com.github.grishberg.viewer
 
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
 import android.util.DisplayMetrics
@@ -10,6 +11,8 @@ import android.widget.CheckBox
 import android.widget.CompoundButton
 import android.widget.Toast
 import com.github.grishberg.cad3d.R
+import com.github.grishberg.cad3d.pccase.AluminumProfile
+import com.github.grishberg.cad3d.pccase.PcCaseModelFactory
 import com.github.grishberg.cad3d.pccase.SceneConfig
 import com.github.grishberg.cad3d.pccase.SceneConfigParser
 import com.github.grishberg.cad3d.util.PcCaseSceneBuilder
@@ -57,10 +60,24 @@ class Cad3dActivity : Activity() {
                 mRenderer?.setWireframeOnly(isChecked)
             }
 
-            findViewById<Button>(R.id.edit_script_button).setOnClickListener {
+            // Menu toggle
+            val menuPopup = findViewById<View>(R.id.menu_popup)
+            findViewById<Button>(R.id.menu_button).setOnClickListener {
+                menuPopup.visibility = if (menuPopup.visibility == View.GONE) View.VISIBLE else View.GONE
+            }
+
+            // Editor action
+            findViewById<Button>(R.id.menu_editor).setOnClickListener {
+                menuPopup.visibility = View.GONE
                 val intent = Intent(this, ScriptEditorActivity::class.java)
                 intent.putExtra(EXTRA_SCRIPT, lastValidScript)
                 startActivityForResult(intent, REQUEST_SCRIPT_EDITOR)
+            }
+
+            // Report action
+            findViewById<Button>(R.id.menu_report).setOnClickListener {
+                menuPopup.visibility = View.GONE
+                showProfileReport()
             }
 
             // Apply saved script on startup
@@ -100,5 +117,18 @@ class Cad3dActivity : Activity() {
                 }
             }
         }
+    }
+
+    private fun showProfileReport() {
+        val config = SceneConfigParser().parse(lastValidScript).getOrNull() ?: SceneConfig.DEFAULT
+        val models = PcCaseModelFactory.buildAll(config)
+        models.forEach { (_, csg) -> csg.getVerticesAndColorsAsFloatArray() }
+        val report = AluminumProfile.generateReport()
+        AlertDialog.Builder(this)
+            .setTitle("Отчет по профилям")
+            .setMessage(report)
+            .setPositiveButton("OK") { _, _ -> }
+            .setCancelable(true)
+            .show()
     }
 }
