@@ -32,6 +32,12 @@ android {
         jvmTarget = '1.8'
     }
 
+    android.applicationVariants.all { variant ->
+        variant.outputs.each { output ->
+            output.outputFileName = "pc-frame-viewer.apk"
+        }
+    }
+
     sourceSets {
         main {
             java {
