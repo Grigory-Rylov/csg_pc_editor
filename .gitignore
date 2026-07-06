@@ -7,6 +7,8 @@ settings.json
 pccase/stl_pccase/*
 cli-viewer/stl_pccase/*
 stl_pccase/*
+viewer/stl_pccase/*
+pc-config.txt
 ### IntelliJ IDEA ###
 .idea
 *.iws

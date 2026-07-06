@@ -76,6 +76,7 @@ object PcCaseModelFactory {
 
     private class ComponentModelBuilder(components: List<ComponentPlacement>) {
         private val result = mutableListOf<Triple<String, Abstract3dModel, FacetGenerationContext>>()
+        private val nameCounters = mutableMapOf<String, Int>()
 
         init {
             val mbContext = ColorFacetGenerationContext(eu.printingin3d.javascad.utils.Color.GREEN).apply { setFn(8) }
@@ -88,14 +89,15 @@ object PcCaseModelFactory {
                 val name: String
                 val context: FacetGenerationContext
 
+                val baseName = cp.type
+                val globalIndex = result.size
+
                 val baseModel: Abstract3dModel = when (cp.type) {
                     "motherboard" -> {
-                        name = "motherboard"
                         context = mbContext
                         Motherboard().build()
                     }
                     "gpu" -> {
-                        name = "gpu"
                         context = gpuContext
                         val parts = mutableListOf<Abstract3dModel>()
                         for (i in 0 until cp.count) {
@@ -107,22 +109,23 @@ object PcCaseModelFactory {
                         if (parts.size == 1) parts[0] else Union(parts)
                     }
                     "psu" -> {
-                        name = "psu_${result.size}"
                         context = psuContext
                         Psu().build()
                     }
                     "cooler" -> {
-                        name = "cooler"
                         context = coolerContext
                         Cooler().build()
                     }
                     "radiator" -> {
-                        name = "radiator"
                         context = radiatorContext
                         Radiator().build()
                     }
                     else -> throw IllegalArgumentException("unknown type: ${cp.type}")
                 }
+
+                val counter = nameCounters.getOrDefault(baseName, 0)
+                nameCounters[baseName] = counter + 1
+                name = if (counter == 0) baseName else "${baseName}_$counter"
 
                 var model = baseModel
                 for (op in cp.transforms) {

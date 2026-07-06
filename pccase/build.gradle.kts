@@ -5,6 +5,7 @@ plugins {
 
 dependencies {
     implementation(project(":javascad"))
+    testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
 }
 
 kotlin {

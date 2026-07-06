@@ -1,6 +1,9 @@
 package com.github.grishberg.cad3d.viewer
 
 import com.github.grishberg.cad3d.pccase.PcCaseModelFactory
+import com.github.grishberg.cad3d.pccase.SceneConfig
+import com.github.grishberg.cad3d.pccase.SceneConfigParser
+import com.github.grishberg.cad3d.pccase.TransformOp
 import com.jogamp.opengl.GL2
 import com.jogamp.opengl.GLAutoDrawable
 import com.jogamp.opengl.GLCapabilities
@@ -13,8 +16,13 @@ import com.jogamp.opengl.util.texture.Texture
 import com.jogamp.opengl.util.texture.TextureIO
 import com.jogamp.opengl.util.Animator
 import eu.printingin3d.javascad.vrl.CSG
+import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea
+import org.fife.ui.rsyntaxtextarea.SyntaxConstants
+import org.fife.ui.rtextarea.RTextScrollPane
 import java.awt.BorderLayout
+import java.awt.Dimension
 import java.awt.FlowLayout
+import java.awt.Font
 import java.awt.event.InputEvent
 import java.awt.event.KeyEvent
 import java.awt.event.KeyListener
@@ -24,9 +32,12 @@ import java.awt.event.MouseWheelEvent
 import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
 import java.io.File
+import javax.swing.JButton
 import javax.swing.JCheckBox
 import javax.swing.JFrame
+import javax.swing.JLabel
 import javax.swing.JPanel
+import javax.swing.JSplitPane
 
 data class ModelData(
     val vertex: FloatArray, val normals: FloatArray, val verticesCount: Int
@@ -47,11 +58,28 @@ class Main(title: String?) : JFrame(title), GLEventListener {
     private var mbTexture: Texture? = null
     private var mbTextureBottom: Texture? = null
 
-    private val allModels = buildPcCaseModels().mapValues { (_, csg) -> csgToModelData(csg) }.toMutableMap()
-    private val visibleModels = allModels.toMutableMap()
+    private val allModels = mutableMapOf<String, ModelData>()
+    private val visibleModels = mutableMapOf<String, ModelData>()
+
+    private var currentScript: String = loadScriptFromFile()
+    private var currentConfig: SceneConfig = SceneConfig.DEFAULT
+    private val parser = SceneConfigParser()
+
+    private var mbOffsetX = PcCaseModelFactory.MB_OFFSET_X.toFloat()
+    private var mbOffsetY = PcCaseModelFactory.MB_OFFSET_Y.toFloat()
+    private var mbOffsetZ = PcCaseModelFactory.MB_OFFSET_Z.toFloat()
+
+    private val checkboxBoxes = mutableMapOf<String, JCheckBox>()
+    private var checkboxPanel: JPanel = JPanel()
 
     init {
         title ?: "PC Case Viewer (OpenGL)"
+
+        val parsedConfig = parser.parse(currentScript).getOrNull()
+        if (parsedConfig != null) {
+            currentConfig = parsedConfig
+        }
+        buildWithConfig(currentConfig)
 
         val glProfile = GLProfile.get(GLProfile.GL2)
         val glCapabilities = GLCapabilities(glProfile)
@@ -70,9 +98,54 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         animator.add(glCanvas)
         animator.start()
 
-        val boxes = createCheckboxes()
-        contentPane.add(boxes, BorderLayout.NORTH)
-        contentPane.add(glCanvas, BorderLayout.CENTER)
+        checkboxPanel = createCheckboxes()
+        val northPanel = JPanel(BorderLayout())
+        northPanel.add(checkboxPanel, BorderLayout.WEST)
+
+        val glPanel = JPanel(BorderLayout())
+        glPanel.add(northPanel, BorderLayout.NORTH)
+        glPanel.add(glCanvas, BorderLayout.CENTER)
+        glPanel.minimumSize = Dimension(400, 400)
+
+        // --- Code editor ---
+        val editorTextArea = RSyntaxTextArea(25, 45)
+        editorTextArea.syntaxEditingStyle = SyntaxConstants.SYNTAX_STYLE_NONE
+        editorTextArea.font = Font("Monospaced", Font.PLAIN, 12)
+        editorTextArea.text = currentScript
+        editorTextArea.caretPosition = 0
+        editorTextArea.tabSize = 2
+
+        val editorScroll = RTextScrollPane(editorTextArea)
+        editorScroll.lineNumbersEnabled = true
+
+        val statusLabel = JLabel(" ")
+
+        val applyBtn = JButton("Apply (Ctrl+Enter)")
+        applyBtn.addActionListener { applyScript(editorTextArea.text, statusLabel) }
+        editorTextArea.addKeyListener(object : KeyListener {
+            override fun keyTyped(e: KeyEvent) {}
+            override fun keyPressed(e: KeyEvent) {
+                if (e.keyCode == KeyEvent.VK_ENTER && (e.modifiersEx and InputEvent.CTRL_DOWN_MASK) != 0) {
+                    applyScript(editorTextArea.text, statusLabel)
+                }
+            }
+            override fun keyReleased(e: KeyEvent) {}
+        })
+
+        val editorPanel = JPanel(BorderLayout())
+        val bottomBar = JPanel(BorderLayout())
+        bottomBar.add(applyBtn, BorderLayout.WEST)
+        bottomBar.add(statusLabel, BorderLayout.CENTER)
+        editorPanel.add(editorScroll, BorderLayout.CENTER)
+        editorPanel.add(bottomBar, BorderLayout.SOUTH)
+        editorPanel.preferredSize = Dimension(400, 800)
+        editorPanel.minimumSize = Dimension(250, 400)
+
+        val splitPane = JSplitPane(JSplitPane.HORIZONTAL_SPLIT, glPanel, editorPanel)
+        splitPane.resizeWeight = 0.7
+        splitPane.dividerLocation = 700
+
+        contentPane.add(splitPane, BorderLayout.CENTER)
 
         addWindowListener(object : WindowAdapter() {
             override fun windowClosing(e: WindowEvent) {
@@ -84,29 +157,116 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         isVisible = true
     }
 
+    private fun loadScriptFromFile(): String {
+        val file = File("pc-config.txt")
+        return if (file.exists()) {
+            println("  [OK] Loaded pc-config.txt")
+            file.readText()
+        } else {
+            SceneConfigParser().getDefaultScript()
+        }
+    }
+
+    private fun applyScript(script: String, statusLabel: JLabel) {
+        val config = parser.parse(script).getOrNull()
+        if (config == null) {
+            statusLabel.text = "Parse error!"
+            return
+        }
+        currentScript = script
+        currentConfig = config
+        buildWithConfig(config)
+        rebuildCheckboxes()
+        saveScriptToFile(script)
+        statusLabel.text = "Applied ✓"
+    }
+
+    private fun saveScriptToFile(script: String) {
+        try {
+            File("pc-config.txt").writeText(script)
+        } catch (e: Exception) {
+            println("  [WARN] Failed to save pc-config.txt: ${e.message}")
+        }
+    }
+
+    private fun buildWithConfig(config: SceneConfig) {
+        val models = PcCaseModelFactory.buildAll(config)
+        allModels.clear()
+        allModels.putAll(models.mapValues { (_, csg) -> csgToModelData(csg) })
+        visibleModels.clear()
+        visibleModels.putAll(allModels)
+
+        val mbComp = config.components.find { it.type == "motherboard" }
+        if (mbComp != null) {
+            for (op in mbComp.transforms) {
+                if (op is TransformOp.Move) {
+                    mbOffsetX = op.x.toFloat(); mbOffsetY = op.y.toFloat(); mbOffsetZ = op.z.toFloat()
+                }
+            }
+        }
+        glCanvas?.display()
+    }
+
     private fun createCheckboxes(): JPanel {
         val panel = JPanel(FlowLayout(FlowLayout.LEFT))
-        val boxes = mutableMapOf<String, JCheckBox>()
-        val labels = listOf(
-            "frame_vertical" to "Frame (vert.)",
-            "frame_horizontal" to "Frame (horiz.)",
-            "motherboard" to "Motherboard",
-            "gpu" to "GPU",
-            "psu_back" to "PSU (back)",
-            "psu_front" to "PSU (front)",
-            "cooler" to "Cooler"
-        )
-        for ((key, label) in labels) {
+        for ((key, _) in allModels) {
+            val label = when {
+                key.startsWith("frame_vertical") -> "Frame (vert.)"
+                key.startsWith("frame_horizontal") -> "Frame (horiz.)"
+                key == "motherboard" -> "Motherboard"
+                key == "gpu" -> "GPU"
+                key.startsWith("psu") -> "PSU"
+                key == "cooler" -> "Cooler"
+                key == "radiator" -> "Radiator"
+                else -> key
+            }
+            if (checkboxBoxes.any { it.value.text == label }) continue
             val cb = JCheckBox(label, true)
             cb.addActionListener {
                 visibleModels.clear()
-                visibleModels.putAll(allModels.filterKeys { k -> boxes[k]?.isSelected ?: true })
+                visibleModels.putAll(allModels.filterKeys { k ->
+                    checkboxBoxes.any { (ck, ccb) ->
+                        ccb.isSelected && (k == ck || k.startsWith("${ck}_"))
+                    }
+                })
                 glCanvas?.display()
             }
-            boxes[key] = cb
+            checkboxBoxes[key] = cb
             panel.add(cb)
         }
         return panel
+    }
+
+    private fun rebuildCheckboxes() {
+        checkboxBoxes.clear()
+        checkboxPanel.removeAll()
+        for ((key, _) in allModels) {
+            val label = when {
+                key.startsWith("frame_vertical") -> "Frame (vert.)"
+                key.startsWith("frame_horizontal") -> "Frame (horiz.)"
+                key == "motherboard" -> "Motherboard"
+                key == "gpu" -> "GPU"
+                key.startsWith("psu") -> "PSU"
+                key == "cooler" -> "Cooler"
+                key == "radiator" -> "Radiator"
+                else -> key
+            }
+            if (checkboxBoxes.any { it.value.text == label }) continue
+            val cb = JCheckBox(label, true)
+            cb.addActionListener {
+                visibleModels.clear()
+                visibleModels.putAll(allModels.filterKeys { k ->
+                    checkboxBoxes.any { (ck, ccb) ->
+                        ccb.isSelected && (k == ck || k.startsWith("${ck}_"))
+                    }
+                })
+                glCanvas?.display()
+            }
+            checkboxBoxes[key] = cb
+            checkboxPanel.add(cb)
+        }
+        checkboxPanel.revalidate()
+        checkboxPanel.repaint()
     }
 
     override fun init(drawable: GLAutoDrawable) {
@@ -130,7 +290,6 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         gl.glLightfv(GLLightingFunc.GL_LIGHT0, GLLightingFunc.GL_DIFFUSE, lightDiffuse, 0)
         gl.glLightfv(GLLightingFunc.GL_LIGHT0, GLLightingFunc.GL_POSITION, lightPosition, 0)
 
-        // Загрузка текстуры материнской платы
         try {
             val texFile = listOf(File("motherboard.png"), File("../motherboard.png"))
                 .firstOrNull { it.exists() }
@@ -149,7 +308,6 @@ class Main(title: String?) : JFrame(title), GLEventListener {
             e.printStackTrace()
         }
 
-        // Загрузка текстуры нижней стороны материнской платы
         try {
             val texFile = listOf(File("motherboard_down.png"), File("../motherboard_down.png"))
                 .firstOrNull { it.exists() }
@@ -190,8 +348,7 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         gl.glRotatef(camPitch, 1f, 0f, 0f)
         gl.glRotatef(camYaw, 0f, 0f, 1f)
 
-        // 1. Материнка — записывает depth на уровне платы
-        visibleModels["motherboard"]?.let { md ->
+        motherboardModel()?.let { md ->
             gl.glBegin(GL2.GL_TRIANGLES)
             var vi = 0; var ni = 0
             for (i in 0 until md.verticesCount) {
@@ -203,29 +360,23 @@ class Main(title: String?) : JFrame(title), GLEventListener {
             gl.glEnd()
         }
 
-        // 2. Текстуры — GL_ALWAYS + depthMask=false, рисуются поверх материнки
         gl.glDepthMask(false)
         gl.glDepthFunc(GL2.GL_ALWAYS)
 
-        // Определяем какая сторона материнки видна камере
-        // Нормаль верхней грани (0,0,1) после поворота камеры
         val rx = Math.toRadians(camPitch.toDouble())
         val ry = Math.toRadians(camYaw.toDouble())
         val nzAfterRot = Math.cos(rx) * Math.cos(ry)
         if (nzAfterRot > 0) {
-            // Верхняя сторона видна — рисуем верхнюю текстуру
             drawMotherboardTexture(gl)
         } else {
-            // Нижняя сторона видна — рисуем нижнюю текстуру
             drawMotherboardBottomTexture(gl)
         }
 
         gl.glDepthFunc(GL2.GL_LEQUAL)
         gl.glDepthMask(true)
 
-        // 3. Остальные компоненты — перекрывают текстуру где стоят выше материнки
         for ((name, md) in visibleModels) {
-            if (name == "motherboard") continue
+            if (name == "motherboard" || name.startsWith("motherboard_")) continue
             gl.glBegin(GL2.GL_TRIANGLES)
             var vi = 0; var ni = 0
             for (i in 0 until md.verticesCount) {
@@ -431,14 +582,18 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         override fun keyReleased(e: KeyEvent) {}
     }
 
-    private fun buildPcCaseModels(): Map<String, CSG> = PcCaseModelFactory.buildAll()
+    private fun motherboardModel(): ModelData? =
+        visibleModels.entries.firstOrNull { it.key == "motherboard" || it.key.startsWith("motherboard_") }?.value
+
+    private fun hasMotherboard(): Boolean =
+        visibleModels.keys.any { it == "motherboard" || it.startsWith("motherboard_") }
 
     private fun drawMotherboardTexture(gl: GL2) {
-        if (!visibleModels.containsKey("motherboard") || mbTexture == null) return
+        if (!hasMotherboard() || mbTexture == null) return
 
-        val mbZ = PcCaseModelFactory.MB_OFFSET_Z.toFloat()
-        val mx = PcCaseModelFactory.MB_OFFSET_X.toFloat()
-        val my = PcCaseModelFactory.MB_OFFSET_Y.toFloat()
+        val mbZ = mbOffsetZ
+        val mx = mbOffsetX
+        val my = mbOffsetY
         val hw = 305f / 2
         val hd = 205.8f / 2
 
@@ -463,11 +618,11 @@ class Main(title: String?) : JFrame(title), GLEventListener {
     }
 
     private fun drawMotherboardBottomTexture(gl: GL2) {
-        if (!visibleModels.containsKey("motherboard") || mbTextureBottom == null) return
+        if (!hasMotherboard() || mbTextureBottom == null) return
 
-        val mbZ = (PcCaseModelFactory.MB_OFFSET_Z - 1.6).toFloat()
-        val mx = PcCaseModelFactory.MB_OFFSET_X.toFloat()
-        val my = PcCaseModelFactory.MB_OFFSET_Y.toFloat()
+        val mbZ = mbOffsetZ - 1.6f
+        val mx = mbOffsetX
+        val my = mbOffsetY
         val hw = 305f / 2
         val hd = 205.8f / 2
 

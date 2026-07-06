@@ -66,8 +66,9 @@ class SceneConfigParser {
         }.toList()
     }
 
-    private inner class Parser(private val lines: List<String>) {
+        private inner class Parser(private val lines: List<String>) {
         private var index = 0
+        private var inBlock = false
 
         fun parseFrame(): FrameResult {
             while (index < lines.size) {
@@ -130,8 +131,9 @@ class SceneConfigParser {
                 val ops = tokens.map { (cmd, content) ->
                     parseOperation(cmd, content, line)
                 }
+                inBlock = line.trim().endsWith("{")
                 val children = parseArgument(line)
-                var result: Expr = if (children.size == 1) children[0] else Expr.Transform(ops.last(), children)
+                var result: Expr = Expr.Transform(ops.last(), children)
                 for (i in (ops.size - 2) downTo 0) {
                     result = Expr.Transform(ops[i], listOf(result))
                 }
@@ -164,8 +166,9 @@ class SceneConfigParser {
                 throw ParseError("expected argument after operation", currentLine)
             }
             val line = lines[index]
-            if (line == "{") {
-                index++
+            if (inBlock || line == "{") {
+                inBlock = false
+                if (line == "{") index++
                 val children = mutableListOf<Expr>()
                 while (index < lines.size && lines[index].trim() != "}") {
                     val child = parseLine()
