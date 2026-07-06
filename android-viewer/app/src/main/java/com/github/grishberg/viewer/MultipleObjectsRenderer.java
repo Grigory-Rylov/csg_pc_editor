@@ -1,9 +1,12 @@
 package com.github.grishberg.viewer;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
+import android.opengl.GLUtils;
 import android.opengl.Matrix;
 
 import android.os.Handler;
@@ -11,6 +14,8 @@ import android.os.Looper;
 import com.github.grishberg.cad3d.R;
 import com.github.grishberg.cad3d.common.DebugPoint;
 import com.github.grishberg.cad3d.common.RawResourceReader;
+import com.github.grishberg.cad3d.pccase.PcCaseModelFactory;
+import com.github.grishberg.cad3d.util.PcCaseSceneBuilder;
 import com.github.grishberg.cad3d.ui.ControlledRenderer;
 import com.github.grishberg.cad3d.ui.DebugPointUi;
 import com.github.grishberg.cad3d.ui.DebugPointsRenderer;
@@ -19,6 +24,8 @@ import com.github.grishberg.cad3d.ui.DebugVisualizerImpl;
 import com.github.grishberg.cad3d.util.BuffersContainer;
 import com.github.grishberg.cad3d.util.SceneBuilder;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -197,6 +204,19 @@ public class MultipleObjectsRenderer implements GLSurfaceView.Renderer, Controll
     /**
      * Initialize the model data.
      */
+    // Texture overlay fields
+    private int textureProgramHandle;
+    private int texMVPMatrixHandle;
+    private int texPositionHandle;
+    private int texCoordinateHandle;
+    private int texSamplerHandle;
+    private int topTextureId;
+    private int bottomTextureId;
+    private FloatBuffer topQuadVertexBuffer;
+    private FloatBuffer topQuadTexCoordBuffer;
+    private FloatBuffer bottomQuadVertexBuffer;
+    private FloatBuffer bottomQuadTexCoordBuffer;
+
     private final Handler handler = new Handler(Looper.getMainLooper());
     public MultipleObjectsRenderer(Context context, SceneBuilder builder, Runnable invalidator) {
         this.context = context;
@@ -435,6 +455,107 @@ public class MultipleObjectsRenderer implements GLSurfaceView.Renderer, Controll
         GLES20.glUseProgram(programHandle);
         // Initialize the accumulated rotation matrix
         Matrix.setIdentityM(mAccumulatedRotation, 0);
+
+        // Setup texture shader program
+        setupTextureProgram();
+        loadTextures();
+        setupQuadBuffers();
+    }
+
+    private void setupTextureProgram() {
+        final String texVertexShader = RawResourceReader.readTextFileFromRawResource(
+            context, R.raw.texture_vertex_shader);
+        final String texFragmentShader = RawResourceReader.readTextFileFromRawResource(
+            context, R.raw.texture_fragment_shader);
+
+        int texVertHandle = GLES20.glCreateShader(GLES20.GL_VERTEX_SHADER);
+        GLES20.glShaderSource(texVertHandle, texVertexShader);
+        GLES20.glCompileShader(texVertHandle);
+
+        int texFragHandle = GLES20.glCreateShader(GLES20.GL_FRAGMENT_SHADER);
+        GLES20.glShaderSource(texFragHandle, texFragmentShader);
+        GLES20.glCompileShader(texFragHandle);
+
+        textureProgramHandle = GLES20.glCreateProgram();
+        GLES20.glAttachShader(textureProgramHandle, texVertHandle);
+        GLES20.glAttachShader(textureProgramHandle, texFragHandle);
+        GLES20.glBindAttribLocation(textureProgramHandle, 0, "a_Position");
+        GLES20.glBindAttribLocation(textureProgramHandle, 1, "a_TexCoordinate");
+        GLES20.glLinkProgram(textureProgramHandle);
+
+        texMVPMatrixHandle = GLES20.glGetUniformLocation(textureProgramHandle, "u_MVPMatrix");
+        texPositionHandle = GLES20.glGetAttribLocation(textureProgramHandle, "a_Position");
+        texCoordinateHandle = GLES20.glGetAttribLocation(textureProgramHandle, "a_TexCoordinate");
+        texSamplerHandle = GLES20.glGetUniformLocation(textureProgramHandle, "u_Texture");
+    }
+
+    private void loadTextures() {
+        topTextureId = loadTextureFromAsset("motherboard.png");
+        bottomTextureId = loadTextureFromAsset("motherboard_down.png");
+    }
+
+    private int loadTextureFromAsset(String fileName) {
+        int[] textureHandle = new int[1];
+        GLES20.glGenTextures(1, textureHandle, 0);
+        if (textureHandle[0] != 0) {
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inScaled = false;
+            try {
+                Bitmap bitmap = BitmapFactory.decodeStream(
+                    context.getAssets().open(fileName), null, options);
+                GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureHandle[0]);
+                GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D,
+                    GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR);
+                GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D,
+                    GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
+                GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, bitmap, 0);
+                bitmap.recycle();
+            } catch (Exception e) {
+                android.util.Log.e("Texture", "Failed to load: " + fileName, e);
+            }
+        }
+        return textureHandle[0];
+    }
+
+    private void setupQuadBuffers() {
+        float mbZ = (float) PcCaseModelFactory.MB_OFFSET_Z;
+        float mbZBottom = (float) (PcCaseModelFactory.MB_OFFSET_Z - 1.6);
+        float mx = (float) PcCaseModelFactory.MB_OFFSET_X;
+        float my = (float) PcCaseModelFactory.MB_OFFSET_Y;
+        float hw = 305f / 2f;
+        float hd = 205.8f / 2f;
+
+        // Top quad vertices (xy plane at mbZ)
+        float[] topVerts = {
+            mx - hw, my - hd, mbZ,
+            mx + hw, my - hd, mbZ,
+            mx + hw, my + hd, mbZ,
+            mx - hw, my + hd, mbZ
+        };
+        float[] topTexCoords = { 0f, 1f, 1f, 1f, 1f, 0f, 0f, 0f };
+
+        // Bottom quad vertices (xy plane at mbZBottom)
+        float[] bottomVerts = {
+            mx - hw, my + hd, mbZBottom,
+            mx + hw, my + hd, mbZBottom,
+            mx + hw, my - hd, mbZBottom,
+            mx - hw, my - hd, mbZBottom
+        };
+        float[] bottomTexCoords = { 0f, 1f, 1f, 1f, 1f, 0f, 0f, 0f };
+
+        topQuadVertexBuffer = createFloatBuffer(topVerts);
+        topQuadTexCoordBuffer = createFloatBuffer(topTexCoords);
+        bottomQuadVertexBuffer = createFloatBuffer(bottomVerts);
+        bottomQuadTexCoordBuffer = createFloatBuffer(bottomTexCoords);
+    }
+
+    private FloatBuffer createFloatBuffer(float[] data) {
+        ByteBuffer bb = ByteBuffer.allocateDirect(data.length * 4);
+        bb.order(ByteOrder.nativeOrder());
+        FloatBuffer fb = bb.asFloatBuffer();
+        fb.put(data);
+        fb.position(0);
+        return fb;
     }
 
     @Override
@@ -510,11 +631,31 @@ public class MultipleObjectsRenderer implements GLSurfaceView.Renderer, Controll
             mapDebugPointsToScreen();
         }
 
-        for (BuffersContainer buffersContainer : targetBuffers) {
+        // Determine motherboard index from builder
+        int mbIdx = -1;
+        if (sceneBuilder instanceof PcCaseSceneBuilder) {
+            mbIdx = ((PcCaseSceneBuilder) sceneBuilder).getMotherboardIndex();
+        }
+
+        // 1. Draw other models — write depth for frame, GPU, cooler, PSU
+        for (int i = 0; i < targetBuffers.size(); i++) {
+            if (i == mbIdx) continue;
             if (wireframeOnly) {
-                drawWireframe(buffersContainer);
+                drawWireframe(targetBuffers.get(i));
             } else {
-                drawTriangle(buffersContainer);
+                drawTriangle(targetBuffers.get(i));
+            }
+        }
+
+        // 2. Draw texture — GL_LEQUAL + depthMask=false, only where no model blocks it
+        drawMotherboardTexture(mMVPMatrix);
+
+        // 3. Draw motherboard model — green PCB fills remaining areas
+        if (mbIdx >= 0 && mbIdx < targetBuffers.size()) {
+            if (wireframeOnly) {
+                drawWireframe(targetBuffers.get(mbIdx));
+            } else {
+                drawTriangle(targetBuffers.get(mbIdx));
             }
         }
 
@@ -618,6 +759,53 @@ public class MultipleObjectsRenderer implements GLSurfaceView.Renderer, Controll
         for (int i = 0; i < vertexCount; i += 3) {
             GLES20.glDrawArrays(GLES20.GL_LINE_LOOP, i, 3);
         }
+    }
+
+    /**
+     * Draws motherboard texture overlay.
+     */
+    private void drawMotherboardTexture(float[] mvpMatrix) {
+        // Determine which face is visible using accumulated rotation
+        float[] normal = {0f, 0f, 1f, 0f};
+        float[] transformedNormal = new float[4];
+        Matrix.multiplyMV(transformedNormal, 0, mAccumulatedRotation, 0, normal, 0);
+
+        boolean showTop = transformedNormal[2] > 0;
+
+        GLES20.glUseProgram(textureProgramHandle);
+        GLES20.glDisable(GLES20.GL_CULL_FACE);
+        GLES20.glDepthFunc(GLES20.GL_ALWAYS);
+        GLES20.glDepthMask(false);
+
+        float[] texMVP = new float[16];
+        float[] tempMVP = new float[16];
+        Matrix.multiplyMM(tempMVP, 0, mViewMatrix, 0, mModelMatrix, 0);
+        Matrix.multiplyMM(texMVP, 0, mProjectionMatrix, 0, tempMVP, 0);
+
+        GLES20.glUniformMatrix4fv(texMVPMatrixHandle, 1, false, texMVP, 0);
+        GLES20.glUniform1i(texSamplerHandle, 0);
+
+        GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, showTop ? topTextureId : bottomTextureId);
+
+        FloatBuffer vertexBuf = showTop ? topQuadVertexBuffer : bottomQuadVertexBuffer;
+        FloatBuffer texCoordBuf = showTop ? topQuadTexCoordBuffer : bottomQuadTexCoordBuffer;
+
+        vertexBuf.position(0);
+        GLES20.glVertexAttribPointer(texPositionHandle, 3, GLES20.GL_FLOAT, false, 0, vertexBuf);
+        GLES20.glEnableVertexAttribArray(texPositionHandle);
+
+        texCoordBuf.position(0);
+        GLES20.glVertexAttribPointer(texCoordinateHandle, 2, GLES20.GL_FLOAT, false, 0, texCoordBuf);
+        GLES20.glEnableVertexAttribArray(texCoordinateHandle);
+
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, 0, 4);
+
+        GLES20.glDisableVertexAttribArray(texPositionHandle);
+        GLES20.glDisableVertexAttribArray(texCoordinateHandle);
+        GLES20.glDepthFunc(GLES20.GL_LEQUAL);
+        GLES20.glDepthMask(true);
+        GLES20.glEnable(GLES20.GL_CULL_FACE);
     }
 
     /**

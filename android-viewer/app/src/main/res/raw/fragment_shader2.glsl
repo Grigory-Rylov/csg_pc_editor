@@ -13,7 +13,7 @@ void main()                     // The entry point for our fragment shader.
 	// Get a lighting direction vector from the light to the vertex.
     vec3 lightVector = normalize(u_LightPos - v_Position);
     // Использование интенсивности и радиуса
-    float intensity = 1.2; // Увеличение интенсивности света
+    float intensity = 0.8; // Интенсивность света
     float range = 500.0; // Увеличение радиуса действия света
 
     // Нормализованное затухание света на основе расстояния и радиуса
@@ -28,7 +28,7 @@ void main()                     // The entry point for our fragment shader.
 	diffuse = diffuse * intensity * attenuation;
 
     // Add ambient lighting
-    float ambient = 0.9;
+    float ambient = 0.3;
     diffuse = diffuse + ambient;
     //diffuse = diffuse + 0.7;
 

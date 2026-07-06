@@ -8,6 +8,8 @@ class PcCaseSceneBuilder : SceneBuilder {
 
     private val buffers = mutableListOf<VertexHolder>()
     private var listener: SceneBuilder.ReadyListener? = null
+    var motherboardIndex: Int = -1
+        private set
 
     override fun setConfig(cfg: KeyboardConfig) {
         // no op
@@ -19,10 +21,16 @@ class PcCaseSceneBuilder : SceneBuilder {
 
     override fun requestBuffers() {
         buffers.clear()
+        motherboardIndex = -1
 
         val models = PcCaseModelFactory.buildAll()
-        for ((_, csg) in models) {
+        var idx = 0
+        for ((name, csg) in models) {
             buffers.add(csg.getVerticesAndColorsAsFloatArray())
+            if (name == "motherboard") {
+                motherboardIndex = idx
+            }
+            idx++
         }
 
         listener?.onReady(buffers)
