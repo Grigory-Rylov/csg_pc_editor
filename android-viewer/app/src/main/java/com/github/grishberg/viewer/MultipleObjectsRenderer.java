@@ -157,6 +157,11 @@ public class MultipleObjectsRenderer implements GLSurfaceView.Renderer, Controll
     private int mColorHandle;
 
     /**
+     * Handle to the main shader program.
+     */
+    private int programHandle;
+
+    /**
      * How many bytes per float.
      */
     private final int mBytesPerFloat = 4;
@@ -408,7 +413,7 @@ public class MultipleObjectsRenderer implements GLSurfaceView.Renderer, Controll
         }
 
         // Create a program object and store the handle to it.
-        int programHandle = GLES20.glCreateProgram();
+        programHandle = GLES20.glCreateProgram();
 
         if (programHandle != 0) {
             // Bind the vertex shader to the program.
@@ -589,7 +594,7 @@ public class MultipleObjectsRenderer implements GLSurfaceView.Renderer, Controll
 
         // Calculate position of the light. Rotate and then push into the distance.
         Matrix.setIdentityM(mLightModelMatrix, 0);
-        Matrix.translateM(mLightModelMatrix, 0, 0.0f, 200.0f, 200.0f);
+        Matrix.translateM(mLightModelMatrix, 0, 0.0f, 50.0f, 50.0f);
         Matrix.rotateM(mLightModelMatrix, 0, angleInDegrees, 0.0f, 1.0f, 0.0f);
         Matrix.translateM(mLightModelMatrix, 0, 0.0f, 0.0f, 3.5f);
 
@@ -631,33 +636,16 @@ public class MultipleObjectsRenderer implements GLSurfaceView.Renderer, Controll
             mapDebugPointsToScreen();
         }
 
-        // Determine motherboard index from builder
-        int mbIdx = -1;
-        if (sceneBuilder instanceof PcCaseSceneBuilder) {
-            mbIdx = ((PcCaseSceneBuilder) sceneBuilder).getMotherboardIndex();
-        }
-
-        // 1. Draw other models — write depth for frame, GPU, cooler, PSU
-        for (int i = 0; i < targetBuffers.size(); i++) {
-            if (i == mbIdx) continue;
+        for (BuffersContainer buffersContainer : targetBuffers) {
             if (wireframeOnly) {
-                drawWireframe(targetBuffers.get(i));
+                drawWireframe(buffersContainer);
             } else {
-                drawTriangle(targetBuffers.get(i));
+                drawTriangle(buffersContainer);
             }
         }
 
-        // 2. Draw texture — GL_LEQUAL + depthMask=false, only where no model blocks it
+        // Draw motherboard texture overlay
         drawMotherboardTexture(mMVPMatrix);
-
-        // 3. Draw motherboard model — green PCB fills remaining areas
-        if (mbIdx >= 0 && mbIdx < targetBuffers.size()) {
-            if (wireframeOnly) {
-                drawWireframe(targetBuffers.get(mbIdx));
-            } else {
-                drawTriangle(targetBuffers.get(mbIdx));
-            }
-        }
 
         drawLight();
         
@@ -675,6 +663,9 @@ public class MultipleObjectsRenderer implements GLSurfaceView.Renderer, Controll
      * Draws a triangle from the given vertex data.
      */
     private void drawTriangle(final BuffersContainer buffersContainer) {
+        // Ensure main shader program is active
+        GLES20.glUseProgram(programHandle);
+
         // Сбрасываем состояние атрибутов для предотвращения конфликтов
         GLES20.glDisableVertexAttribArray(mPositionHandle);
         GLES20.glDisableVertexAttribArray(mColorHandle);
