@@ -7,7 +7,8 @@ class PcFrame(
     private val width: Double,
     private val depth: Double,
     private val height: Double,
-    private val levels: List<Double> = emptyList()
+    private val levels: List<Double> = emptyList(),
+    private val bottomBeams: List<Double> = emptyList()
 ) {
     fun buildVertical(): Abstract3dModel {
         val p = AluminumProfile.PROFILE_SIZE
@@ -45,16 +46,10 @@ class PcFrame(
         beams.add(AluminumProfile.vertical(beamD).move(-hw + p / 2, 0.0, height - p / 2))
         beams.add(AluminumProfile.vertical(beamD).move(hw - p / 2, 0.0, height - p / 2))
 
-        // Motherboard support rails (along Y, under screw positions)
-        // Default config: motherboard at x=90, screws at X=-120..+100 relative
-        val mbX1 = -30.0   // under leftmost screw (90-120)
-        val mbX2 = 190.0   // under rightmost screw (90+100)
-        beams.add(AluminumProfile.vertical(beamD).move(mbX1, 0.0, p / 2))
-        beams.add(AluminumProfile.vertical(beamD).move(mbX2, 0.0, p / 2))
-
-        // PSU support rails (left side, bottom, along Y)
-        beams.add(AluminumProfile.vertical(beamD).move(-245.0, 0.0, p / 2))
-        beams.add(AluminumProfile.vertical(beamD).move(-195.0, 0.0, p / 2))
+        // Additional bottom beams along Y at specified X offsets (via b= param)
+        for (bx in bottomBeams) {
+            beams.add(AluminumProfile.vertical(beamD).move(bx, 0.0, p / 2))
+        }
 
         // Intermediate levels
         for (levelZ in levels) {

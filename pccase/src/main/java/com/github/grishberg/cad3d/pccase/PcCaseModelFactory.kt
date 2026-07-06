@@ -1,6 +1,7 @@
 package com.github.grishberg.cad3d.pccase
 
 import eu.printingin3d.javascad.coords.Angles3d
+import eu.printingin3d.javascad.models.Abstract3dModel
 import eu.printingin3d.javascad.tranzitions.Union
 import eu.printingin3d.javascad.vrl.ColorFacetGenerationContext
 import eu.printingin3d.javascad.vrl.FacetGenerationContext
@@ -35,13 +36,17 @@ object PcCaseModelFactory {
         val coolerContext: FacetGenerationContext = ColorFacetGenerationContext(eu.printingin3d.javascad.utils.Color(180, 180, 180))
         coolerContext.setFn(8)
 
+        val radiatorContext: FacetGenerationContext = ColorFacetGenerationContext(eu.printingin3d.javascad.utils.Color(50, 50, 55))
+        radiatorContext.setFn(8)
+
         AluminumProfile.reset()
 
         val frameCfg = PcFrame(
             width = config.frameWidth,
             depth = config.frameDepth,
             height = config.frameHeight,
-            levels = config.frameLevels
+            levels = config.frameLevels,
+            bottomBeams = config.frameBottomBeams
         )
         val frameVertical = frameCfg.buildVertical()
         val frameHorizontal = frameCfg.buildHorizontal()
@@ -70,50 +75,67 @@ object PcCaseModelFactory {
     }
 
     private class ComponentModelBuilder(components: List<ComponentPlacement>) {
-        private val result = mutableListOf<Triple<String, eu.printingin3d.javascad.models.Abstract3dModel, FacetGenerationContext>>()
+        private val result = mutableListOf<Triple<String, Abstract3dModel, FacetGenerationContext>>()
 
         init {
             val mbContext = ColorFacetGenerationContext(eu.printingin3d.javascad.utils.Color.GREEN).apply { setFn(8) }
             val gpuContext = ColorFacetGenerationContext(eu.printingin3d.javascad.utils.Color(200, 30, 30)).apply { setFn(8) }
             val psuContext = ColorFacetGenerationContext(eu.printingin3d.javascad.utils.Color(60, 60, 60)).apply { setFn(8) }
             val coolerContext = ColorFacetGenerationContext(eu.printingin3d.javascad.utils.Color(180, 180, 180)).apply { setFn(8) }
+            val radiatorContext = ColorFacetGenerationContext(eu.printingin3d.javascad.utils.Color(50, 50, 55)).apply { setFn(8) }
 
             for (cp in components) {
-                when (cp.type) {
+                val name: String
+                val context: FacetGenerationContext
+
+                val baseModel: Abstract3dModel = when (cp.type) {
                     "motherboard" -> {
-                        val model = Motherboard().build().move(cp.x, cp.y, cp.z)
-                        result.add(Triple("motherboard", model, mbContext))
+                        name = "motherboard"
+                        context = mbContext
+                        Motherboard().build()
                     }
                     "gpu" -> {
-                        val parts = mutableListOf<eu.printingin3d.javascad.models.Abstract3dModel>()
+                        name = "gpu"
+                        context = gpuContext
+                        val parts = mutableListOf<Abstract3dModel>()
                         for (i in 0 until cp.count) {
                             val offset = if (cp.count > 1) i * cp.spacing else 0.0
-                            parts.add(Gpu().build().move(
-                                cp.x + offset,
-                                cp.y,
-                                cp.z
-                            ))
+                            var gpu = Gpu().build()
+                            if (offset != 0.0) gpu = gpu.moveX(offset)
+                            parts.add(gpu)
                         }
-                        val model = if (parts.size == 1) parts[0] else Union(parts)
-                        result.add(Triple("gpu", model, gpuContext))
+                        if (parts.size == 1) parts[0] else Union(parts)
                     }
                     "psu" -> {
-                        var model = Psu().build()
-                        if (cp.rotation != 0.0) {
-                            model = model.rotate(Angles3d.xOnly(cp.rotation))
-                        }
-                        model = model.move(cp.x, cp.y, cp.z)
-                        val name = "psu_${result.size}"
-                        result.add(Triple(name, model, psuContext))
+                        name = "psu_${result.size}"
+                        context = psuContext
+                        Psu().build()
                     }
                     "cooler" -> {
-                        val model = Cooler().build().move(cp.x, cp.y, cp.z)
-                        result.add(Triple("cooler", model, coolerContext))
+                        name = "cooler"
+                        context = coolerContext
+                        Cooler().build()
+                    }
+                    "radiator" -> {
+                        name = "radiator"
+                        context = radiatorContext
+                        Radiator().build()
+                    }
+                    else -> throw IllegalArgumentException("unknown type: ${cp.type}")
+                }
+
+                var model = baseModel
+                for (op in cp.transforms) {
+                    model = when (op) {
+                        is TransformOp.Rotate -> model.rotate(op.angles)
+                        is TransformOp.Move -> model.move(op.x, op.y, op.z)
                     }
                 }
+
+                result.add(Triple(name, model, context))
             }
         }
 
-        fun build(): List<Triple<String, eu.printingin3d.javascad.models.Abstract3dModel, FacetGenerationContext>> = result
+        fun build(): List<Triple<String, Abstract3dModel, FacetGenerationContext>> = result
     }
 }

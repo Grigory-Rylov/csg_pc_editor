@@ -3,6 +3,7 @@ package com.github.grishberg.cad3d.util
 import com.github.grishberg.cad3d.keyboard.cfg.KeyboardConfig
 import com.github.grishberg.cad3d.pccase.PcCaseModelFactory
 import com.github.grishberg.cad3d.pccase.SceneConfig
+import com.github.grishberg.cad3d.pccase.TransformOp
 import eu.printingin3d.javascad.vrl.VertexHolder
 
 class PcCaseSceneBuilder : SceneBuilder {
@@ -48,9 +49,15 @@ class PcCaseSceneBuilder : SceneBuilder {
 
         val mb = currentConfig.components.firstOrNull { it.type == "motherboard" }
         if (mb != null) {
-            motherboardX = mb.x.toFloat()
-            motherboardY = mb.y.toFloat()
-            motherboardZ = mb.z.toFloat()
+            var mx = 0.0; var my = 0.0; var mz = 0.0
+            for (op in mb.transforms) {
+                if (op is TransformOp.Move) {
+                    mx += op.x; my += op.y; mz += op.z
+                }
+            }
+            motherboardX = mx.toFloat()
+            motherboardY = my.toFloat()
+            motherboardZ = mz.toFloat()
         }
 
         listener?.onReady(buffers)
