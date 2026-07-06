@@ -64,7 +64,7 @@ object PcCaseModelFactory {
         val psuFront = Psu().build().rotate(Angles3d.xOnly(90.0)).align(Side.TOP_OUT_CENTER, mb).move(pcuX, -hd + 70.0, 0)
 
         // Building CPU cooler (ARCTIC Freezer 4U-M)
-        val cooler = Cooler().build().align(Side.TOP_OUT_CENTER, mb).move(65.0, -20.0, 0.0)
+        val cooler = Cooler().build().align(Side.TOP_OUT_CENTER, mb).move(65.0, -20.0, 7.0)
 
         val report = AluminumProfile.generateReport()
         println(report)

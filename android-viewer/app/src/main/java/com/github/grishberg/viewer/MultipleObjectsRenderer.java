@@ -592,14 +592,13 @@ public class MultipleObjectsRenderer implements GLSurfaceView.Renderer, Controll
         // Do a complete rotation every 10 seconds.
         float angleInDegrees = (360.0f / 10000.0f);
 
-        // Calculate position of the light. Rotate and then push into the distance.
-        Matrix.setIdentityM(mLightModelMatrix, 0);
-        Matrix.translateM(mLightModelMatrix, 0, 0.0f, 50.0f, 50.0f);
-        Matrix.rotateM(mLightModelMatrix, 0, angleInDegrees, 0.0f, 1.0f, 0.0f);
-        Matrix.translateM(mLightModelMatrix, 0, 0.0f, 0.0f, 3.5f);
-
-        Matrix.multiplyMV(mLightPosInWorldSpace, 0, mLightModelMatrix, 0, mLightPosInModelSpace, 0);
-        Matrix.multiplyMV(mLightPosInEyeSpace, 0, mViewMatrix, 0, mLightPosInWorldSpace, 0);
+        // Light position directly in eye space — fixed relative to camera, not model.
+        // Camera is at origin looking along -Z; Y is up.
+        // Place light above and slightly to the side, in front of the camera.
+        mLightPosInEyeSpace[0] = 30.0f;  // offset to the side (X)
+        mLightPosInEyeSpace[1] = 50.0f;  // above (Y)
+        mLightPosInEyeSpace[2] = -80.0f; // in front of camera (-Z)
+        mLightPosInEyeSpace[3] = 0.0f;
 
         // Draw the triangle facing straight on.
         Matrix.setIdentityM(mModelMatrix, 0);
