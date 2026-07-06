@@ -66,6 +66,7 @@ class Cad3dActivity : AppCompatActivity() {
             // Set up AppBar (Toolbar)
             val toolbar = findViewById<Toolbar>(R.id.toolbar)
             setSupportActionBar(toolbar)
+            supportActionBar?.title = "PC Case Editor"
 
             // Apply saved script on startup
             SceneConfigParser().parse(lastValidScript).onSuccess { config ->

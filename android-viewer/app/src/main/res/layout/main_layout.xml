@@ -10,13 +10,16 @@
 
 	<!-- AppBar поверх GL-вью -->
 	<androidx.appcompat.widget.Toolbar
+		xmlns:app="http://schemas.android.com/apk/res-auto"
 		android:id="@+id/toolbar"
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
 		android:layout_gravity="top"
-		android:background="#CC000000"
-		android:title="PC Case Editor"
-		android:titleTextColor="#FFFFFF" />
+		android:background="#EEEEEE"
+		app:title="PC Case Editor"
+		app:titleTextColor="#000000"
+		app:theme="@style/ToolbarTheme"
+		app:popupTheme="@style/PopupTheme" />
 
 
 	<com.github.grishberg.viewer.DebugOverlayView

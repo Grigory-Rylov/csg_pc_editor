@@ -5,4 +5,10 @@
         <item name="colorPrimaryDark">#222222</item>
         <item name="colorAccent">#4488FF</item>
     </style>
+
+    <style name="ToolbarTheme" parent="ThemeOverlay.AppCompat.ActionBar">
+    </style>
+
+    <style name="PopupTheme" parent="ThemeOverlay.AppCompat.Light">
+    </style>
 </resources>
