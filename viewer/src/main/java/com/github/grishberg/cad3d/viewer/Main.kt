@@ -60,6 +60,7 @@ class Main(title: String?) : JFrame(title), GLEventListener {
 
     companion object {
         private const val PAN_SENSITIVITY = 0.5f
+        private const val VIEW_CONF_FILE = "scene-view.conf"
     }
 
     private var mbTexture: Texture? = null
@@ -85,6 +86,7 @@ class Main(title: String?) : JFrame(title), GLEventListener {
             System.err.println("[EDT] Uncaught exception on " + thread.name + ":")
             ex.printStackTrace()
         }
+        loadViewConf()
         title ?: "PC Case Viewer (OpenGL)"
 
         val parsedConfig = parser.parse(currentScript).getOrNull()
@@ -171,6 +173,7 @@ class Main(title: String?) : JFrame(title), GLEventListener {
 
         addWindowListener(object : WindowAdapter() {
             override fun windowClosing(e: WindowEvent) {
+                saveViewConf()
                 if (animator.isAnimating) animator.stop()
                 dispose()
             }
@@ -208,6 +211,38 @@ class Main(title: String?) : JFrame(title), GLEventListener {
             File("pc-config.txt").writeText(script)
         } catch (e: Exception) {
             println("  [WARN] Failed to save pc-config.txt: ${e.message}")
+        }
+    }
+
+    private fun saveViewConf() {
+        try {
+            File(VIEW_CONF_FILE).writeText(
+                "camPitch=$camPitch\ncamYaw=$camYaw\ncamDist=$camDist\npanX=$panX\npanY=$panY\n"
+            )
+        } catch (e: Exception) {
+            println("  [WARN] Failed to save $VIEW_CONF_FILE: ${e.message}")
+        }
+    }
+
+    private fun loadViewConf() {
+        val file = File(VIEW_CONF_FILE)
+        if (!file.exists()) return
+        try {
+            val lines = file.readLines()
+            for (line in lines) {
+                val parts = line.split('=', limit = 2)
+                if (parts.size != 2) continue
+                when (parts[0]) {
+                    "camPitch" -> camPitch = parts[1].toFloatOrNull() ?: camPitch
+                    "camYaw" -> camYaw = parts[1].toFloatOrNull() ?: camYaw
+                    "camDist" -> camDist = parts[1].toFloatOrNull() ?: camDist
+                    "panX" -> panX = parts[1].toFloatOrNull() ?: panX
+                    "panY" -> panY = parts[1].toFloatOrNull() ?: panY
+                }
+            }
+            println("  [OK] Loaded $VIEW_CONF_FILE")
+        } catch (e: Exception) {
+            println("  [WARN] Failed to load $VIEW_CONF_FILE: ${e.message}")
         }
     }
 

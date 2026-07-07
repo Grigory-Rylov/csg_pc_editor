@@ -59,15 +59,17 @@ object PcCaseModelFactory {
         val modelBuilder = ComponentModelBuilder(config.components)
         modelBuilder.build().forEach { entry ->
             var csg = entry.baseModel.toCSG(entry.context)
+            var tx = 0.0; var ty = 0.0; var tz = 0.0
             for (op in entry.transforms) {
-                csg = when (op) {
-                    is TransformOp.Move -> csg.transformed(
-                        TransformationFactory.getTranlationMatrix(V3d(op.x, op.y, op.z))
-                    )
-                    is TransformOp.Rotate -> csg.transformed(
-                        TransformationFactory.getRotationMatrix(op.angles)
-                    )
+                when (op) {
+                    is TransformOp.Move -> { tx += op.x; ty += op.y; tz += op.z }
+                    is TransformOp.Rotate -> {
+                        csg = csg.transformed(TransformationFactory.getRotationMatrix(op.angles))
+                    }
                 }
+            }
+            if (tx != 0.0 || ty != 0.0 || tz != 0.0) {
+                csg = csg.transformed(TransformationFactory.getTranlationMatrix(V3d(tx, ty, tz)))
             }
             results[entry.name] = csg
         }
