@@ -102,6 +102,7 @@ class DslTokenMaker(private val colors: SyntaxColors = SyntaxColors()) : Abstrac
 
                 else -> {
                     addToken(array, i, i, TokenTypes.IDENTIFIER, startOffset + i - segmentOffset)
+                    i++
                 }
             }
         }
