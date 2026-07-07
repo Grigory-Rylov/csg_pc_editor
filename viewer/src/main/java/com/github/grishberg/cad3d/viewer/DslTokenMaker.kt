@@ -56,11 +56,11 @@ class DslTokenMaker(private val colors: SyntaxColors = SyntaxColors()) : Abstrac
                 ch == '#' -> {
                     val start = i
                     while (i < end && array[i] != '\n' && array[i] != '\r') i++
-                    addToken(array, start, i - 1, TokenTypes.COMMENT_EOL, startOffset)
+                    addToken(array, start, i - 1, TokenTypes.COMMENT_EOL, startOffset + start)
                 }
 
                 ch == '(' || ch == ')' || ch == '{' || ch == '}' || ch == '=' -> {
-                    addToken(array, i, i, TokenTypes.SEPARATOR, startOffset)
+                    addToken(array, i, i, TokenTypes.SEPARATOR, startOffset + i)
                     i++
                 }
 
@@ -68,13 +68,13 @@ class DslTokenMaker(private val colors: SyntaxColors = SyntaxColors()) : Abstrac
                     val start = i
                     i++
                     while (i < end && (array[i].isDigit() || array[i] == '.')) i++
-                    addToken(array, start, i - 1, TokenTypes.LITERAL_NUMBER_FLOAT, startOffset)
+                    addToken(array, start, i - 1, TokenTypes.LITERAL_NUMBER_FLOAT, startOffset + start)
                 }
 
                 ch.isDigit() -> {
                     val start = i
                     while (i < end && (array[i].isDigit() || array[i] == '.')) i++
-                    addToken(array, start, i - 1, TokenTypes.LITERAL_NUMBER_FLOAT, startOffset)
+                    addToken(array, start, i - 1, TokenTypes.LITERAL_NUMBER_FLOAT, startOffset + start)
                 }
 
                 ch.isLetter() || ch == '_' -> {
@@ -82,23 +82,23 @@ class DslTokenMaker(private val colors: SyntaxColors = SyntaxColors()) : Abstrac
                     while (i < end && (array[i].isLetterOrDigit() || array[i] == '_')) i++
                     val existingType = getWordsToHighlight().get(array, start, i - 1)
                     val type = if (existingType != 0) existingType else TokenTypes.IDENTIFIER
-                    addToken(array, start, i - 1, type, startOffset)
+                    addToken(array, start, i - 1, type, startOffset + start)
                 }
 
                 ch == ' ' || ch == '\t' -> {
                     val start = i
                     while (i < end && (array[i] == ' ' || array[i] == '\t')) i++
-                    addToken(array, start, i - 1, TokenTypes.WHITESPACE, startOffset)
+                    addToken(array, start, i - 1, TokenTypes.WHITESPACE, startOffset + start)
                 }
 
                 ch == '\n' || ch == '\r' -> {
-                    addToken(array, i, i, TokenTypes.NULL, startOffset)
+                    addToken(array, i, i, TokenTypes.NULL, startOffset + i)
                     i++
                     if (ch == '\r' && i < end && array[i] == '\n') i++
                 }
 
                 else -> {
-                    addToken(array, i, i, TokenTypes.IDENTIFIER, startOffset)
+                    addToken(array, i, i, TokenTypes.IDENTIFIER, startOffset + i)
                     i++
                 }
             }
