@@ -17,9 +17,11 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-swing:1.8.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.0")
 
-    implementation("org.jogamp.gluegen:gluegen-rt-main:2.5.0")
-    implementation(files("libs/jogl-all-2.5.0.jar"))
-    implementation(files("libs/jogl-all-2.5.0-natives-macosx-universal.jar"))
+    // Use local JARs — jogamp.org Maven repo is unreachable from CI runners
+    implementation(files(
+        "libs/jogamp-fat.jar",
+        "libs/jogl-all-2.5.0-natives-macosx-universal.jar"
+    ))
 
     testImplementation("junit:junit:4.13.1")
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
