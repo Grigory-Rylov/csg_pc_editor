@@ -417,20 +417,11 @@ class Main(title: String?) : JFrame(title), GLEventListener {
             gl.glEnd()
         }
 
-        gl.glDepthMask(false)
-        gl.glDepthFunc(GL2.GL_ALWAYS)
-
-        val rx = Math.toRadians(camPitch.toDouble())
-        val ry = Math.toRadians(camYaw.toDouble())
-        val nzAfterRot = Math.cos(rx) * Math.cos(ry)
-        if (nzAfterRot > 0) {
-            drawMotherboardTexture(gl)
-        } else {
-            drawMotherboardBottomTexture(gl)
-        }
-
-        gl.glDepthFunc(GL2.GL_LEQUAL)
-        gl.glDepthMask(true)
+        gl.glEnable(GL2.GL_CULL_FACE)
+        gl.glCullFace(GL2.GL_BACK)
+        drawMotherboardTexture(gl)
+        drawMotherboardBottomTexture(gl)
+        gl.glDisable(GL2.GL_CULL_FACE)
 
         for ((name, md) in visibleModels) {
             if (name == "motherboard" || name.startsWith("motherboard_")) continue
