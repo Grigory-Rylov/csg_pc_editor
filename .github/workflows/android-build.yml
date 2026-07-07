@@ -32,3 +32,9 @@ jobs:
       - name: Build Android APK
         run: ./gradlew assembleDebug
         working-directory: android-viewer
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: apk-debug
+          path: android-viewer/app/build/outputs/apk/debug/*.apk
