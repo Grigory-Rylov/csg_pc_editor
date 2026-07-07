@@ -55,6 +55,12 @@ class Main(title: String?) : JFrame(title), GLEventListener {
     private var camPitch = -90f
     private var camYaw = 0f
     private var camDist = -600f
+    private var panX = 0f
+    private var panY = 0f
+
+    companion object {
+        private const val PAN_SENSITIVITY = 0.5f
+    }
 
     private var mbTexture: Texture? = null
     private var mbTextureBottom: Texture? = null
@@ -360,7 +366,7 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         gl.glClear(GL2.GL_COLOR_BUFFER_BIT or GL2.GL_DEPTH_BUFFER_BIT)
         gl.glLoadIdentity()
 
-        gl.glTranslatef(0f, 0f, camDist)
+        gl.glTranslatef(panX, panY, camDist)
         gl.glRotatef(camPitch, 1f, 0f, 0f)
         gl.glRotatef(camYaw, 0f, 0f, 1f)
 
@@ -568,7 +574,10 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         override fun mouseDragged(e: MouseEvent) {
             val dx = e.x - prevMouseX;
             val dy = e.y - prevMouseY
-            if (e.modifiersEx and InputEvent.CTRL_DOWN_MASK == 0) {
+            if (e.modifiersEx and InputEvent.CTRL_DOWN_MASK != 0) {
+                panX += dx * PAN_SENSITIVITY
+                panY -= dy * PAN_SENSITIVITY
+            } else {
                 camYaw += dx * 0.5f
                 camPitch += dy * 0.5f
             }
@@ -589,7 +598,7 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         override fun keyPressed(e: KeyEvent) {
             when (e.keyCode) {
                 KeyEvent.VK_R -> {
-                    camPitch = -90f; camYaw = 0f; camDist = -300f
+                    camPitch = -90f; camYaw = 0f; camDist = -300f; panX = 0f; panY = 0f
                 }
             }
             glCanvas?.display()
