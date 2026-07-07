@@ -419,8 +419,12 @@ class Main(title: String?) : JFrame(title), GLEventListener {
 
         gl.glEnable(GL2.GL_CULL_FACE)
         gl.glCullFace(GL2.GL_BACK)
+        gl.glDepthMask(false)
+        gl.glDepthFunc(GL2.GL_ALWAYS)
         drawMotherboardTexture(gl)
         drawMotherboardBottomTexture(gl)
+        gl.glDepthFunc(GL2.GL_LEQUAL)
+        gl.glDepthMask(true)
         gl.glDisable(GL2.GL_CULL_FACE)
 
         for ((name, md) in visibleModels) {

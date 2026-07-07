@@ -789,15 +789,9 @@ public class MultipleObjectsRenderer implements GLSurfaceView.Renderer, Controll
      * Draws motherboard texture overlay.
      */
     private void drawMotherboardTexture(float[] mvpMatrix) {
-        // Determine which face is visible using accumulated rotation
-        float[] normal = {0f, 0f, 1f, 0f};
-        float[] transformedNormal = new float[4];
-        Matrix.multiplyMV(transformedNormal, 0, mAccumulatedRotation, 0, normal, 0);
-
-        boolean showTop = transformedNormal[2] > 0;
-
         GLES20.glUseProgram(textureProgramHandle);
-        GLES20.glDisable(GLES20.GL_CULL_FACE);
+        GLES20.glEnable(GLES20.GL_CULL_FACE);
+        GLES20.glCullFace(GLES20.GL_BACK);
         GLES20.glDepthFunc(GLES20.GL_ALWAYS);
         GLES20.glDepthMask(false);
 
@@ -809,20 +803,25 @@ public class MultipleObjectsRenderer implements GLSurfaceView.Renderer, Controll
         GLES20.glUniformMatrix4fv(texMVPMatrixHandle, 1, false, texMVP, 0);
         GLES20.glUniform1i(texSamplerHandle, 0);
 
+        // Draw top texture quad — front-facing when viewed from above (+Z)
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
-        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, showTop ? topTextureId : bottomTextureId);
-
-        FloatBuffer vertexBuf = showTop ? topQuadVertexBuffer : bottomQuadVertexBuffer;
-        FloatBuffer texCoordBuf = showTop ? topQuadTexCoordBuffer : bottomQuadTexCoordBuffer;
-
-        vertexBuf.position(0);
-        GLES20.glVertexAttribPointer(texPositionHandle, 3, GLES20.GL_FLOAT, false, 0, vertexBuf);
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, topTextureId);
+        topQuadVertexBuffer.position(0);
+        GLES20.glVertexAttribPointer(texPositionHandle, 3, GLES20.GL_FLOAT, false, 0, topQuadVertexBuffer);
         GLES20.glEnableVertexAttribArray(texPositionHandle);
-
-        texCoordBuf.position(0);
-        GLES20.glVertexAttribPointer(texCoordinateHandle, 2, GLES20.GL_FLOAT, false, 0, texCoordBuf);
+        topQuadTexCoordBuffer.position(0);
+        GLES20.glVertexAttribPointer(texCoordinateHandle, 2, GLES20.GL_FLOAT, false, 0, topQuadTexCoordBuffer);
         GLES20.glEnableVertexAttribArray(texCoordinateHandle);
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, 0, 4);
 
+        // Draw bottom texture quad — front-facing when viewed from below (-Z)
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, bottomTextureId);
+        bottomQuadVertexBuffer.position(0);
+        GLES20.glVertexAttribPointer(texPositionHandle, 3, GLES20.GL_FLOAT, false, 0, bottomQuadVertexBuffer);
+        GLES20.glEnableVertexAttribArray(texPositionHandle);
+        bottomQuadTexCoordBuffer.position(0);
+        GLES20.glVertexAttribPointer(texCoordinateHandle, 2, GLES20.GL_FLOAT, false, 0, bottomQuadTexCoordBuffer);
+        GLES20.glEnableVertexAttribArray(texCoordinateHandle);
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, 0, 4);
 
         GLES20.glDisableVertexAttribArray(texPositionHandle);
