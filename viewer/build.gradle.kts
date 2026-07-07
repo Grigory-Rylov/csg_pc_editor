@@ -39,6 +39,12 @@ tasks.withType<JavaExec> {
     jvmArgs(joglJvmArgs)
 }
 
+tasks.test {
+    systemProperty("java.awt.headless", "true")
+    useJUnitPlatform()
+    jvmArgs(joglJvmArgs)
+}
+
 kotlin {
     jvmToolchain(17)
 }
