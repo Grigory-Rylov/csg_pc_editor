@@ -1,15 +1,7 @@
 package com.github.grishberg.cad3d.viewer
 
 import com.github.grishberg.cad3d.config.SyntaxColors
-import org.fife.ui.rsyntaxtextarea.AbstractTokenMaker
-import org.fife.ui.rsyntaxtextarea.AbstractTokenMakerFactory
-import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea
-import org.fife.ui.rsyntaxtextarea.Style
-import org.fife.ui.rsyntaxtextarea.SyntaxScheme
-import org.fife.ui.rsyntaxtextarea.Token
-import org.fife.ui.rsyntaxtextarea.TokenMap
-import org.fife.ui.rsyntaxtextarea.TokenTypes
-import org.fife.ui.rsyntaxtextarea.TokenMakerFactory
+import org.fife.ui.rsyntaxtextarea.*
 import java.awt.Color
 import javax.swing.text.Segment
 
@@ -21,14 +13,14 @@ class DslTokenMaker(private val colors: SyntaxColors = SyntaxColors()) : Abstrac
         fun register() {
             val factory = TokenMakerFactory.getDefaultInstance()
             if (factory is AbstractTokenMakerFactory) {
-                factory.putMapping(SYNTAX_STYLE, DslTokenMaker::class.java.name)
+                factory.putMapping(SYNTAX_STYLE, "com.github.grishberg.cad3d.viewer.DslTokenMaker")
             } else {
                 System.err.println("Warning: could not register DslTokenMaker")
             }
         }
     }
 
-    override fun getWordsToHighlight(): TokenMap {
+    private val words = run {
         val map = TokenMap(true)
         map.put("frame", TokenTypes.RESERVED_WORD)
         map.put("motherboard", TokenTypes.DATA_TYPE)
@@ -39,16 +31,25 @@ class DslTokenMaker(private val colors: SyntaxColors = SyntaxColors()) : Abstrac
         map.put("move", TokenTypes.FUNCTION)
         map.put("rotate", TokenTypes.FUNCTION)
         map.put("bottomEdge", TokenTypes.FUNCTION)
-        return map
+        map
     }
+
+    override fun getWordsToHighlight(): TokenMap = words
 
     override fun getTokenList(text: Segment, initialTokenType: Int, startOffset: Int): Token {
         resetTokenList()
 
         val array = text.array
-        val end = text.offset + text.count
-        var i = text.offset
+        val textCount = text.count
+        val segmentOffset = text.offset
+        val end = segmentOffset + textCount
 
+        if (textCount == 0) {
+            addNullToken()
+            return firstToken
+        }
+
+        var i = segmentOffset
         while (i < end) {
             val ch = array[i]
 
@@ -56,11 +57,12 @@ class DslTokenMaker(private val colors: SyntaxColors = SyntaxColors()) : Abstrac
                 ch == '#' -> {
                     val start = i
                     while (i < end && array[i] != '\n' && array[i] != '\r') i++
-                    addToken(array, start, i - 1, TokenTypes.COMMENT_EOL, startOffset + start)
+                    addToken(array, start, i - 1, TokenTypes.COMMENT_EOL, startOffset + start - segmentOffset)
                 }
 
-                ch == '(' || ch == ')' || ch == '{' || ch == '}' || ch == '=' -> {
-                    addToken(array, i, i, TokenTypes.SEPARATOR, startOffset + i)
+                ch == '(' || ch == ')' || ch == '{' || ch == '}' ||
+                        ch == '[' || ch == ']' || ch == '=' -> {
+                    addToken(array, i, i, TokenTypes.SEPARATOR, startOffset + i - segmentOffset)
                     i++
                 }
 
@@ -68,38 +70,38 @@ class DslTokenMaker(private val colors: SyntaxColors = SyntaxColors()) : Abstrac
                     val start = i
                     i++
                     while (i < end && (array[i].isDigit() || array[i] == '.')) i++
-                    addToken(array, start, i - 1, TokenTypes.LITERAL_NUMBER_FLOAT, startOffset + start)
+                    addToken(array, start, i - 1, TokenTypes.LITERAL_NUMBER_FLOAT, startOffset + start - segmentOffset)
                 }
 
                 ch.isDigit() -> {
                     val start = i
                     while (i < end && (array[i].isDigit() || array[i] == '.')) i++
-                    addToken(array, start, i - 1, TokenTypes.LITERAL_NUMBER_FLOAT, startOffset + start)
+                    addToken(array, start, i - 1, TokenTypes.LITERAL_NUMBER_FLOAT, startOffset + start - segmentOffset)
                 }
 
                 ch.isLetter() || ch == '_' -> {
                     val start = i
                     while (i < end && (array[i].isLetterOrDigit() || array[i] == '_')) i++
-                    val existingType = getWordsToHighlight().get(array, start, i - 1)
-                    val type = if (existingType != 0) existingType else TokenTypes.IDENTIFIER
-                    addToken(array, start, i - 1, type, startOffset + start)
+                    val existingType = words.get(array, start, i - 1)
+                    val type = if (existingType > 0) existingType else TokenTypes.IDENTIFIER
+                    addToken(array, start, i - 1, type, startOffset + start - segmentOffset)
                 }
 
                 ch == ' ' || ch == '\t' -> {
                     val start = i
                     while (i < end && (array[i] == ' ' || array[i] == '\t')) i++
-                    addToken(array, start, i - 1, TokenTypes.WHITESPACE, startOffset + start)
+                    addToken(array, start, i - 1, TokenTypes.WHITESPACE, startOffset + start - segmentOffset)
                 }
 
                 ch == '\n' || ch == '\r' -> {
-                    addToken(array, i, i, TokenTypes.NULL, startOffset + i)
+                    val pos = i
                     i++
                     if (ch == '\r' && i < end && array[i] == '\n') i++
+                    addToken(array, pos, i - 1, TokenTypes.NULL, startOffset + pos - segmentOffset)
                 }
 
                 else -> {
-                    addToken(array, i, i, TokenTypes.IDENTIFIER, startOffset + i)
-                    i++
+                    addToken(array, i, i, TokenTypes.IDENTIFIER, startOffset + i - segmentOffset)
                 }
             }
         }

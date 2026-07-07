@@ -12,14 +12,16 @@ dependencies {
     implementation(project(":pccase"))
     implementation(project(":config-parser"))
 
-    implementation("com.fifesoft:rsyntaxtextarea:3.5.3")
+    implementation("com.fifesoft:rsyntaxtextarea:3.6.0")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-swing:1.8.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.0")
 
-    implementation("org.jogamp.gluegen:gluegen-rt-main:2.5.0")
-    implementation(files("libs/jogl-all-2.5.0.jar"))
-    implementation(files("libs/jogl-all-2.5.0-natives-macosx-universal.jar"))
+    // Use local JARs — jogamp.org Maven repo is unreachable from CI runners
+    implementation(files(
+        "libs/jogamp-fat.jar",
+        "libs/jogl-all-2.5.0-natives-macosx-universal.jar"
+    ))
 
     testImplementation("junit:junit:4.13.1")
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
@@ -28,13 +30,23 @@ dependencies {
 
 application {
     mainClass.set("com.github.grishberg.cad3d.MainKt")
-    // Suppress JOGL AppContext reflective access warnings on JDK 17+
-    applicationDefaultJvmArgs = listOf(
-        "--add-exports=java.desktop/sun.awt=ALL-UNNAMED",
-        "--add-opens=java.desktop/sun.awt=ALL-UNNAMED"
-    )
+}
+
+val joglJvmArgs = listOf(
+    "--add-exports=java.desktop/sun.awt=ALL-UNNAMED",
+    "--add-opens=java.desktop/sun.awt=ALL-UNNAMED"
+)
+
+tasks.withType<JavaExec> {
+    jvmArgs(joglJvmArgs)
+}
+
+tasks.test {
+    systemProperty("java.awt.headless", "true")
+    useJUnitPlatform()
+    jvmArgs(joglJvmArgs)
 }
 
 kotlin {
-    jvmToolchain(17) // Устанавливаем единую версию Java для всех задач
+    jvmToolchain(17)
 }
