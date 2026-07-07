@@ -31,7 +31,11 @@ application {
     // Suppress JOGL AppContext reflective access warnings on JDK 17+
     applicationDefaultJvmArgs = listOf(
         "--add-exports=java.desktop/sun.awt=ALL-UNNAMED",
-        "--add-opens=java.desktop/sun.awt=ALL-UNNAMED"
+        "--add-opens=java.desktop/sun.awt=ALL-UNNAMED",
+        "--add-exports=java.desktop/sun.lwawt=ALL-UNNAMED",
+        "--add-opens=java.desktop/sun.lwawt=ALL-UNNAMED",
+        "--add-exports=java.desktop/sun.lwawt.macosx=ALL-UNNAMED",
+        "--add-opens=java.desktop/sun.lwawt.macosx=ALL-UNNAMED"
     )
 }
 

@@ -119,6 +119,8 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         editorTextArea.text = currentScript
         editorTextArea.caretPosition = 0
         editorTextArea.tabSize = 2
+        // Disable bracket matching — crashes with null Token on custom TokenMaker (rsyntaxtextarea bug)
+        editorTextArea.bracketMatching = false
 
         val editorScroll = RTextScrollPane(editorTextArea)
         editorScroll.lineNumbersEnabled = true
