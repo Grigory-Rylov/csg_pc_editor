@@ -33,7 +33,6 @@
  */
 package eu.printingin3d.javascad.vrl;
 
-import com.github.grishberg.cad3d.common.DebugRecorder;
 import eu.printingin3d.javascad.coords.Triangle3d;
 import eu.printingin3d.javascad.coords.Triangulator;
 import eu.printingin3d.javascad.coords.V3d;
@@ -70,13 +69,7 @@ public final class PolygonImproved {
      */
     private final Color color;
 
-    private static DebugRecorder debugRecorder;
-
-    public static void setDebugRecorder(DebugRecorder recorder) {
-        debugRecorder = recorder;
-    }
-
-    public PolygonImproved(List<V3d> vertices, V3d normal, Color color) {
+     public PolygonImproved(List<V3d> vertices, V3d normal, Color color) {
         this.vertices = vertices;
         this.normal = normal;
         V3d a = vertices.get(0);
@@ -93,10 +86,6 @@ public final class PolygonImproved {
         for (V3d v : vertices) {
             VertexPosition position = calculateVertexPosition(v);
             if (position != VertexPosition.COPLANAR) {
-                if (debugRecorder != null) {
-                    //debugRecorder.d("Polygon vertex not coplanar: " + position + " for vertex "
-                    // + v);
-                }
             }
         }
     }
@@ -245,25 +234,15 @@ public final class PolygonImproved {
         // Classify each point as well as the entire polygon into one of the four possible classes.
         VertexPosition polygonType = calculatePolygonPosition(polygon);
 
-        if (debugRecorder != null) {
-            //debugRecorder.onSplitPolygonStarted(this, polygon, polygonType);
-        }
-
         // Put the polygon in the correct list, splitting it when necessary.
         switch (polygonType) {
             case COPLANAR:
                 (this.normal.dot(polygon.normal) > 0 ? coplanarFront : coplanarBack).add(polygon);
                 break;
             case FRONT:
-                if (debugRecorder != null) {
-                    debugRecorder.onLogEvent("splitPolygon: front.add(polygon)");
-                }
                 front.add(polygon);
                 break;
             case BACK:
-                if (debugRecorder != null) {
-                    debugRecorder.onLogEvent("splitPolygon: back.add(polygon)");
-                }
                 back.add(polygon);
                 break;
             case SPANNING:
@@ -291,15 +270,8 @@ public final class PolygonImproved {
             classifyAndSplitVertex(ls.getStart(), ls.getEnd(), f, b);
         }
 
-        if (debugRecorder != null) {
-            debugRecorder.onSplitPolygonCompleted(f, b);
-        }
-
         //f = removeDuplicates(f);
         //b = removeDuplicates(b);
-        if (debugRecorder != null) {
-            debugRecorder.onSplitPolygonCompleted(f, b);
-        }
         front.add(fromPolygons(f, polygon.color));
         back.add(fromPolygons(b, polygon.color));
     }
@@ -329,32 +301,14 @@ public final class PolygonImproved {
     ) {
         VertexPosition position = calculateVertexPosition(currentVertex);
 
-        if (debugRecorder != null) {
-            debugRecorder.onClassifyAndSplitVertex(currentVertex, nextVertex, position);
-        }
-
         switch (position) {
             case FRONT:
-                if (debugRecorder != null) {
-                    debugRecorder.onLogEvent(
-                        "classifyAndSplitVertex: pos = FRONT, addVertexToList currentVertex = " +
-                            currentVertex);
-                }
                 addVertexToList(f, currentVertex, position);
                 break;
             case BACK:
-                if (debugRecorder != null) {
-                    debugRecorder.onLogEvent(
-                        "classifyAndSplitVertex: pos = BACK, addVertexToList currentVertex = " +
-                            currentVertex);
-                }
                 addVertexToList(b, currentVertex, position);
                 break;
             default:
-                if (debugRecorder != null) {
-                    debugRecorder.onLogEvent(
-                        "classifyAndSplitVertex: pos = " + position + ", addVertexToList both");
-                }
                 addVertexToList(f, currentVertex, VertexPosition.FRONT);
                 addVertexToList(b, currentVertex, VertexPosition.BACK);
                 break;
@@ -363,10 +317,6 @@ public final class PolygonImproved {
             double t = (this.dist - this.normal.dot(currentVertex)) /
                 this.normal.dot(nextVertex.add(currentVertex.inverse()));
             V3d v = currentVertex.lerp(nextVertex, t);
-
-            if (debugRecorder != null) {
-                debugRecorder.onEdgeSpanning(currentVertex, nextVertex, v);
-            }
 
             addVertexToList(f, v, VertexPosition.FRONT);
             addVertexToList(b, v, VertexPosition.BACK);
@@ -382,9 +332,6 @@ public final class PolygonImproved {
                 V3d prev = vertices.get(i);
                 V3d c = vertices.get((i + 1) % vertices.size());
 
-                if (debugRecorder != null) {
-                    debugRecorder.onAddVertexNextPoint(list, lastVertex, newVertex, prev, c, vp);
-                }
 				//TODO: test V3d(25, -25, -15) - V3d(-25, -25, -15) x V3d(-25, -25, -15) - V3d(-12
 				   .5, -25, -15)
                 V3d cross = EdgeCrossSolver.findIntersection(prev, c, lastVertex, newVertex);
@@ -392,9 +339,6 @@ public final class PolygonImproved {
                     System.out.println(
                         "Added new vertex: " + cross + " between " + lastVertex + " and " +
                             newVertex + " (" + prev + ", " + c + ")");
-                    if (debugRecorder != null) {
-                        debugRecorder.onEdgeCross(list, lastVertex, newVertex, cross, vp);
-                    }
                     list.add(cross);
                 }
             }
