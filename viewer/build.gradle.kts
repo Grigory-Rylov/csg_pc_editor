@@ -50,3 +50,20 @@ tasks.test {
 kotlin {
     jvmToolchain(17)
 }
+
+tasks.register<Jar>("fatJar") {
+    group = "build"
+    description = "Assembles a fat JAR with all dependencies"
+    archiveBaseName.set("viewer-all")
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    manifest {
+        attributes["Main-Class"] = "com.github.grishberg.cad3d.MainKt"
+    }
+    from(sourceSets.main.get().output)
+    dependsOn(configurations.runtimeClasspath)
+    from({
+        configurations.runtimeClasspath.get()
+            .filter { it.exists() }
+            .map { if (it.isDirectory) it else zipTree(it) }
+    })
+}
