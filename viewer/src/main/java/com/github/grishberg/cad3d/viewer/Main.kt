@@ -126,7 +126,7 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         val editorTextArea = SafeRSyntaxTextArea(25, 45)
         editorTextArea.syntaxEditingStyle = DslTokenMaker.SYNTAX_STYLE
         tokenMaker.applyColors(editorTextArea)
-        editorTextArea.font = Font("Monospaced", Font.PLAIN, 20)
+        editorTextArea.font = Font("Monospaced", Font.PLAIN, 18)
         editorTextArea.text = currentScript
         editorTextArea.caretPosition = 0
         editorTextArea.tabSize = 2
