@@ -6,6 +6,7 @@ plugins {
 
 dependencies {
     implementation(project(":pccase"))
+    implementation(project(":config-parser"))
     implementation(project(":javascad"))
     implementation(project(":cad3d"))
     implementation(project(":plugin"))

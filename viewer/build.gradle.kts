@@ -10,6 +10,7 @@ dependencies {
     implementation(project(":javascad"))
     implementation(project(":plugin"))
     implementation(project(":pccase"))
+    implementation(project(":config-parser"))
 
     implementation("com.fifesoft:rsyntaxtextarea:3.5.3")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")

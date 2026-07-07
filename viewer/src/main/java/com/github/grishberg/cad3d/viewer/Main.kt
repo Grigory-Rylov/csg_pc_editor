@@ -1,8 +1,9 @@
 package com.github.grishberg.cad3d.viewer
 
+import com.github.grishberg.cad3d.config.SceneConfigParser
+import com.github.grishberg.cad3d.config.SyntaxColors
 import com.github.grishberg.cad3d.pccase.PcCaseModelFactory
 import com.github.grishberg.cad3d.pccase.SceneConfig
-import com.github.grishberg.cad3d.pccase.SceneConfigParser
 import com.github.grishberg.cad3d.pccase.TransformOp
 import com.jogamp.opengl.GL2
 import com.jogamp.opengl.GLAutoDrawable
@@ -17,9 +18,9 @@ import com.jogamp.opengl.util.texture.TextureIO
 import com.jogamp.opengl.util.Animator
 import eu.printingin3d.javascad.vrl.CSG
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea
-import org.fife.ui.rsyntaxtextarea.SyntaxConstants
 import org.fife.ui.rtextarea.RTextScrollPane
 import java.awt.BorderLayout
+import java.awt.Color
 import java.awt.Dimension
 import java.awt.FlowLayout
 import java.awt.Font
@@ -108,8 +109,12 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         glPanel.minimumSize = Dimension(400, 400)
 
         // --- Code editor ---
+        DslTokenMaker.register()
+        val syntaxColors = SyntaxColors.load()
+        val tokenMaker = DslTokenMaker(syntaxColors)
         val editorTextArea = RSyntaxTextArea(25, 45)
-        editorTextArea.syntaxEditingStyle = SyntaxConstants.SYNTAX_STYLE_NONE
+        editorTextArea.syntaxEditingStyle = DslTokenMaker.SYNTAX_STYLE
+        tokenMaker.applyColors(editorTextArea)
         editorTextArea.font = Font("Monospaced", Font.PLAIN, 12)
         editorTextArea.text = currentScript
         editorTextArea.caretPosition = 0
@@ -117,6 +122,12 @@ class Main(title: String?) : JFrame(title), GLEventListener {
 
         val editorScroll = RTextScrollPane(editorTextArea)
         editorScroll.lineNumbersEnabled = true
+        val gutter = editorScroll.gutter
+        if (gutter != null) {
+            gutter.background = Color(syntaxColors.gutterBackground)
+            gutter.borderColor = Color(syntaxColors.gutterBackground)
+            gutter.lineNumberColor = Color(syntaxColors.gutterForeground)
+        }
 
         val statusLabel = JLabel(" ")
 

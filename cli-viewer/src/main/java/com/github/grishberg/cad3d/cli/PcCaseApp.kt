@@ -1,7 +1,7 @@
 package com.github.grishberg.cad3d.cli
 
 import com.github.grishberg.cad3d.pccase.PcCaseModelFactory
-import com.github.grishberg.cad3d.pccase.SceneConfigParser
+import com.github.grishberg.cad3d.config.SceneConfigParser
 import com.github.grishberg.javascad.StlExporter
 import java.io.File
 import javax.imageio.ImageIO

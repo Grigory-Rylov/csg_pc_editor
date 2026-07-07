@@ -42,6 +42,7 @@ android {
         main {
             java {
                 srcDirs += ['../../pccase/src/main/java']
+                srcDirs += ['../../config-parser/src/main/kotlin']
             }
         }
     }

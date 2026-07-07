@@ -6,7 +6,7 @@ import android.os.Bundle
 import android.widget.Button
 import android.widget.Toast
 import com.github.grishberg.cad3d.R
-import com.github.grishberg.cad3d.pccase.SceneConfigParser
+import com.github.grishberg.cad3d.config.SceneConfigParser
 
 class ScriptEditorActivity : Activity() {
 

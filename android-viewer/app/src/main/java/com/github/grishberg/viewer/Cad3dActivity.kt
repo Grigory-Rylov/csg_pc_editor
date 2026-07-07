@@ -17,7 +17,7 @@ import com.github.grishberg.cad3d.R
 import com.github.grishberg.cad3d.pccase.AluminumProfile
 import com.github.grishberg.cad3d.pccase.PcCaseModelFactory
 import com.github.grishberg.cad3d.pccase.SceneConfig
-import com.github.grishberg.cad3d.pccase.SceneConfigParser
+import com.github.grishberg.cad3d.config.SceneConfigParser
 import com.github.grishberg.cad3d.util.PcCaseSceneBuilder
 import com.github.grishberg.cad3d.util.SceneBuilder
 
