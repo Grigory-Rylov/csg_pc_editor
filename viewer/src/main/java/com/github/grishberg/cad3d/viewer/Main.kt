@@ -74,6 +74,11 @@ class Main(title: String?) : JFrame(title), GLEventListener {
     private var checkboxPanel: JPanel = JPanel()
 
     init {
+        // Log all uncaught EDT exceptions to diagnose text-disappearance bug
+        Thread.setDefaultUncaughtExceptionHandler { thread, ex ->
+            System.err.println("[EDT] Uncaught exception on " + thread.name + ":")
+            ex.printStackTrace()
+        }
         title ?: "PC Case Viewer (OpenGL)"
 
         val parsedConfig = parser.parse(currentScript).getOrNull()
@@ -112,7 +117,7 @@ class Main(title: String?) : JFrame(title), GLEventListener {
         DslTokenMaker.register()
         val syntaxColors = SyntaxColors.load()
         val tokenMaker = DslTokenMaker(syntaxColors)
-        val editorTextArea = RSyntaxTextArea(25, 45)
+        val editorTextArea = SafeRSyntaxTextArea(25, 45)
         editorTextArea.syntaxEditingStyle = DslTokenMaker.SYNTAX_STYLE
         tokenMaker.applyColors(editorTextArea)
         editorTextArea.font = Font("Monospaced", Font.PLAIN, 12)
