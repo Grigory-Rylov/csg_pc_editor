@@ -1,7 +1,8 @@
 package com.github.grishberg.cad3d.pccase
 
-import eu.printingin3d.javascad.coords.Angles3d
+import eu.printingin3d.javascad.coords.V3d
 import eu.printingin3d.javascad.models.Abstract3dModel
+import eu.printingin3d.javascad.tranform.TransformationFactory
 import eu.printingin3d.javascad.tranzitions.Union
 import eu.printingin3d.javascad.vrl.ColorFacetGenerationContext
 import eu.printingin3d.javascad.vrl.FacetGenerationContext
@@ -56,8 +57,19 @@ object PcCaseModelFactory {
         results["frame_horizontal"] = frameHorizontal.toCSG(defaultContext)
 
         val modelBuilder = ComponentModelBuilder(config.components)
-        modelBuilder.build().forEach { (name, model, context) ->
-            results[name] = model.toCSG(context)
+        modelBuilder.build().forEach { entry ->
+            var csg = entry.baseModel.toCSG(entry.context)
+            for (op in entry.transforms) {
+                csg = when (op) {
+                    is TransformOp.Move -> csg.transformed(
+                        TransformationFactory.getTranlationMatrix(V3d(op.x, op.y, op.z))
+                    )
+                    is TransformOp.Rotate -> csg.transformed(
+                        TransformationFactory.getRotationMatrix(op.angles)
+                    )
+                }
+            }
+            results[entry.name] = csg
         }
 
         val report = AluminumProfile.generateReport()
@@ -75,7 +87,13 @@ object PcCaseModelFactory {
     }
 
     private class ComponentModelBuilder(components: List<ComponentPlacement>) {
-        private val result = mutableListOf<Triple<String, Abstract3dModel, FacetGenerationContext>>()
+        data class ModelWithTransforms(
+            val name: String,
+            val baseModel: Abstract3dModel,
+            val context: FacetGenerationContext,
+            val transforms: List<TransformOp>
+        )
+        private val result = mutableListOf<ModelWithTransforms>()
         private val nameCounters = mutableMapOf<String, Int>()
 
         init {
@@ -90,7 +108,6 @@ object PcCaseModelFactory {
                 val context: FacetGenerationContext
 
                 val baseName = cp.type
-                val globalIndex = result.size
 
                 val baseModel: Abstract3dModel = when (cp.type) {
                     "motherboard" -> {
@@ -127,18 +144,10 @@ object PcCaseModelFactory {
                 nameCounters[baseName] = counter + 1
                 name = if (counter == 0) baseName else "${baseName}_$counter"
 
-                var model = baseModel
-                for (op in cp.transforms) {
-                    model = when (op) {
-                        is TransformOp.Rotate -> model.rotate(op.angles)
-                        is TransformOp.Move -> model.move(op.x, op.y, op.z)
-                    }
-                }
-
-                result.add(Triple(name, model, context))
+                result.add(ModelWithTransforms(name, baseModel, context, cp.transforms))
             }
         }
 
-        fun build(): List<Triple<String, Abstract3dModel, FacetGenerationContext>> = result
+        fun build(): List<ModelWithTransforms> = result
     }
 }
