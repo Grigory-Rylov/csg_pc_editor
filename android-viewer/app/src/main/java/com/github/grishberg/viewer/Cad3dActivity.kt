@@ -7,19 +7,17 @@ import android.util.DisplayMetrics
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.widget.Button
 import android.widget.CheckBox
 import android.widget.CompoundButton
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import com.github.grishberg.cad3d.R
+import com.github.grishberg.cad3d.config.SceneConfigParser
 import com.github.grishberg.cad3d.pccase.AluminumProfile
 import com.github.grishberg.cad3d.pccase.PcCaseModelFactory
 import com.github.grishberg.cad3d.pccase.SceneConfig
-import com.github.grishberg.cad3d.config.SceneConfigParser
 import com.github.grishberg.cad3d.util.PcCaseSceneBuilder
-import com.github.grishberg.cad3d.util.SceneBuilder
 
 class Cad3dActivity : AppCompatActivity() {
 
@@ -40,7 +38,8 @@ class Cad3dActivity : AppCompatActivity() {
         mGLSurfaceView = findViewById<View>(R.id.gl_surface_view) as CustomGLSurfaceView
         lastValidScript = ScriptStorage.loadScript(this) ?: SceneConfigParser().getDefaultScript()
 
-        val configurationInfo = (getSystemService(ACTIVITY_SERVICE) as android.app.ActivityManager).deviceConfigurationInfo
+        val configurationInfo =
+            (getSystemService(ACTIVITY_SERVICE) as android.app.ActivityManager).deviceConfigurationInfo
         val supportsEs2 = configurationInfo.reqGlEsVersion >= 0x20000
 
         if (supportsEs2) {
@@ -95,10 +94,12 @@ class Cad3dActivity : AppCompatActivity() {
                 startActivityForResult(intent, REQUEST_SCRIPT_EDITOR)
                 true
             }
+
             R.id.action_report -> {
                 showProfileReport()
                 true
             }
+
             else -> super.onOptionsItemSelected(item)
         }
     }
