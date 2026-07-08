@@ -32,8 +32,8 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('android-viewer/**/*.gradle*', 'android-viewer/**/gradle-wrapper.properties') }}
           restore-keys: ${{ runner.os }}-gradle-
 
-      - name: Build Release APK
-        run: ./gradlew assembleRelease
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug
         working-directory: android-viewer
 
       - name: Generate version tag
@@ -47,4 +47,4 @@ jobs:
         with:
           tag_name: ${{ steps.version.outputs.tag }}
           name: ${{ steps.version.outputs.tag }}
-          files: android-viewer/app/build/outputs/apk/release/pc-frame-viewer.apk
+          files: android-viewer/app/build/outputs/apk/debug/pc-frame-viewer.apk
