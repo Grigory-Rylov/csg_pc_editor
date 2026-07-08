@@ -7,6 +7,7 @@ import eu.printingin3d.javascad.models.Cylinder
 import eu.printingin3d.javascad.tranzitions.Union
 
 class Motherboard {
+
     private val boardWidth = 305.0   // X — ширина платы
     private val boardDepth = 205.8   // Y — длина/глубина платы
     private val pcbThickness = 1.6     // Z — толщина PCB (вертикальная ось)
@@ -83,20 +84,19 @@ class Motherboard {
         val screwH = 10.0
         val screwPositions = listOf(
             // Rear I/O area (Y+ edge)
-            -100.0 to 93.0,
-             100.0 to 93.0,
-               0.0 to 93.0,
+            -138 to 92.5,
+            146 to 76,
+            -14.0 to 93.0,
             // Front edge / PCIe area (Y- edge)
-            -100.0 to -93.0,
-             100.0 to -93.0,
-               0.0 to -93.0,
-            // CPU support (near socket at X~50, Y~-20)
-            -120.0 to -20.0,
-             -80.0 to -20.0,
+            -138.0 to -93.0,
+            -138.0 to -34.0,
+            146.0 to -93.0,
+
+            -14.0 to -93.0,
+            -14.0 to -34.0,
         )
         val holes = screwPositions.map { (hx, hy) ->
-            Cylinder(screwH, Radius.fromRadius(screwR))
-                .move(hx, hy, 0.0)
+            Cylinder(screwH, Radius.fromRadius(screwR)).move(hx, hy, 0.0)
         }
         val holeSubtract = Union(holes)
         return board.subtractModel(holeSubtract)
