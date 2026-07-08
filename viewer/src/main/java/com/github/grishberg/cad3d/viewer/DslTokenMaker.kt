@@ -97,7 +97,7 @@ class DslTokenMaker(private val colors: SyntaxColors = SyntaxColors()) : Abstrac
                     val pos = i
                     i++
                     if (ch == '\r' && i < end && array[i] == '\n') i++
-                    addToken(array, pos, i - 1, TokenTypes.NULL, startOffset + pos - segmentOffset)
+                    addToken(array, pos, i - 1, TokenTypes.WHITESPACE, startOffset + pos - segmentOffset)
                 }
 
                 else -> {

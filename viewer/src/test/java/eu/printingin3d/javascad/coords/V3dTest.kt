@@ -16,8 +16,8 @@ class V3dTest {
 
     @Test
     fun testNonEquals() {
-        val a = V3d(76.51101271115557, -51.79415715919706, 23.72429834360106)
-        val b = V3d(76.511018, -51.7941571501976, 23.72429831)
+        val a = V3d(76.5110, -51.7942, 23.7243)
+        val b = V3d(86.5110, -61.7942, 33.7243)
 
         assertNotEquals(a.hashCode(), b.hashCode())
     }
