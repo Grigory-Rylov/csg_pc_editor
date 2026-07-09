@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#1A1A1A">
+
+    <!-- Handle -->
+    <View
+        android:layout_width="40dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        android:background="@drawable/editor_handle" />
+
+    <!-- Editor -->
+    <com.github.grishberg.viewer.ScriptEditText
+        android:id="@+id/script_editor"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:background="#222222"
+        android:textColor="#FFFFFF"
+        android:inputType="textMultiLine|textNoSuggestions"
+        android:gravity="top|start"
+        android:fontFamily="monospace"
+        android:textSize="14sp"
+        android:padding="8dp"
+        android:scrollbars="vertical"
+        android:freezesText="true" />
+
+
+</LinearLayout>

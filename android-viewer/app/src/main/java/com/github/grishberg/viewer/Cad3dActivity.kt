@@ -1,8 +1,8 @@
 package com.github.grishberg.viewer
 
 import android.app.AlertDialog
-import android.content.Intent
 import android.os.Bundle
+import android.widget.FrameLayout
 import android.util.DisplayMetrics
 import android.view.Menu
 import android.view.MenuItem
@@ -12,6 +12,8 @@ import android.widget.CompoundButton
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.github.grishberg.cad3d.R
 import com.github.grishberg.cad3d.config.SceneConfigParser
 import com.github.grishberg.cad3d.pccase.AluminumProfile
@@ -25,13 +27,12 @@ class Cad3dActivity : AppCompatActivity() {
     private var mRenderer: MultipleObjectsRenderer? = null
     private var mSceneBuilder: PcCaseSceneBuilder? = null
     private var lastValidScript: String = ""
+    private var editorBehavior: BottomSheetBehavior<FrameLayout>? = null
+    private var editorView: FrameLayout? = null
+    private var scriptEditor: ScriptEditText? = null
+    private var fabApply: FloatingActionButton? = null
 
-    companion object {
-        private const val REQUEST_SCRIPT_EDITOR = 1
-        private const val EXTRA_SCRIPT = "extra_script"
-    }
-
-    public override fun onCreate(savedInstanceState: Bundle?) {
+    override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.main_layout)
 
@@ -62,17 +63,73 @@ class Cad3dActivity : AppCompatActivity() {
                 mRenderer?.setWireframeOnly(isChecked)
             }
 
-            // Set up AppBar (Toolbar)
             val toolbar = findViewById<Toolbar>(R.id.toolbar)
             setSupportActionBar(toolbar)
             supportActionBar?.title = "PC Case Editor"
 
-            // Apply saved script on startup
+            // Setup bottom sheet editor
+            setupEditorBottomSheet()
+
             SceneConfigParser().parse(lastValidScript).onSuccess { config ->
                 mSceneBuilder?.updateConfig(config)
             }
 
             mSceneBuilder!!.requestBuffers()
+        }
+    }
+
+    private fun applyScript() {
+        val script = scriptEditor?.text?.toString()?.trim() ?: ""
+        if (script.isEmpty()) {
+            Toast.makeText(this, "Script is empty", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val parser = SceneConfigParser()
+        val result = parser.parse(script)
+        result.onSuccess { config ->
+            lastValidScript = script
+            ScriptStorage.saveScript(this, script)
+            mSceneBuilder?.updateConfig(config)
+            mRenderer?.requestRender()
+            Toast.makeText(this, "Scene updated", Toast.LENGTH_SHORT).show()
+        }.onFailure { e ->
+            Toast.makeText(this, e.message, Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun setupEditorBottomSheet() {
+        editorView = findViewById(R.id.editor_bottom_sheet)
+        scriptEditor = findViewById(R.id.script_editor)
+        scriptEditor?.setText(lastValidScript)
+        scriptEditor?.setSelection(lastValidScript.length)
+        fabApply = findViewById(R.id.fab_apply)
+
+        fabApply?.setOnClickListener {
+            applyScript()
+        }
+
+        editorBehavior = BottomSheetBehavior.from(editorView!!).apply {
+            isHideable = false
+            addBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
+                override fun onStateChanged(bottomSheet: View, newState: Int) {
+                    when (newState) {
+                        BottomSheetBehavior.STATE_COLLAPSED -> {
+                            scriptEditor?.setText(lastValidScript)
+                            fabApply?.visibility = View.GONE
+                        }
+                        BottomSheetBehavior.STATE_EXPANDED -> {
+                            fabApply?.visibility = View.VISIBLE
+                        }
+                    }
+                }
+                override fun onSlide(bottomSheet: View, slideOffset: Float) {}
+            })
+        }
+
+        // Set COLLAPSED after first layout pass so BottomSheetBehavior can position correctly
+        editorView?.post {
+            editorBehavior?.state = BottomSheetBehavior.STATE_COLLAPSED
         }
     }
 
@@ -89,17 +146,20 @@ class Cad3dActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.action_editor -> {
-                val intent = Intent(this, ScriptEditorActivity::class.java)
-                intent.putExtra(EXTRA_SCRIPT, lastValidScript)
-                startActivityForResult(intent, REQUEST_SCRIPT_EDITOR)
+                when (editorBehavior?.state) {
+                    BottomSheetBehavior.STATE_COLLAPSED -> {
+                        editorBehavior?.state = BottomSheetBehavior.STATE_EXPANDED
+                    }
+                    else -> {
+                        editorBehavior?.state = BottomSheetBehavior.STATE_COLLAPSED
+                    }
+                }
                 true
             }
-
             R.id.action_report -> {
                 showProfileReport()
                 true
             }
-
             else -> super.onOptionsItemSelected(item)
         }
     }
@@ -107,26 +167,6 @@ class Cad3dActivity : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
         mGLSurfaceView?.onPause()
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == REQUEST_SCRIPT_EDITOR && resultCode == RESULT_OK) {
-            val script = data?.getStringExtra("result_script")
-            if (script != null) {
-                val parser = SceneConfigParser()
-                val result = parser.parse(script)
-                result.onSuccess { config ->
-                    lastValidScript = script
-                    ScriptStorage.saveScript(this, script)
-                    mSceneBuilder?.updateConfig(config)
-                    mRenderer?.requestRender()
-                    Toast.makeText(this, "Scene updated", Toast.LENGTH_SHORT).show()
-                }.onFailure { e ->
-                    Toast.makeText(this, "Parse error: ${e.message}", Toast.LENGTH_LONG).show()
-                }
-            }
-        }
     }
 
     private fun showProfileReport() {

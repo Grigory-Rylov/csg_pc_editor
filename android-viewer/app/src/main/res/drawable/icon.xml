@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="128dp"
+    android:height="128dp"
+    android:viewportWidth="128"
+    android:viewportHeight="128">
+
+    <!-- Background -->
+    <path
+        android:fillColor="#1A1A1A"
+        android:pathData="M0,0 L128,0 L128,128 L0,128 Z" />
+
+    <!-- PC case body -->
+    <path
+        android:fillColor="#4A4A4A"
+        android:pathData="M24,16 L104,16 L104,112 L24,112 Z"
+        android:strokeColor="#6A6A6A"
+        android:strokeWidth="2" />
+
+    <!-- Glass panel -->
+    <path
+        android:fillColor="#1E3A5F"
+        android:pathData="M32,24 L96,24 L96,104 L32,104 Z" />
+
+    <!-- Panel shine -->
+    <path
+        android:fillColor="#2A4A6F"
+        android:pathData="M32,24 L60,24 L40,104 L32,104 Z"
+        android:fillAlpha="0.3" />
+
+    <!-- Motherboard -->
+    <path
+        android:fillColor="#2D5A2D"
+        android:pathData="M38,30 L78,30 L78,88 L38,88 Z" />
+
+    <!-- CPU cooler -->
+    <path
+        android:fillColor="#888888"
+        android:pathData="M48,40 L62,40 L62,52 L48,52 Z" />
+    <path
+        android:fillColor="#AAAAAA"
+        android:pathData="M50,36 L60,36 L60,40 L50,40 Z" />
+
+    <!-- GPU -->
+    <path
+        android:fillColor="#555555"
+        android:pathData="M38,60 L76,60 L76,70 L38,70 Z" />
+    <path
+        android:fillColor="#2196F3"
+        android:pathData="M50,63 L54,63 L54,67 L50,67 Z" />
+
+    <!-- RAM sticks -->
+    <path
+        android:fillColor="#444444"
+        android:pathData="M66,40 L70,40 L70,58 L66,58 Z" />
+    <path
+        android:fillColor="#444444"
+        android:pathData="M72,40 L76,40 L76,58 L72,58 Z" />
+
+    <!-- PSU -->
+    <path
+        android:fillColor="#3A3A3A"
+        android:pathData="M38,90 L78,90 L78,98 L38,98 Z" />
+
+    <!-- Fan -->
+    <path
+        android:fillColor="#333333"
+        android:pathData="M44,74 A8,8 0 1,0 60,74 A8,8 0 1,0 44,74" />
+    <path
+        android:fillColor="#555555"
+        android:pathData="M52,74 A2,2 0 1,0 52,78 A2,2 0 1,0 52,74" />
+
+</vector>

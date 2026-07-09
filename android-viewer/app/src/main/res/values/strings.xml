@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>    
-    <string name="app_name">Cad3d</string>
-    <string name="cad3d">Java Cad3d</string>
+    <string name="app_name">PC frame</string>
+    <string name="cad3d">PC frame</string>
     <string name="wire_mode_checkbox_title">W</string>
     <string name="show_logs">L+</string>
     <string name="hide_logs">L-</string>
