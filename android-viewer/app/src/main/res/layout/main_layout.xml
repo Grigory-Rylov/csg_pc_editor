@@ -1,149 +1,179 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout
-	xmlns:android="http://schemas.android.com/apk/res/android"	
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/res-auto"
 	android:layout_width="match_parent"
 	android:layout_height="match_parent">
-	<com.github.grishberg.viewer.CustomGLSurfaceView
-		android:id="@+id/gl_surface_view"
-		android:layout_width="match_parent"
-		android:layout_height="match_parent" />
 
-	<!-- AppBar поверх GL-вью -->
-	<androidx.appcompat.widget.Toolbar
-		xmlns:app="http://schemas.android.com/apk/res-auto"
-		android:id="@+id/toolbar"
+	<!-- Background overlays — behind bottom sheet -->
+	<FrameLayout
 		android:layout_width="match_parent"
-		android:layout_height="wrap_content"
-		android:layout_gravity="top"
-		android:background="#EEEEEE"
-		app:title="PC Case Editor"
-		app:titleTextColor="#000000"
-		app:theme="@style/ToolbarTheme"
-		app:popupTheme="@style/PopupTheme" />
+		android:layout_height="match_parent">
 
+		<com.github.grishberg.viewer.CustomGLSurfaceView
+			android:id="@+id/gl_surface_view"
+			android:layout_width="match_parent"
+			android:layout_height="match_parent" />
 
-	<com.github.grishberg.viewer.DebugOverlayView
-		android:id="@+id/debug_overlay"
-		android:layout_width="match_parent"
-		android:layout_height="match_parent"
-		android:visibility="gone"/>
-
-	<!-- Кастомная вьюшка для логов вместо RecyclerView -->
-	<com.github.grishberg.viewer.LogListView
-		android:id="@+id/logs_recycler_view"
-		android:layout_width="match_parent"
-		android:layout_height="250dp"
-		android:layout_gravity="top"
-		android:background="#80000000"
-		android:visibility="gone" />
-
-	<!-- TextView для отладочной информации -->
-	<TextView
-		android:id="@+id/debug_info_text"
-		android:layout_width="match_parent"
-		android:layout_height="50dp"
-		android:layout_gravity="top"
-		android:layout_marginTop="250dp"
-		android:background="#80000000"
-		android:textColor="#FFFFFF"
-		android:textSize="12sp"
-		android:padding="8dp"
-		android:gravity="center_vertical"
-		android:visibility="gone" />
-
-	<!-- Панель управления внизу -->
-	<LinearLayout
-		android:layout_gravity="bottom"
-		android:layout_width="match_parent"
-		android:layout_height="wrap_content"
-		android:visibility="gone"
-		android:orientation="vertical">
-		<!-- top panel -->
-		<LinearLayout
+		<!-- AppBar поверх GL-вью -->
+		<androidx.appcompat.widget.Toolbar
+			android:id="@+id/toolbar"
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
+			android:layout_gravity="top"
+			android:background="#EEEEEE"
+			app:title="PC Case Editor"
+			app:titleTextColor="#000000"
+			app:theme="@style/ToolbarTheme"
+			app:popupTheme="@style/PopupTheme" />
 
+		<com.github.grishberg.viewer.DebugOverlayView
+			android:id="@+id/debug_overlay"
+			android:layout_width="match_parent"
+			android:layout_height="match_parent"
+			android:visibility="gone"/>
+
+		<!-- Кастомная вьюшка для логов вместо RecyclerView -->
+		<com.github.grishberg.viewer.LogListView
+			android:id="@+id/logs_recycler_view"
+			android:layout_width="match_parent"
+			android:layout_height="250dp"
+			android:layout_gravity="top"
 			android:background="#80000000"
-			android:gravity="center"
-			android:orientation="horizontal"
-			android:padding="8dp">
+			android:visibility="gone" />
 
-			<CheckBox
-				android:id="@+id/wire_mode_checkbox"
-				android:layout_width="wrap_content"
-				android:layout_height="wrap_content"
-				android:text="@string/wire_mode_checkbox_title"
-				android:textColor="#FFFFFF" />
-
-			<Button
-				android:id="@+id/toggle_logs_button"
-				android:layout_width="wrap_content"
-				android:layout_height="wrap_content"
-				android:layout_marginStart="16dp"
-				android:background="@drawable/button_background"
-				android:text="@string/show_logs"
-				android:textColor="#FFFFFF" />
-
-			<Button
-				android:id="@+id/clear_logs_button"
-				android:layout_width="wrap_content"
-				android:layout_height="wrap_content"
-				android:layout_marginStart="8dp"
-				android:background="@drawable/button_background"
-				android:text="@string/clear_logs"
-				android:textColor="#FFFFFF" />
-
-		</LinearLayout>
-		<!-- bottom panel -->
-		<LinearLayout
+		<!-- TextView для отладочной информации -->
+		<TextView
+			android:id="@+id/debug_info_text"
 			android:layout_width="match_parent"
-			android:layout_height="wrap_content"
+			android:layout_height="50dp"
+			android:layout_gravity="top"
+			android:layout_marginTop="250dp"
+			android:background="#80000000"
+			android:textColor="#FFFFFF"
+			android:textSize="12sp"
+			android:padding="8dp"
+			android:gravity="center_vertical"
+			android:visibility="gone" />
+
+		<!-- Панель управления внизу -->
+		<LinearLayout
 			android:layout_gravity="bottom"
-			android:background="#80000000"
-			android:gravity="center"
-			android:orientation="horizontal"
-			android:padding="8dp">
-
-			<Button
-				android:id="@+id/prev_10_debug_button"
-				android:layout_width="wrap_content"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:visibility="gone"
+			android:orientation="vertical">
+			<!-- top panel -->
+			<LinearLayout
+				android:layout_width="match_parent"
 				android:layout_height="wrap_content"
-				android:layout_marginStart="8dp"
-				android:background="@drawable/button_background"
-				android:text="@string/prev_10_debug"
-				android:textColor="#FFFFFF" />
+				android:background="#80000000"
+				android:gravity="center"
+				android:orientation="horizontal"
+				android:padding="8dp">
 
-			<Button
-				android:id="@+id/next_10_debug_button"
-				android:layout_width="wrap_content"
+				<CheckBox
+					android:id="@+id/wire_mode_checkbox"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:text="@string/wire_mode_checkbox_title"
+					android:textColor="#FFFFFF" />
+
+				<Button
+					android:id="@+id/toggle_logs_button"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:layout_marginStart="16dp"
+					android:background="@drawable/button_background"
+					android:text="@string/show_logs"
+					android:textColor="#FFFFFF" />
+
+				<Button
+					android:id="@+id/clear_logs_button"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:layout_marginStart="8dp"
+					android:background="@drawable/button_background"
+					android:text="@string/clear_logs"
+					android:textColor="#FFFFFF" />
+
+			</LinearLayout>
+			<!-- bottom panel -->
+			<LinearLayout
+				android:layout_width="match_parent"
 				android:layout_height="wrap_content"
-				android:layout_marginStart="8dp"
-				android:background="@drawable/button_background"
-				android:text="@string/next_10_debug"
-				android:textColor="#FFFFFF" />
+				android:layout_gravity="bottom"
+				android:background="#80000000"
+				android:gravity="center"
+				android:orientation="horizontal"
+				android:padding="8dp">
+
+				<Button
+					android:id="@+id/prev_10_debug_button"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:layout_marginStart="8dp"
+					android:background="@drawable/button_background"
+					android:text="@string/prev_10_debug"
+					android:textColor="#FFFFFF" />
+
+				<Button
+					android:id="@+id/next_10_debug_button"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:layout_marginStart="8dp"
+					android:background="@drawable/button_background"
+					android:text="@string/next_10_debug"
+					android:textColor="#FFFFFF" />
 
 
-			<Button
-				android:id="@+id/prev_debug_button"
-				android:layout_width="wrap_content"
-				android:layout_height="wrap_content"
-				android:layout_marginStart="8dp"
-				android:background="@drawable/button_background"
-				android:text="@string/prev_debug"
-				android:textColor="#FFFFFF" />
+				<Button
+					android:id="@+id/prev_debug_button"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:layout_marginStart="8dp"
+					android:background="@drawable/button_background"
+					android:text="@string/prev_debug"
+					android:textColor="#FFFFFF" />
 
-			<Button
-				android:id="@+id/next_debug_button"
-				android:layout_width="wrap_content"
-				android:layout_height="wrap_content"
-				android:layout_marginStart="8dp"
-				android:background="@drawable/button_background"
-				android:text="@string/next_debug"
-				android:textColor="#FFFFFF" />
+				<Button
+					android:id="@+id/next_debug_button"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:layout_marginStart="8dp"
+					android:background="@drawable/button_background"
+					android:text="@string/next_debug"
+					android:textColor="#FFFFFF" />
+			</LinearLayout>
 		</LinearLayout>
 
+	</FrameLayout>
 
-	</LinearLayout>
-</FrameLayout>
+	<!-- Bottom Sheet Editor -->
+	<FrameLayout
+		android:id="@+id/editor_bottom_sheet"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:minHeight="300dp"
+		android:background="#1A1A1A"
+		app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior"
+		app:behavior_peekHeight="48dp">
+
+		<include layout="@layout/bottom_sheet_editor" />
+
+	</FrameLayout>
+
+	<com.google.android.material.floatingactionbutton.FloatingActionButton
+		android:id="@+id/fab_apply"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_gravity="bottom|end"
+		android:layout_marginBottom="16dp"
+		android:layout_marginEnd="16dp"
+		android:src="@drawable/ic_refresh"
+		android:backgroundTint="#2196F3"
+		android:visibility="gone" />
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
 
 
