@@ -51,7 +51,6 @@ object StlExporter {
                 for (trianglePoint in t.getPoints()) {
                     rounded.add(trianglePoint.roundedToEpsilon())
                 }
-                //facetsFromPolygons.add(Facet(t, p.getNormal(), p.getColor()))
                 val newT = Triangle3d(rounded.get(0), rounded.get(1), rounded.get(2))
                 facetsFromPolygons.add(Facet(newT, p.getNormal(), p.getColor()));
             }
@@ -61,9 +60,13 @@ object StlExporter {
             "saveStl: " + fileName + " triangulation completed, takes " + (System.currentTimeMillis() - triangulationStartTime) + " ms"
         )
 
+        println("saveStl: validating and repairing ${facetsFromPolygons.size} facets...")
+        val validatedFacets = StlValidator.validateAndRepair(facetsFromPolygons) as MutableList<Facet>
+        println("saveStl: after repair: ${validatedFacets.size} facets")
+
         try {
             FileOutputStream(fileName).getChannel().use { channel ->
-                writeBinaryStl(facetsFromPolygons, channel)
+                writeBinaryStl(validatedFacets, channel)
                 println("Export to " + fileName + " is done.")
             }
         } catch (e: IOException) {

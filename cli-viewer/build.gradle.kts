@@ -9,6 +9,9 @@ dependencies {
     implementation(project(":javascad"))
     implementation(project(":cad3d"))
     implementation(project(":plugin"))
+
+    testImplementation(kotlin("test"))
+    testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
 }
 
 application {

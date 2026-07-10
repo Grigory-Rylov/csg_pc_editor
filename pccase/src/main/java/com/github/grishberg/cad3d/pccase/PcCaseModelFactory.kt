@@ -76,7 +76,7 @@ object PcCaseModelFactory {
             val mbContext = ColorFacetGenerationContext(eu.printingin3d.javascad.utils.Color.GREEN).apply { setFn(8) }
             val gpuContext = ColorFacetGenerationContext(eu.printingin3d.javascad.utils.Color(200, 30, 30)).apply { setFn(8) }
             val psuContext = ColorFacetGenerationContext(eu.printingin3d.javascad.utils.Color(60, 60, 60)).apply { setFn(8) }
-            val coolerContext = ColorFacetGenerationContext(eu.printingin3d.javascad.utils.Color(180, 180, 180)).apply { setFn(8) }
+            val coolerContext = ColorFacetGenerationContext(eu.printingin3d.javascad.utils.Color(180, 180, 180)).apply { setFn(30) }
 
             for (cp in components) {
                 when (cp.type) {
