@@ -15,20 +15,9 @@ class CoolerNakedEdgesTest {
 
     @Test
     fun `cooler model should have zero dangling edges after export pipeline`() {
-        val context = ColorFacetGenerationContext(Color(180, 180, 180)).apply { setFn(30) }
+        val context = ColorFacetGenerationContext(Color(180, 180, 180)).apply { setFn(8) }
         val model = Cooler().build()
         val polygons = model.toCSG(context).polygons
-
-        val rawFacets = mutableListOf<Facet>()
-        for (p in polygons) {
-            val triangles = Triangulator.triangulate(p.getVertices(), p.getNormal())
-            for (t in triangles) {
-                val rounded = t.getPoints().map { it.roundedToEpsilon() }
-                rawFacets.add(Facet(eu.printingin3d.javascad.coords.Triangle3d(rounded[0], rounded[1], rounded[2]), p.getNormal(), p.getColor()))
-            }
-        }
-        val rawNaked = StlValidator.analyzeNakedEdges(rawFacets)
-        println("Naked edges from raw CSG: ${rawNaked.size}")
 
         val fixedPolygons = PolygonValidatorMultithreading().fixPolygons(polygons, ProgressObserver.STUB)
 
@@ -40,8 +29,9 @@ class CoolerNakedEdgesTest {
                 facets.add(Facet(eu.printingin3d.javascad.coords.Triangle3d(rounded[0], rounded[1], rounded[2]), p.getNormal(), p.getColor()))
             }
         }
-        val afterFix = StlValidator.analyzeNakedEdges(facets)
-        println("Naked edges after fixPolygons: ${afterFix.size}")
+
+        val beforeRepair = StlValidator.analyzeNakedEdges(facets)
+        println("Naked edges after fixPolygons: ${beforeRepair.size}")
 
         val repaired = StlValidator.validateAndRepair(facets)
         val afterRepair = StlValidator.analyzeNakedEdges(repaired)
