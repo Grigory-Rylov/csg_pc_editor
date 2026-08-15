@@ -7,8 +7,8 @@ class PcFrame(
     private val width: Double,
     private val depth: Double,
     private val height: Double,
-    private val levels: List<Double> = emptyList(),
-    private val bottomBeams: List<Double> = emptyList()
+    private val bottomBeams: List<Double> = emptyList(),
+    private val edges: List<EdgeBeam> = emptyList()
 ) {
     fun buildVertical(): Abstract3dModel {
         val p = AluminumProfile.PROFILE_SIZE
@@ -46,17 +46,21 @@ class PcFrame(
         beams.add(AluminumProfile.vertical(beamD).move(-hw + p / 2, 0.0, height - p / 2))
         beams.add(AluminumProfile.vertical(beamD).move(hw - p / 2, 0.0, height - p / 2))
 
-        // Additional bottom beams along Y at specified X offsets (via b= param)
+        // Additional bottom beams along Y at specified X offsets (bottomEdge(x=...))
         for (bx in bottomBeams) {
             beams.add(AluminumProfile.vertical(beamD).move(bx, 0.0, p / 2))
         }
 
-        // Intermediate levels
-        for (levelZ in levels) {
-            beams.add(AluminumProfile.horizontalX(beamW).move(0.0, -hd + p / 2, levelZ))
-            beams.add(AluminumProfile.horizontalX(beamW).move(0.0, hd - p / 2, levelZ))
-            beams.add(AluminumProfile.vertical(beamD).move(-hw + p / 2, 0.0, levelZ))
-            beams.add(AluminumProfile.vertical(beamD).move(hw - p / 2, 0.0, levelZ))
+        // Edge beams: front/back — along X near the walls (y offset from the wall),
+        // left/right — along Y at the wall centerline. z is the beam height, length default = full span
+        for (e in edges) {
+            if (e.side == EdgeSide.FRONT || e.side == EdgeSide.BACK) {
+                val wallY = if (e.side == EdgeSide.FRONT) -hd + p / 2 else hd - p / 2
+                beams.add(AluminumProfile.horizontalX(e.length ?: beamW).move(e.x, wallY + e.y, e.z))
+            } else {
+                val wallX = if (e.side == EdgeSide.RIGHT) hw - p / 2 else -hw + p / 2
+                beams.add(AluminumProfile.vertical(beamD).move(wallX, 0.0, e.z))
+            }
         }
 
         return Union(beams)

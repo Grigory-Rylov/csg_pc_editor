@@ -13,12 +13,50 @@ class Parser(private val tokens: List<Token>) {
         return AstNode.Program(stmts)
     }
 
+    private val edgeFunctions = mapOf(
+        "frontEdge" to com.github.grishberg.cad3d.pccase.EdgeSide.FRONT,
+        "backEdge" to com.github.grishberg.cad3d.pccase.EdgeSide.BACK,
+        "leftEdge" to com.github.grishberg.cad3d.pccase.EdgeSide.LEFT,
+        "rightEdge" to com.github.grishberg.cad3d.pccase.EdgeSide.RIGHT
+    )
+
     private fun parseStatement(): AstNode.Statement {
+        val t = current()
         return when {
             peekIdentifier("frame") -> parseFrameDecl()
             peekIdentifier("bottomEdge") -> parseBottomEdge()
+            t is Token.Identifier && edgeFunctions.containsKey(t.value) -> parseEdge(t.value)
             else -> parseTransformChain()
         }
+    }
+
+    // front/backEdge(z [x] [y] [l]), left/rightEdge(z): z обязательна, l — длина балки (весь пролёт по умолчанию)
+    private fun parseEdge(name: String): AstNode.Statement.EdgeDecl {
+        consumeIdentifier(name)
+        consume(Token.LParen)
+        val params = parseNamedParams()
+        consume(Token.RParen)
+        return AstNode.Statement.EdgeDecl(
+            com.github.grishberg.cad3d.pccase.EdgeBeam(
+                side = edgeFunctions.getValue(name),
+                z = numericParam(params, "z"),
+                x = params["x"]?.toDoubleOrNull() ?: 0.0,
+                y = params["y"]?.toDoubleOrNull() ?: 0.0,
+                length = params["l"]?.toDoubleOrNull()
+            )
+        )
+    }
+
+    private fun numericParam(params: Map<String, String>, key: String): Double {
+        if (!params.containsKey(key)) error("Отсутствует параметр '$key'")
+        return params.getValue(key).toDoubleOrNull()
+            ?: error("Ожидалось числовое значение параметра '$key'")
+    }
+
+    private fun frameDim(params: Map<String, String>, key: String): Double {
+        if (!params.containsKey(key)) error("Отсутствует параметр '$key' frame()")
+        return params.getValue(key).toDoubleOrNull()
+            ?: error("Ожидалось числовое значение параметра '$key'")
     }
 
     private fun parseFrameDecl(): AstNode.Statement.FrameDecl {
@@ -26,18 +64,17 @@ class Parser(private val tokens: List<Token>) {
         consume(Token.LParen)
         val params = parseNamedParams()
         consume(Token.RParen)
-        val w = params["w"]?.toDoubleOrNull()
-            ?: error("frame: missing or invalid 'w' parameter")
-        val d = params["d"]?.toDoubleOrNull()
-            ?: error("frame: missing or invalid 'd' parameter")
-        val h = params["h"]?.toDoubleOrNull()
-            ?: error("frame: missing or invalid 'h' parameter")
-        val levels = params["l"]?.split(Regex("[\\s,]+"))
-            ?.map { it.toDoubleOrNull() ?: error("frame: invalid level value '$it'") }
-            ?: emptyList()
-        val bottomBeams = (params["b"]?.split(Regex("[\\s,]+"))
-            ?.map { it.toDoubleOrNull() ?: error("frame: invalid beam value '$it'") }
-            ?: emptyList()).toMutableList()
+        if (params.containsKey("l")) {
+            error("Параметр l= frame() больше не поддерживается — используйте frontEdge/backEdge/leftEdge/rightEdge")
+        }
+        if (params.containsKey("b")) {
+            error("Параметр b= frame() больше не поддерживается — используйте bottomEdge(x=...)")
+        }
+        val w = frameDim(params, "w")
+        val d = frameDim(params, "d")
+        val h = frameDim(params, "h")
+        val bottomBeams = mutableListOf<Double>()
+        val edges = mutableListOf<com.github.grishberg.cad3d.pccase.EdgeBeam>()
 
         skipNewlines()
         if (current() is Token.LCurly) {
@@ -45,16 +82,18 @@ class Parser(private val tokens: List<Token>) {
             while (true) {
                 skipNewlines()
                 if (current() == Token.RCurly) break
-                if (current() == Token.Eof) error("unclosed frame block")
+                if (current() == Token.Eof) error("Незакрытый блок frame")
                 val stmt = parseStatement()
-                if (stmt is AstNode.Statement.BottomEdge) {
-                    bottomBeams.add(stmt.x)
+                when (stmt) {
+                    is AstNode.Statement.BottomEdge -> bottomBeams.add(stmt.x)
+                    is AstNode.Statement.EdgeDecl -> edges.add(stmt.beam)
+                    else -> {}
                 }
             }
             consume(Token.RCurly)
         }
 
-        return AstNode.Statement.FrameDecl(w, d, h, levels, bottomBeams)
+        return AstNode.Statement.FrameDecl(w, d, h, bottomBeams, edges)
     }
 
     private fun parseBottomEdge(): AstNode.Statement.BottomEdge {
@@ -62,8 +101,7 @@ class Parser(private val tokens: List<Token>) {
         consume(Token.LParen)
         val params = parseNamedParams()
         consume(Token.RParen)
-        val x = params["x"]?.toDoubleOrNull()
-            ?: error("bottomEdge: missing or invalid 'x' parameter")
+        val x = numericParam(params, "x")
         return AstNode.Statement.BottomEdge(x)
     }
 
@@ -79,7 +117,7 @@ class Parser(private val tokens: List<Token>) {
                 while (true) {
                     skipNewlines()
                     if (current() == Token.RCurly) break
-                    if (current() == Token.Eof) error("unclosed block")
+                    if (current() == Token.Eof) error("Незакрытый блок '{'")
                     stmts.add(parseStatement())
                 }
                 consume(Token.RCurly)
@@ -89,7 +127,7 @@ class Parser(private val tokens: List<Token>) {
                 val comp = parseComponentRef()
                 AstNode.Statement.ComponentStmt(transforms, comp)
             }
-            else -> error("expected component or '{' after transform")
+            else -> error("После transform ожидается компонент или '{'")
         }
     }
 
@@ -102,7 +140,7 @@ class Parser(private val tokens: List<Token>) {
         val type = when (keyword) {
             "move" -> AstNode.TransformType.Move
             "rotate" -> AstNode.TransformType.Rotate
-            else -> error("unknown transform: $keyword")
+            else -> error("Неизвестный transform '$keyword'")
         }
         consume(Token.LParen)
         val (x, y, z) = parseTransformArgs()
@@ -155,7 +193,7 @@ class Parser(private val tokens: List<Token>) {
             val value = when (val t = current()) {
                 is Token.Number -> t.value.toString()
                 is Token.Identifier -> t.value
-                else -> error("expected value after '='")
+                else -> error("Ожидалось значение после '='")
             }
             pos++
             params[key] = value
@@ -176,14 +214,14 @@ class Parser(private val tokens: List<Token>) {
     private fun consumeIdentifier(value: String) {
         val t = current()
         if (t !is Token.Identifier || t.value != value) {
-            error("expected '$value', got '$t'")
+            error("Ожидалось '$value', получено '${t}'")
         }
         pos++
     }
 
     private fun consume(expected: Token) {
         if (current()::class != expected::class) {
-            error("expected $expected, got ${current()}")
+            error("Ожидалось $expected, получено ${current()}")
         }
         pos++
     }

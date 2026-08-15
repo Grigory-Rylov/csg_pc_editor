@@ -17,16 +17,38 @@ class SceneConfigParser {
         }
     }
 
+    // Дефолтный скрипт — 1-в-1 с web-версией (pc_viewer_3d DEFAULT_SCRIPT) и SceneConfig.DEFAULT
     fun getDefaultScript(): String {
-        return """# PC Case Configuration
-# b=x1,x2,... - additional bottom Y-beams (comma-separated X offsets)
-frame (w=530 d=330 h=350 l=140)
-move(90 0 20.8) motherboard()
-move(0 0 100) gpu (n=5 s=55)
-move(-240 95 0) rotate(90 0 0) psu()
-move(-240 -95 0) rotate(90 0 0) psu()
+        return """# Корпус
+frame (w=540 d=340 h=400) {
+  # Нижние ребра
+  bottomEdge (x=-30)
+  bottomEdge (x=100)
+  bottomEdge (x=-115)
+  # Передняя штанга под видеокарты
+  frontEdge(y = 60 z=200)
+  # Задняя штанга под видеокарты
+  backEdge(z=310)
+  # Боковые промежуточные штанги
+  rightEdge(z=200)
+  leftEdge(z=200)
+}
+
+# Матплата
+move(114 30 20.8) motherboard()
+# Видеокарты
+move(-120 0 270) gpu (n=5 s=55)
+# БП
+move(x=-190 z=65) {
+  move(y=75) rotate(90 0 0) psu()
+  move(y=-75) rotate(90 0 0) psu()
+}
 move(150 35 105) cooler()
-move(0 0 363.5) rotate(0 0 90) radiator()""".trimIndent()
+move(0 0 420) {
+  radiator()
+  move(x=200) radiator ()
+  move(x=-200) radiator ()
+}""".trimIndent()
     }
 }
 

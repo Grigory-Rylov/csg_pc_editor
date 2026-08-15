@@ -46,8 +46,8 @@ object PcCaseModelFactory {
             width = config.frameWidth,
             depth = config.frameDepth,
             height = config.frameHeight,
-            levels = config.frameLevels,
-            bottomBeams = config.frameBottomBeams
+            bottomBeams = config.frameBottomBeams,
+            edges = config.frameEdges
         )
         val frameVertical = frameCfg.buildVertical()
         val frameHorizontal = frameCfg.buildHorizontal()

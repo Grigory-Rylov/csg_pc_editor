@@ -1,5 +1,6 @@
 package com.github.grishberg.cad3d.config
 
+import com.github.grishberg.cad3d.pccase.EdgeBeam
 import com.github.grishberg.cad3d.pccase.ComponentPlacement
 import com.github.grishberg.cad3d.pccase.SceneConfig
 import com.github.grishberg.cad3d.pccase.TransformOp
@@ -10,21 +11,24 @@ class AstInterpreter {
         var frameDecl: AstNode.Statement.FrameDecl? = null
         val componentStmts = mutableListOf<AstNode.Statement>()
         val externalBottomEdges = mutableListOf<Double>()
+        val externalEdges = mutableListOf<EdgeBeam>()
 
         for (stmt in program.statements) {
             when (stmt) {
                 is AstNode.Statement.FrameDecl -> {
-                    if (frameDecl != null) error("duplicate frame declaration")
+                    if (frameDecl != null) error("Дублирующее объявление frame")
                     frameDecl = stmt
                 }
                 is AstNode.Statement.BottomEdge -> externalBottomEdges.add(stmt.x)
+                is AstNode.Statement.EdgeDecl -> externalEdges.add(stmt.beam)
                 is AstNode.Statement.ComponentStmt -> componentStmts.add(stmt)
-                is AstNode.Statement.BlockStmt -> flattenBlock(stmt, emptyList(), componentStmts)
+                is AstNode.Statement.BlockStmt -> flattenBlock(stmt, emptyList(), componentStmts, externalBottomEdges, externalEdges)
             }
         }
 
-        val frame = frameDecl ?: error("frame declaration is required")
+        val frame = frameDecl ?: error("Не найдено объявление frame")
         val allBottomBeams = frame.bottomBeams + externalBottomEdges
+        val allEdges = frame.edges + externalEdges
 
         val components = componentStmts.map { stmt ->
             val cs = stmt as AstNode.Statement.ComponentStmt
@@ -40,8 +44,8 @@ class AstInterpreter {
             frameWidth = frame.width,
             frameDepth = frame.depth,
             frameHeight = frame.height,
-            frameLevels = frame.levels,
             frameBottomBeams = allBottomBeams,
+            frameEdges = allEdges,
             components = components
         )
     }
@@ -49,7 +53,9 @@ class AstInterpreter {
     private fun flattenBlock(
         block: AstNode.Statement.BlockStmt,
         outerTransforms: List<AstNode.Transform>,
-        result: MutableList<AstNode.Statement>
+        result: MutableList<AstNode.Statement>,
+        bottomEdgeResult: MutableList<Double>,
+        edgeResult: MutableList<EdgeBeam>
     ) {
         val combined = outerTransforms + block.transforms
         for (stmt in block.statements) {
@@ -60,9 +66,11 @@ class AstInterpreter {
                     )
                     result.add(merged)
                 }
-                is AstNode.Statement.BlockStmt -> flattenBlock(stmt, combined, result)
-                is AstNode.Statement.BottomEdge -> result.add(stmt)
-                is AstNode.Statement.FrameDecl -> error("frame cannot be inside block")
+                // балки относятся к рамке целиком, transform'ы на них не действуют
+                is AstNode.Statement.EdgeDecl -> edgeResult.add(stmt.beam)
+                is AstNode.Statement.BottomEdge -> bottomEdgeResult.add(stmt.x)
+                is AstNode.Statement.BlockStmt -> flattenBlock(stmt, combined, result, bottomEdgeResult, edgeResult)
+                is AstNode.Statement.FrameDecl -> error("frame нельзя объявлять внутри блока")
             }
         }
     }

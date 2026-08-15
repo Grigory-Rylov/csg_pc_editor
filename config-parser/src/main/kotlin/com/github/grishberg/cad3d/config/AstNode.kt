@@ -1,5 +1,7 @@
 package com.github.grishberg.cad3d.config
 
+import com.github.grishberg.cad3d.pccase.EdgeBeam
+
 sealed class AstNode {
     data class Program(val statements: List<Statement>) : AstNode()
 
@@ -8,11 +10,13 @@ sealed class AstNode {
             val width: Double,
             val depth: Double,
             val height: Double,
-            val levels: List<Double> = emptyList(),
-            val bottomBeams: List<Double> = emptyList()
+            val bottomBeams: List<Double> = emptyList(),
+            val edges: List<EdgeBeam> = emptyList()
         ) : Statement()
 
         data class BottomEdge(val x: Double) : Statement()
+
+        data class EdgeDecl(val beam: EdgeBeam) : Statement()
 
         data class ComponentStmt(
             val transforms: List<Transform>,

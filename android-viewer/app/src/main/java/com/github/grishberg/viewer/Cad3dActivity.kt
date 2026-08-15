@@ -65,7 +65,7 @@ class Cad3dActivity : AppCompatActivity() {
 
             val toolbar = findViewById<Toolbar>(R.id.toolbar)
             setSupportActionBar(toolbar)
-            supportActionBar?.title = "PC Case Editor"
+            supportActionBar?.title = getString(R.string.cad3d)
 
             // Setup bottom sheet editor
             setupEditorBottomSheet()
@@ -81,7 +81,7 @@ class Cad3dActivity : AppCompatActivity() {
     private fun applyScript() {
         val script = scriptEditor?.text?.toString()?.trim() ?: ""
         if (script.isEmpty()) {
-            Toast.makeText(this, "Script is empty", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Скрипт пустой", Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -92,7 +92,7 @@ class Cad3dActivity : AppCompatActivity() {
             ScriptStorage.saveScript(this, script)
             mSceneBuilder?.updateConfig(config)
             mRenderer?.requestRender()
-            Toast.makeText(this, "Scene updated", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Сцена обновлена", Toast.LENGTH_SHORT).show()
         }.onFailure { e ->
             Toast.makeText(this, e.message, Toast.LENGTH_LONG).show()
         }
@@ -175,9 +175,9 @@ class Cad3dActivity : AppCompatActivity() {
         models.forEach { (_, csg) -> csg.getVerticesAndColorsAsFloatArray() }
         val report = AluminumProfile.generateReport()
         AlertDialog.Builder(this)
-            .setTitle("Отчет по профилям")
+            .setTitle("Отчёт по материалам")
             .setMessage(report)
-            .setPositiveButton("OK") { _, _ -> }
+            .setPositiveButton(getString(R.string.dialog_ok)) { _, _ -> }
             .setCancelable(true)
             .show()
     }

@@ -2,6 +2,7 @@ package com.github.grishberg.cad3d.config
 
 import com.github.grishberg.cad3d.pccase.TransformOp
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
@@ -12,7 +13,7 @@ class SceneConfigParserTest {
     @Test
     fun `move with named z param in block keeps transform`() {
         val script = """
-            frame(w=530 d=330 h=350 l=140)
+            frame(w=530 d=330 h=350)
             move(z=363.5) {
                 radiator()
             }
@@ -106,10 +107,17 @@ class SceneConfigParserTest {
     fun `parse default script`() {
         val script = parser.getDefaultScript()
         val result = parser.parse(script).getOrThrow()
-        assertEquals(530.0, result.frameWidth, 0.001)
-        assertEquals(330.0, result.frameDepth, 0.001)
-        assertEquals(350.0, result.frameHeight, 0.001)
-        assertEquals(6, result.components.size)
+        assertEquals(540.0, result.frameWidth, 0.001)
+        assertEquals(340.0, result.frameDepth, 0.001)
+        assertEquals(400.0, result.frameHeight, 0.001)
+        assertEquals(listOf(-30.0, 100.0, -115.0), result.frameBottomBeams)
+        assertEquals(4, result.frameEdges.size)
+        val front = result.frameEdges.first { it.side == com.github.grishberg.cad3d.pccase.EdgeSide.FRONT }
+        assertEquals(200.0, front.z, 0.001)
+        assertEquals(60.0, front.y, 0.001)
+        val back = result.frameEdges.first { it.side == com.github.grishberg.cad3d.pccase.EdgeSide.BACK }
+        assertEquals(310.0, back.z, 0.001)
+        assertEquals(8, result.components.size)
     }
 
     @Test
@@ -173,15 +181,72 @@ class SceneConfigParserTest {
     }
 
     @Test
-    fun `frame with mixed b param and bottomEdge block`() {
+    fun `b param in frame is rejected`() {
         val script = """
             frame(w=530 d=330 h=350 b=200) {
                 bottomEdge(x=0)
-                bottomEdge(x=-100)
             }
         """.trimIndent()
+        assertTrue(parser.parse(script).isFailure, "b= should be rejected")
+    }
+
+    @Test
+    fun `l param in frame is rejected`() {
+        val script = "frame(w=530 d=330 h=350 l=140)"
+        assertTrue(parser.parse(script).isFailure, "l= should be rejected")
+    }
+
+    @Test
+    fun `edge beams with custom params`() {
+        val script = """
+            frame(w=540 d=340 h=400)
+            frontEdge(z=170 x=-50 y=10 l=300)
+            backEdge(z=200)
+            leftEdge(z=100)
+            rightEdge(z=120)
+        """.trimIndent()
+
         val result = parser.parse(script).getOrThrow()
-        assertEquals(listOf(200.0, 0.0, -100.0), result.frameBottomBeams)
+        assertEquals(4, result.frameEdges.size)
+        val (f, b, le, r) = result.frameEdges
+        assertEquals(com.github.grishberg.cad3d.pccase.EdgeSide.FRONT, f.side)
+        assertEquals(170.0, f.z, 0.001)
+        assertEquals(-50.0, f.x, 0.001)
+        assertEquals(10.0, f.y, 0.001)
+        assertEquals(300.0, f.length!!, 0.001)
+        assertEquals(com.github.grishberg.cad3d.pccase.EdgeSide.BACK, b.side)
+        assertEquals(200.0, b.z, 0.001)
+        assertNull(b.length)
+        assertEquals(com.github.grishberg.cad3d.pccase.EdgeSide.LEFT, le.side)
+        assertEquals(100.0, le.z, 0.001)
+        assertEquals(com.github.grishberg.cad3d.pccase.EdgeSide.RIGHT, r.side)
+        assertEquals(120.0, r.z, 0.001)
+    }
+
+    @Test
+    fun `edge without z is rejected`() {
+        val script = "frame(w=540 d=340 h=400)\nfrontEdge(x=1)"
+        assertTrue(parser.parse(script).isFailure, "missing z should fail")
+    }
+
+    @Test
+    fun `bottomEdge and edges inside transform block are kept`() {
+        val script = """
+            frame(w=530 d=330 h=350)
+            move(1 2 3) {
+                motherboard()
+                bottomEdge(x=-77)
+                backEdge(z=180)
+            }
+        """.trimIndent()
+
+        val result = parser.parse(script).getOrThrow()
+        assertEquals(listOf(-77.0), result.frameBottomBeams)
+        assertEquals(1, result.frameEdges.size)
+        assertEquals(com.github.grishberg.cad3d.pccase.EdgeSide.BACK, result.frameEdges[0].side)
+        // компонент наследует transform'ы блока
+        val mb = result.components.first { it.type == "motherboard" }
+        assertTrue(mb.transforms.any { it is TransformOp.Move })
     }
 
     @Test

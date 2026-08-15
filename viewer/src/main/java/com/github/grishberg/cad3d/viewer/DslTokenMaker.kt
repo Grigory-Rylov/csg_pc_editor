@@ -31,6 +31,10 @@ class DslTokenMaker(private val colors: SyntaxColors = SyntaxColors()) : Abstrac
         map.put("move", TokenTypes.FUNCTION)
         map.put("rotate", TokenTypes.FUNCTION)
         map.put("bottomEdge", TokenTypes.FUNCTION)
+        map.put("frontEdge", TokenTypes.FUNCTION)
+        map.put("backEdge", TokenTypes.FUNCTION)
+        map.put("leftEdge", TokenTypes.FUNCTION)
+        map.put("rightEdge", TokenTypes.FUNCTION)
         map
     }
 
