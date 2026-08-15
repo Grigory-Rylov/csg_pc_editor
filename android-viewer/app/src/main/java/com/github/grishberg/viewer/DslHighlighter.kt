@@ -25,7 +25,9 @@ object DslCommentRule : LanguageRule {
 }
 
 object DslKeywordRule : LanguageRule {
-    private val KEYWORDS = Regex("""(?im)\b(frame|motherboard|gpu|psu|cooler)\b""")
+    private val KEYWORDS = Regex(
+        """(?im)\b(frame|bottomEdge|frontEdge|backEdge|leftEdge|rightEdge|move|rotate|motherboard|radiator|gpu|psu|cooler)\b"""
+    )
     override fun findMatches(text: CharSequence): List<RuleMatch> {
         return RuleHelper.findRegexMatches(text, KEYWORDS)
     }

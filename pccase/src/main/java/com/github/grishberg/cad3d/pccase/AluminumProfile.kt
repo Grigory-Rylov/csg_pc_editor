@@ -33,37 +33,48 @@ class AluminumProfile private constructor(
             return Cube(PROFILE_SIZE, PROFILE_SIZE, length)
         }
 
+        // Формат отчёта 1-в-1 с web-версией (pc_viewer_3d profiles.ts generateReport)
         fun generateReport(): String {
-            val grouped = cuts.groupBy { it.length to it.orientation }
-                .mapValues { (_, v) -> v.size }
-                .entries.sortedBy { it.key.first }
+            val axisOf = { o: Orientation ->
+                when (o) {
+                    Orientation.HORIZONTAL_X -> "X"
+                    Orientation.VERTICAL -> "Y"
+                    Orientation.HORIZONTAL_Z -> "Z"
+                }
+            }
 
-            val sb = StringBuilder()
-            sb.appendLine("=== Aluminum Profile Bill of Materials ===")
-            sb.appendLine()
+            // тот же набор кусков, что собирает PcFrame: 4 стойки по Z + слои (низ/верх) 2xX+2xY
+            // + bottomBeams по Y + front/backEdge вдоль X + left/rightEdge вдоль Y
+            val grouped = cuts.groupBy { it.length to axisOf(it.orientation) }
+                .mapValues { (_, v) -> v.size }
+                .entries.map { (key, count) -> Triple(key.first, key.second, count) }
+                    .sortedWith(compareBy({ it.first }, { it.second }))
+
+            val lines = mutableListOf<String>()
+            lines.add("=== Спецификация профиля ===")
+            lines.add("")
 
             var totalLength = 0.0
             var totalPieces = 0
-            for ((key, count) in grouped) {
-                val (length, orientation) = key
-                val label = when (orientation) {
-                    Orientation.VERTICAL -> "Vertical (Y)"
-                    Orientation.HORIZONTAL_X -> "Horizontal (X)"
-                    Orientation.HORIZONTAL_Z -> "Horizontal (Z)"
-                }
+            for ((length, axis, count) in grouped) {
                 val total = length * count
                 totalLength += total
                 totalPieces += count
-                sb.appendLine("  $label: ${length}mm x ${count}pcs = ${total}mm")
+                lines.add("  По оси $axis: ${fmt(length)}мм x ${count}шт = ${fmt(total)}мм")
             }
 
-            sb.appendLine()
-            sb.appendLine("  Всего кусков: $totalPieces")
-            sb.appendLine("  Всего резов: $totalPieces")
-            sb.appendLine("  Общая длина: ${totalLength}mm (${"%.1f".format(totalLength / 1000.0)}m)")
-            sb.appendLine("  Профиль: 20x20mm")
-            sb.appendLine("=========================================")
-            return sb.toString()
+            lines.add("")
+            lines.add("  Всего кусков: $totalPieces")
+            lines.add("  Всего резов: $totalPieces")
+            lines.add("  Общая длина: ${fmt(totalLength)}мм (${ "%.1f".format(totalLength / 1000.0) }м)")
+            lines.add("  Профиль: 20x20мм")
+            lines.add("=========================================")
+            return lines.joinToString("\n")
+        }
+
+        private fun fmt(n: Double): String {
+            val r = Math.round(n * 1000.0) / 1000.0
+            return if (r == r.toLong().toDouble()) r.toLong().toString() else r.toString()
         }
     }
 }

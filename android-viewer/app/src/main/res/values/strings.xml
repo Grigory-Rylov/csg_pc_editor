@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>    
-    <string name="app_name">PC frame</string>
-    <string name="cad3d">PC frame</string>
+    <string name="app_name">Корпус ПК 3D</string>
+    <string name="cad3d">Редактор корпуса ПК</string>
     <string name="wire_mode_checkbox_title">W</string>
     <string name="show_logs">L+</string>
     <string name="hide_logs">L-</string>
@@ -11,8 +11,8 @@
 
     <string name="prev_10_debug">&lt; 10</string>
     <string name="next_10_debug">&gt; 10</string>
-    <string name="edit_script">Script</string>
-    <string name="edit_script_title">Edit Script</string>
-    <string name="dialog_ok">OK</string>
-    <string name="dialog_cancel">Cancel</string>
+    <string name="edit_script">Скрипт</string>
+    <string name="edit_script_title">Редактор скрипта</string>
+    <string name="dialog_ok">ОК</string>
+    <string name="dialog_cancel">Отмена</string>
 </resources>
