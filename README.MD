@@ -98,12 +98,6 @@ move(0 0 420) {
 и общая длина), формат тот же, что у web-версии.
 
 ## Требования для Android сборки
-
-- ARM64 Linux: требуется ARM64 aapt2 (кастомная сборка из `~/data/projects/android/android-arm-tools/`)
-- Настройки в `~/.gradle/gradle.properties`:
-  ```properties
-  android.aapt2FromMavenOverride=/home/orangepi/Android/Sdk/build-tools/34.0.0/aapt2
-  ```
 - JDK 21
 - Android SDK с `platforms;android-34` и `build-tools;34.0.0`
 
